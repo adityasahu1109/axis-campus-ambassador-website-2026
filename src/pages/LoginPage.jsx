@@ -89,7 +89,6 @@ function LoginPage() {
             )}
             <div>
               <label htmlFor="email" className="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Your email</label>
-              {/* --- THE FIX: Changed e.g.value to e.target.value --- */}
               <input type="email" name="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required />
             </div>
             <div>
