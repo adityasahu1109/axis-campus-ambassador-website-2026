@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 
-// Helper Icons for the UI
+// Helper Icons (Unchanged)
 const StarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
 const AlertIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>;
 const StatusBadge = ({ status }) => {
@@ -14,6 +14,7 @@ const StatusBadge = ({ status }) => {
     };
     return <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full border ${colors[status]}`}>{status}</span>;
 };
+// --- End of Helper Components ---
 
 function MyDashboardPage() {
     const { user } = useAuth();
@@ -27,6 +28,7 @@ function MyDashboardPage() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [submissionContext, setSubmissionContext] = useState('');
 
+    // --- All functions (fetchData, handleTaskClick, etc.) are unchanged ---
     const fetchData = useCallback(async () => {
         if (!user) { setLoading(false); return; }
         try {
@@ -95,8 +97,10 @@ function MyDashboardPage() {
 
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">My Tasks</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Click on a task to view details and submit for review. New tasks are marked with a star ✨.</p>
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-sm">
-                <table className="w-full text-left">
+            
+            {/* --- MODIFICATION: Changed overflow-hidden to overflow-x-auto --- */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto shadow-sm">
+                <table className="w-full min-w-xl text-left">
                     <thead className="bg-slate-50 dark:bg-slate-900"><tr className="border-b border-slate-200 dark:border-slate-700"><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Task</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Points</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Status</th></tr></thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                         {tasks.map((task) => {
@@ -114,6 +118,7 @@ function MyDashboardPage() {
                 </table>
             </div>
 
+            {/* --- Modal is unchanged --- */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-start pt-16 px-4" onClick={() => setIsModalOpen(false)}>
                     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg animate-fade-in-up" onClick={e => e.stopPropagation()}>
