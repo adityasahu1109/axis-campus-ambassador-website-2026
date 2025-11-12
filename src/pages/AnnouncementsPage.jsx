@@ -31,20 +31,20 @@ function AnnouncementsPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white text-center mb-10">
+            {/* --- MODIFICATION: Made heading responsive --- */}
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-center mb-10">
                 Announcements
             </h1>
 
             {announcements.length > 0 ? (
                 <div className="space-y-6">
                     {announcements.map(item => (
-                        <div key={item.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-6">
+                        /* --- MODIFICATION: Made card padding responsive --- */
+                        <div key={item.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-6">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">{item.title}</h2>
-                            {/* --- MODIFICATION: Updated timestamp format --- */}
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 Posted on {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} at {new Date(item.created_at).toLocaleDateString()}
                             </p>
-                            {/* --- END MODIFICATION --- */}
                             <p className="mt-4 text-slate-600 dark:text-slate-300">{item.content}</p>
                         </div>
                     ))}

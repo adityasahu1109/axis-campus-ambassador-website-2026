@@ -52,7 +52,8 @@ function LeaderboardPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white">Leaderboard</h1>
+        {/* --- MODIFICATION: Made heading responsive --- */}
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">Leaderboard</h1>
         {profile?.role === 'student' && myIndex !== -1 && (
           <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
             <button
@@ -71,7 +72,8 @@ function LeaderboardPage() {
         )}
       </div>
 
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+      {/* --- MODIFICATION: Changed overflow-hidden to overflow-x-auto --- */}
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr>
