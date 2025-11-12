@@ -264,7 +264,7 @@ function HomePage() {
           {/* --- MODIFICATION: Icon above heading --- */}
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
             <FaUsers className={sectionIconClass} />
-            <span>Get In Touch</span>
+            <span>Get in Touch</span>
           </h2>
           <p className="mt-4 text-lg text-slate-600 dark:text-slate-400"> Have questions or want to learn more? Reach out to one of our organizing heads. </p>
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
