@@ -1,66 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
-import logoLight from '../assets/logo-light.png';
 import logoDark from '../assets/logo-dark.png';
+import { IoLogOutOutline, IoPersonOutline } from 'react-icons/io5';
+import { TerminalLabel } from './motifs/TerminalLabel';
 
-// --- Self-contained Icon Components ---
-const SunIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-const MoonIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>;
-const HamburgerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>;
-const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>;
-
-
-// --- Self-contained Logo Component (Unchanged from original) ---
-const Logo = () => (
-    <div className="flex items-center space-x-2">
-        <img 
-          src={logoLight} 
-          alt="Event Logo" 
-          className="h-10 w-auto block dark:hidden"
-        />
-        <img 
-          src={logoDark} 
-          alt="Event Logo" 
-          className="h-10 w-auto hidden dark:block"
-        />
-        <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Campus Ambassador
-        </span>
-    </div>
+const HamburgerIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-cyan">
+    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
 );
 
+const CloseIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-amber">
+    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const Logo = () => (
+  <div className="flex items-center space-x-3 group relative">
+    <div className="absolute inset-0 bg-cyan blur-[20px] opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
+    <img 
+      src={logoDark} 
+      alt="AXIS'27" 
+      className="relative h-10 w-auto transition-transform group-hover:scale-105"
+    />
+    <div className="flex flex-col">
+      <span className="text-xl font-display font-bold tracking-tight text-white group-hover:text-cyan transition-colors leading-tight">
+        AXIS'27
+      </span>
+      <span className="text-[10px] font-mono text-cyan-soft tracking-[0.2em] uppercase leading-tight">
+        Ambassador
+      </span>
+    </div>
+  </div>
+);
 
 function Navbar() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [profile, setProfile] = useState(null);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsDropdownOpen(false);
   }, [location]);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
-  };
-  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setIsDropdownOpen(false);
+        }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useEffect(() => {
     async function getProfile() {
       if (user) {
-        const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+        const { data } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
         setProfile(data);
       } else {
         setProfile(null);
@@ -69,142 +73,197 @@ function Navbar() {
     getProfile();
   }, [user]);
 
-  const handleSignOut = async () => { await signOut(); navigate('/'); };
+  const handleSignOut = async () => { setIsDropdownOpen(false); await signOut(); navigate('/'); };
   
   const handleScrollToContact = (e) => {
     e.preventDefault();
     if (location.pathname !== '/') {
       navigate('/');
-      setTimeout(() => {
-        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      setTimeout(() => { document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
     } else {
       document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // --- MODIFICATION: Added text-center to mobile links (Request 5) ---
-  const navLinkClasses = "px-3 py-2 rounded-md text-sm font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors";
-  const activeNavLinkClasses = "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white";
+  const navLinkClasses = "relative px-3 py-2 font-mono text-sm tracking-wide text-sandstone hover:text-cyan transition-colors group flex items-center";
+  const mobileNavLinkClasses = "block w-full px-4 py-3 font-mono text-sm tracking-wide text-sandstone hover:bg-obsidian hover:text-cyan transition-colors border-l-2 border-transparent hover:border-cyan text-left";
   
-  const mobileNavLinkClasses = "block px-3 py-2 rounded-md text-base font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 text-center"; // Added text-center
-  const mobileActiveNavLinkClasses = "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white";
+  const NavItem = ({ to, children, isMobile, onClick }) => {
+      if (isMobile) {
+          return to ? (
+            <NavLink to={to} className={({ isActive }) => `${mobileNavLinkClasses} ${isActive ? 'bg-obsidian border-cyan text-cyan' : ''}`} onClick={onClick}>
+              <span className="text-cyan-soft mr-2 opacity-50">{'//'}</span>{children}
+            </NavLink>
+          ) : (
+            <button onClick={onClick} className={mobileNavLinkClasses}>
+              <span className="text-cyan-soft mr-2 opacity-50">{'//'}</span>{children}
+            </button>
+          );
+      }
+      return to ? (
+        <NavLink to={to} className={({ isActive }) => `${navLinkClasses} ${isActive ? 'text-cyan' : ''}`}>
+            <span className="text-cyan-soft mr-2 opacity-50">{'//'}</span>
+            {children}
+        </NavLink>
+      ) : (
+        <button onClick={onClick} className={navLinkClasses}>
+            <span className="text-cyan-soft mr-2 opacity-50">{'//'}</span>
+            {children}
+        </button>
+      );
+  };
 
-  // --- MODIFICATION: Added button-like classes for mobile (Request 4) ---
-  const getStartedClass = isMobile => isMobile 
-    ? "block px-3 py-2 rounded-md text-base font-medium bg-blue-600 hover:bg-blue-700 text-white text-center font-semibold"
-    : "ml-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition-colors duration-200";
+  const getStartedClass = "ml-4 font-mono uppercase tracking-widest text-xs px-5 py-2.5 bg-amber hover:bg-amber-bright text-void font-bold transition-all duration-300 shadow-[0_0_15px_rgba(255,158,0,0.3)] hover:shadow-[0_0_25px_rgba(255,158,0,0.5)]";
+  const mobileGetStartedClass = "block w-full mt-4 font-mono uppercase tracking-widest text-xs px-5 py-3 bg-amber hover:bg-amber-bright text-void font-bold text-center transition-all duration-300";
 
-  const signOutClass = isMobile => isMobile
-    ? "block px-3 py-2 rounded-md text-base font-medium bg-red-600 hover:bg-red-700 text-white text-center font-semibold"
-    : "ml-4 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-md";
-  // --- END MODIFICATION ---
-
-
-  const renderNavLinks = (isMobile = false) => {
-    const linkClass = isMobile ? mobileNavLinkClasses : navLinkClasses;
-    const activeClass = isMobile ? mobileActiveNavLinkClasses : activeNavLinkClasses;
-
+  const renderDesktopLinks = () => {
     if (!user) {
       return (
         <>
-          <NavLink to="/" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>Home</NavLink>
-          <NavLink to="/leaderboard" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>Leaderboard</NavLink>
-          <button onClick={handleScrollToContact} className={linkClass}>Contact Us</button>
-          {/* --- MODIFICATION: Using new class variable --- */}
-          <Link to="/login" className={getStartedClass(isMobile)}>Get Started</Link>
+          <NavItem to="/">Home</NavItem>
+          <NavItem to="/leaderboard">Leaderboard</NavItem>
+          <NavItem onClick={handleScrollToContact}>Contact</NavItem>
+          <Link to="/login" className={getStartedClass}>Init_Session</Link>
         </>
       );
     }
     if (profile?.role === 'organizer') {
       return (
         <>
-          <NavLink to="/admin" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>Dashboard</NavLink>
-          <NavLink to="/leaderboard" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>Global Leaderboard</NavLink>
-          <NavLink to="/profile/organizer" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>My Profile</NavLink>
-          {/* --- MODIFICATION: Using new class variable --- */}
-          <button onClick={handleSignOut} className={signOutClass(isMobile)}>Sign Out</button>
+          <NavItem to="/admin">Terminal</NavItem>
+          <NavItem to="/leaderboard">Grid_Status</NavItem>
+          <UserDropdown />
         </>
       );
     }
     if (profile?.role === 'student') {
         return (
             <>
-                <NavLink to="/dashboard" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>My Dashboard</NavLink>
-                <NavLink to="/announcements" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>Announcements</NavLink>
-                <NavLink to="/leaderboard" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>Leaderboard</NavLink>
-                <NavLink to="/profile" className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}>My Profile</NavLink>
-                {/* --- MODIFICATION: Using new class variable --- */}
-                <button onClick={handleSignOut} className={signOutClass(isMobile)}>Sign Out</button>
+                <NavItem to="/dashboard">Dashboard</NavItem>
+                <NavItem to="/announcements">Comms</NavItem>
+                <NavItem to="/leaderboard">Rank</NavItem>
+                <UserDropdown />
             </>
         );
     }
-    {/* --- MODIFICATION: Using new class variable --- */}
-    return <button onClick={handleSignOut} className={signOutClass(isMobile)}>Sign Out</button>;
+    return <button onClick={handleSignOut} className={getStartedClass}>End_Session</button>;
+  };
+
+  const renderMobileLinks = () => {
+    if (!user) {
+      return (
+        <>
+          <NavItem to="/" isMobile>Home</NavItem>
+          <NavItem to="/leaderboard" isMobile>Leaderboard</NavItem>
+          <NavItem onClick={handleScrollToContact} isMobile>Contact</NavItem>
+          <Link to="/login" className={mobileGetStartedClass}>Init_Session</Link>
+        </>
+      );
+    }
+    if (profile?.role === 'organizer') {
+      return (
+        <>
+          <NavItem to="/admin" isMobile>Terminal</NavItem>
+          <NavItem to="/leaderboard" isMobile>Grid_Status</NavItem>
+          <NavItem to="/profile/organizer" isMobile>System_ID</NavItem>
+          <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>
+        </>
+      );
+    }
+    if (profile?.role === 'student') {
+        return (
+            <>
+                <NavItem to="/dashboard" isMobile>Dashboard</NavItem>
+                <NavItem to="/announcements" isMobile>Comms</NavItem>
+                <NavItem to="/leaderboard" isMobile>Rank</NavItem>
+                <NavItem to="/profile" isMobile>Profile</NavItem>
+                <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>
+            </>
+        );
+    }
+    return <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>;
+  };
+
+  const UserDropdown = () => {
+      const initial = profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U';
+      const profileLink = profile?.role === 'organizer' ? '/profile/organizer' : '/profile';
+      
+      return (
+          <div className="relative ml-4" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center justify-center w-10 h-10 bg-obsidian-soft border border-border text-cyan font-mono font-bold hover:border-cyan hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] transition-all focus:outline-none"
+              >
+                  {initial}
+              </button>
+              
+              {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-obsidian-soft border border-border shadow-2xl animate-scale-in origin-top-right z-50">
+                      <div className="px-4 py-3 border-b border-border mb-1 bg-obsidian">
+                          <p className="text-sm font-bold text-white truncate font-display">{profile?.full_name || 'User'}</p>
+                          <p className="text-xs text-sandstone-dim font-mono mt-1 truncate">{user?.email}</p>
+                      </div>
+                      <div className="p-1">
+                        <Link to={profileLink} className="flex items-center px-4 py-2.5 text-sm text-sandstone hover:bg-obsidian hover:text-cyan transition-colors font-mono">
+                            <IoPersonOutline className="mr-3 h-4 w-4" /> System_ID
+                        </Link>
+                        <button onClick={handleSignOut} className="flex w-full items-center px-4 py-2.5 text-sm text-danger hover:bg-obsidian transition-colors font-mono mt-1">
+                            <IoLogOutOutline className="mr-3 h-4 w-4" /> End_Session
+                        </button>
+                      </div>
+                  </div>
+              )}
+          </div>
+      );
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700/50 z-50">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* --- MODIFICATION: Re-structured header for new mobile layout (Requests 1, 2, 3) --- */}
-        <div className="flex items-center justify-between h-20">
-          
-          {/* --- LEFT ITEM: Desktop Logo / Mobile Theme Toggle --- */}
-          <div className="flex justify-start">
-            <Link to="/" className="hidden md:block">
-              <Logo />
-            </Link>
-            <button 
-              onClick={toggleTheme} 
-              className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 md:hidden" 
-              aria-label="Toggle color scheme"
-            >
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-            </button>
-          </div>
+    <>
+      <header className="fixed top-0 left-0 w-full bg-void/90 backdrop-blur-md border-b border-cyan/10 z-50">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            
+            <div className="flex justify-start items-center">
+              <Link to="/">
+                <Logo />
+              </Link>
+            </div>
 
-          {/* --- CENTER ITEM: Mobile Title --- */}
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white md:hidden">
-            Campus Ambassador
-          </span>
-
-          {/* --- RIGHT ITEM: Desktop Links & Theme / Mobile Hamburger --- */}
-          <div className="flex items-center justify-end">
-            {/* Desktop Links & Theme Toggle */}
-            <div className="hidden md:flex items-center space-x-2">
-              {renderNavLinks(false)}
-              <button 
-                onClick={toggleTheme} 
-                className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800" 
-                aria-label="Toggle color scheme"
+            <div className="flex items-center justify-end">
+              <div className="hidden md:flex items-center space-x-2">
+                {renderDesktopLinks()}
+              </div>
+              
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-cyan md:hidden hover:bg-obsidian-soft transition-colors ml-4"
+                aria-label="Toggle mobile menu"
               >
-                {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+                {isMobileMenuOpen ? <CloseIcon /> : <HamburgerIcon />}
               </button>
             </div>
-            
-            {/* Mobile Hamburger */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 md:hidden"
-              aria-label="Toggle mobile menu"
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <CloseIcon /> : <HamburgerIcon />}
-            </button>
           </div>
-        </div>
-        {/* --- END MODIFICATION --- */}
-      </nav>
+        </nav>
+      </header>
 
-      {/* --- Mobile menu dropdown (Unchanged, but text will now be centered) --- */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-700">
-          <div className="flex flex-col space-y-2 p-4">
-            {renderNavLinks(true)}
+      {/* Mobile Menu Panel - Slides from right */}
+      <div 
+        className={`fixed inset-0 bg-void/80 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <div 
+          className={`absolute top-0 right-0 h-full w-72 bg-obsidian-soft border-l border-cyan/20 shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col pt-24 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="px-6 mb-6">
+            <TerminalLabel>NAV_SYSTEM</TerminalLabel>
+          </div>
+          <div className="px-2 space-y-1 overflow-y-auto pb-6">
+            {renderMobileLinks()}
           </div>
         </div>
-      )}
-    </header>
+      </div>
+    </>
   );
 }
 

@@ -17,7 +17,7 @@ import OrganizerProfilePage from './pages/OrganizerProfilePage';
 
 function App() {
   return (
-    <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen antialiased flex flex-col">
+    <div className="min-h-screen flex flex-col relative selection:bg-amber-deep/30">
       <Navbar />
       <main className="pt-20 flex-grow">
         <Routes>

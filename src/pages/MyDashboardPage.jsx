@@ -1,20 +1,41 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import { AxisFrame } from '../components/motifs/AxisFrame';
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
+import { TerminalLoader } from '../components/motifs/TerminalLoader';
+import { Crosshair } from '../components/motifs/Crosshair';
+import { clsx } from 'clsx';
 
-// Helper Icons (Unchanged)
-const StarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
-const AlertIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>;
 const StatusBadge = ({ status }) => {
-    const colors = {
-        'Approved': 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20',
-        'Pending': 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20',
-        'Rejected': 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20',
-        'Not Submitted': 'bg-slate-100 dark:bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-500/20',
+    const format = {
+        'Approved': { text: '[ VERIFIED ]', color: 'text-cyan' },
+        'Pending': { text: '[ PENDING ]', color: 'text-amber' },
+        'Rejected': { text: '[ REJECTED ]', color: 'text-danger' },
+        'Not Submitted': { text: '[ UNASSIGNED ]', color: 'text-sandstone-dim' },
     };
-    return <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full border ${colors[status]}`}>{status}</span>;
+    const { text, color } = format[status] || format['Not Submitted'];
+    return <span className={clsx("font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
-// --- End of Helper Components ---
+
+// Animated Counter component
+const AnimatedCounter = ({ value, duration = 1500 }) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        let startTime = null;
+        const animation = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            const easeOutQuart = 1 - Math.pow(1 - Math.min(progress / duration, 1), 4);
+            setCount(Math.floor(easeOutQuart * value));
+            if (progress < duration) requestAnimationFrame(animation);
+            else setCount(value);
+        };
+        requestAnimationFrame(animation);
+        return () => setCount(value);
+    }, [value, duration]);
+    return <span>{count}</span>;
+};
 
 function MyDashboardPage() {
     const { user } = useAuth();
@@ -28,21 +49,25 @@ function MyDashboardPage() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [submissionContext, setSubmissionContext] = useState('');
 
-    // --- All functions (fetchData, handleTaskClick, etc.) are unchanged ---
     const fetchData = useCallback(async () => {
         if (!user) { setLoading(false); return; }
         try {
             setLoading(true);
             const seenId = localStorage.getItem('lastSeenTaskId');
             setLastSeenTaskId(seenId ? parseInt(seenId) : 0);
+            
             const { data: profileData } = await supabase.from('profiles').select('full_name, points').eq('id', user.id).single();
             setProfile(profileData);
+            
             const { data: tasksData } = await supabase.from('tasks').select('*').order('id', { ascending: false });
             setTasks(tasksData || []);
+            
             const { data: leaderboardData } = await supabase.from('profiles').select('id, points').order('points', { ascending: false });
             setLeaderboard(leaderboardData || []);
+            
             const { data: submissionsData } = await supabase.from('submissions').select('*').eq('student_id', user.id);
             setSubmissions(submissionsData || []);
+            
             if (tasksData && tasksData.length > 0) {
                 localStorage.setItem('lastSeenTaskId', tasksData[0].id.toString());
             }
@@ -73,84 +98,174 @@ function MyDashboardPage() {
         } catch (error) { console.error("Error submitting task:", error.message); }
     };
 
-    if (loading) return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Loading your dashboard...</div>;
-    if (!user || !profile) return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Please log in to view your dashboard.</div>;
+    if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="INITIALIZING_NODE_INTERFACE..." /></div>;
+    if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">NO_ACTIVE_SESSION</div>;
 
     const getSubmissionForTask = (taskId) => submissions.find(sub => sub.task_id === taskId);
     const myRank = leaderboard.findIndex(p => p.id === user?.id) + 1;
+    const completedTasksCount = submissions.filter(s => s.status === 'Approved').length;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white text-center mb-8">
-                Welcome, {profile.full_name || user.email}!
-            </h1>
+        <div className="bg-void min-h-screen pb-20 pt-20 relative">
+            
+            {/* Background Grid */}
+            <div className="absolute inset-0 axis-grid-bg opacity-20 pointer-events-none fixed"></div>
 
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-6 mb-8 shadow-sm">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <p className="text-lg font-bold text-slate-900 dark:text-white">Your Current Rank</p>
-                        <p className="text-slate-500 dark:text-slate-400">{profile.points} Points</p>
+            {/* Welcome Banner */}
+            <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
+                <div className="max-w-6xl mx-auto flex items-center gap-x-6 relative z-10 animate-fade-in">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-obsidian border border-cyan flex items-center justify-center text-3xl font-display font-bold text-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                        {(profile.full_name || user.email).charAt(0).toUpperCase()}
                     </div>
-                    <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">#{myRank > 0 ? myRank : 'N/A'}</p>
+                    <div>
+                        <TerminalLabel prefix=">">NODE_ID // {profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
+                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2">
+                            Dashboard
+                        </h1>
+                    </div>
                 </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">My Tasks</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Click on a task to view details and submit for review. New tasks are marked with a star ✨.</p>
-            
-            {/* --- MODIFICATION: Changed overflow-hidden to overflow-x-auto --- */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto shadow-sm">
-                <table className="w-full min-w-xl text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-900"><tr className="border-b border-slate-200 dark:border-slate-700"><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Task</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Points</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Status</th></tr></thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {tasks.map((task) => {
-                            const status = getSubmissionForTask(task.id)?.status || 'Not Submitted';
-                            const isNew = task.id > lastSeenTaskId;
-                            return (
-                                <tr key={task.id} onClick={() => handleTaskClick(task)} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
-                                    <td className="px-6 py-4 whitespace-nowrap text-slate-800 dark:text-slate-300"><div className="flex items-center gap-x-3"><div className="w-4">{isNew && <StarIcon />}</div><span>{task.title}</span></div></td>
-                                    <td className="px-6 py-4 whitespace-nowrap font-semibold text-blue-600 dark:text-blue-400">{task.points}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={status} /></td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
+                
+                {/* Stats Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12 animate-slide-in-up">
+                    <AxisFrame variant="cyan" hover={true} className="!p-6 flex flex-col items-center text-center">
+                        <TerminalLabel className="mb-2">GLOBAL_RANK</TerminalLabel>
+                        <p className="text-4xl font-mono font-bold text-cyan">
+                            {myRank > 0 ? (myRank < 10 ? `0${myRank}` : myRank) : '--'}
+                        </p>
+                    </AxisFrame>
+                    
+                    <AxisFrame variant="amber" hover={true} className="!p-6 flex flex-col items-center text-center">
+                        <TerminalLabel className="mb-2 text-amber">TOTAL_METRICS</TerminalLabel>
+                        <p className="text-4xl font-mono font-bold text-amber">
+                            <AnimatedCounter value={profile.points} />
+                        </p>
+                    </AxisFrame>
+
+                    <AxisFrame variant="cyan" hover={true} className="!p-6 flex flex-col items-center text-center">
+                        <TerminalLabel className="mb-2">TASKS_VERIFIED</TerminalLabel>
+                        <p className="text-4xl font-mono font-bold text-cyan">
+                            {completedTasksCount < 10 ? `0${completedTasksCount}` : completedTasksCount}<span className="text-xl text-sandstone-dim opacity-50 ml-1">/{tasks.length < 10 ? `0${tasks.length}` : tasks.length}</span>
+                        </p>
+                    </AxisFrame>
+                </div>
+
+                {/* Tasks Section */}
+                <div>
+                    <div className="mb-6 flex items-center justify-between">
+                        <TerminalLabel prefix=">">ACTIVE_DIRECTIVES</TerminalLabel>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {tasks.length === 0 ? (
+                            <div className="col-span-full border border-border bg-obsidian-soft p-12 text-center flex flex-col items-center">
+                                <TerminalLabel prefix=">">STATUS_REPORT</TerminalLabel>
+                                <p className="text-sandstone-dim font-mono text-sm mt-4 uppercase tracking-widest">No directives assigned to this node.</p>
+                            </div>
+                        ) : (
+                            tasks.map((task, index) => {
+                                const status = getSubmissionForTask(task.id)?.status || 'Not Submitted';
+                                const isNew = task.id > lastSeenTaskId;
+                                const isVerified = status === 'Approved';
+                                const isPending = status === 'Pending';
+                                
+                                const frameVariant = isVerified ? "cyan" : isPending ? "amber" : "cyan";
+                                
+                                return (
+                                    <div 
+                                        key={task.id} 
+                                        onClick={() => handleTaskClick(task)} 
+                                        className={clsx("group cursor-pointer animate-fade-in-up border transition-all duration-300 relative overflow-hidden", isVerified ? "border-cyan/30 bg-cyan/5 hover:bg-cyan/10" : isPending ? "border-amber/50 bg-amber/5 hover:bg-amber/10" : "border-border bg-obsidian hover:border-cyan/50 hover:bg-obsidian-soft")}
+                                        style={{ animationDelay: `${index * 50}ms` }}
+                                    >
+                                        {/* Accent bar */}
+                                        <div className={clsx("absolute left-0 top-0 bottom-0 w-1 transition-all", isVerified ? "bg-cyan opacity-50" : isPending ? "bg-amber" : "bg-border group-hover:bg-cyan group-hover:opacity-50")}></div>
+                                        
+                                        <div className="p-5 pl-6 flex flex-col h-full">
+                                            <div className="flex justify-between items-start mb-2 gap-4">
+                                                <div className="flex items-center gap-3">
+                                                    {isNew && <span className="inline-block w-2 h-2 rounded-full bg-amber animate-pulse"></span>}
+                                                    <h3 className={clsx("text-base font-display font-bold uppercase tracking-wide line-clamp-1 transition-colors", isVerified ? "text-cyan" : isPending ? "text-amber" : "text-white group-hover:text-cyan")}>{task.title}</h3>
+                                                </div>
+                                                <span className={clsx("font-mono font-bold text-sm shrink-0", isPending ? "text-amber" : "text-cyan")}>+{task.points}</span>
+                                            </div>
+                                            
+                                            <p className="text-sm font-mono text-sandstone-dim line-clamp-2 mb-6 group-hover:text-sandstone transition-colors">{task.description}</p>
+                                            
+                                            <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/50">
+                                                <StatusBadge status={status} />
+                                                <Crosshair size={12} className={clsx("opacity-30 transition-all", isVerified ? "text-cyan" : isPending ? "text-amber" : "text-cyan group-hover:opacity-100 group-hover:rotate-90")} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
             </div>
 
-            {/* --- Modal is unchanged --- */}
+            {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-start pt-16 px-4" onClick={() => setIsModalOpen(false)}>
-                    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg animate-fade-in-up" onClick={e => e.stopPropagation()}>
-                        <div className="p-6">
-                            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{selectedTask?.title}</h3>
+                <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={() => setIsModalOpen(false)}>
+                    <AxisFrame variant={getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'cyan' : 'amber'} className="!p-0 w-full max-w-lg max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                        
+                        <div className={clsx("px-6 py-4 flex justify-between items-center border-b", getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'border-cyan/30 bg-cyan/10' : 'border-amber/30 bg-amber/10')}>
+                            <TerminalLabel prefix=">">{getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'DIRECTIVE_VERIFIED' : 'EXECUTE_DIRECTIVE'}</TerminalLabel>
+                            <button onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'text-cyan' : 'text-amber')}>×</button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto shrink bg-obsidian">
+                            <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+                                <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
+                                <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'text-cyan' : 'text-amber')}>+{selectedTask?.points}</span>
+                            </div>
+                            
+                            <p className="text-sm font-mono text-sandstone bg-obsidian-soft border border-border p-4 leading-relaxed mb-6 whitespace-pre-wrap">
+                                {selectedTask?.description || "No description provided."}
+                            </p>
+
                             {getSubmissionForTask(selectedTask?.id)?.status === 'Rejected' && (
-                                <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-500/30 rounded-lg flex gap-x-3">
-                                    <AlertIcon />
+                                <div className="mb-6 p-4 border border-danger/50 bg-danger/10 flex items-start">
+                                    <span className="text-danger font-mono font-bold mr-3">{'>'}</span>
                                     <div>
-                                        <h4 className="font-bold text-red-800 dark:text-red-300">Submission Rejected</h4>
-                                        <p className="text-sm text-red-700 dark:text-red-300/80 mt-1"><strong>Reason:</strong> {getSubmissionForTask(selectedTask?.id)?.rejection_reason}</p>
+                                        <h4 className="font-mono font-bold text-danger text-sm uppercase">SUBMISSION_REJECTED</h4>
+                                        <p className="text-xs mt-1 text-danger/80 font-mono">REASON: {getSubmissionForTask(selectedTask?.id)?.rejection_reason}</p>
                                     </div>
                                 </div>
                             )}
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Description</p>
-                            <p className="text-slate-600 dark:text-slate-300 mt-1">{selectedTask?.description || "No description."}</p>
-                            
-                            <form onSubmit={handleSubmitForReview} className="mt-6">
+
+                            <form onSubmit={handleSubmitForReview}>
                                 <div>
-                                    <label htmlFor="submission" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Your Submission</label>
-                                    <p className="text-xs text-slate-500 dark:text-slate-500 mb-2">Describe how you completed the task. You can add links or other information for the organizer.</p>
-                                    <textarea id="submission" rows="4" required value={submissionContext} onChange={(e) => setSubmissionContext(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                    <label htmlFor="submission" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">PROOF_OF_EXECUTION</label>
+                                    <p className="text-[10px] font-mono text-sandstone-dim uppercase mb-3">Provide URI links or plain text describing execution.</p>
+                                    <textarea 
+                                        id="submission" 
+                                        rows="4" 
+                                        required 
+                                        value={submissionContext} 
+                                        onChange={(e) => setSubmissionContext(e.target.value)} 
+                                        className="w-full bg-void border border-border p-4 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] disabled:opacity-50"
+                                        placeholder="Input parameters..."
+                                        disabled={['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
+                                    ></textarea>
                                 </div>
                                 <div className="mt-6 flex justify-end gap-x-4">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg">Cancel</button>
-                                    <button type="submit" disabled={['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                                        { getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'Task Approved' : getSubmissionForTask(selectedTask?.id)?.status === 'Pending' ? 'Pending Review' : 'Submit for Review' }
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)} 
+                                        className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                    >
+                                        { getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'Pending' ? 'PENDING' : 'TRANSMIT' }
+                                        {!['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
                                     </button>
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </AxisFrame>
                 </div>
             )}
         </div>

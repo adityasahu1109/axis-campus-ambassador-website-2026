@@ -1,33 +1,58 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
+import { AxisFrame } from '../components/motifs/AxisFrame';
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
+import { TerminalLoader } from '../components/motifs/TerminalLoader';
+import { Crosshair } from '../components/motifs/Crosshair';
+import { clsx } from 'clsx';
 
-// Helper Components for UI (Unchanged)
-const PencilIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>;
-const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
-const EyeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>;
-
-const Modal = ({ children, onClose, title }) => (
-    <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-start pt-16 px-4 sm:px-0" onClick={onClose}>
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-lg animate-fade-in-up" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
-                <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl leading-none">&times;</button>
+const Modal = ({ children, onClose, title, variant = "cyan" }) => (
+    <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={onClose}>
+        <AxisFrame variant={variant} className="!p-0 w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className={clsx("px-6 py-4 flex justify-between items-center border-b", variant === "cyan" ? "border-cyan/30 bg-cyan/10" : "border-danger/30 bg-danger/10")}>
+                <TerminalLabel prefix=">">{title}</TerminalLabel>
+                <button onClick={onClose} className={clsx("text-xl hover:scale-110 transition-transform", variant === "cyan" ? "text-cyan" : "text-danger")}>×</button>
             </div>
-            <div className="p-6">{children}</div>
-        </div>
+            <div className="p-6 overflow-y-auto shrink bg-obsidian text-sandstone">
+                {children}
+            </div>
+        </AxisFrame>
     </div>
 );
 
 const StatusBadge = ({ status }) => {
-    const colors = {
-        'Pending': 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20', 
-        'Approved': 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
-        'Rejected': 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+    const format = {
+        'Approved': { text: '[ VERIFIED ]', color: 'text-cyan' },
+        'Pending': { text: '[ PENDING ]', color: 'text-amber' },
+        'Rejected': { text: '[ REJECTED ]', color: 'text-danger' },
     };
-    return <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full border ${colors[status]}`}>{status}</span>;
+    const { text, color } = format[status] || { text: `[ ${status.toUpperCase()} ]`, color: 'text-sandstone' };
+    return <span className={clsx("font-mono text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
-// --- End of Helper Components ---
+
+const InputField = ({ label, type = "text", value, onChange, required, multiline = false }) => (
+    <div className="mb-6 group">
+        <label className="block mb-2 text-xs font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-cyan transition-colors">{label}</label>
+        {multiline ? (
+            <textarea 
+                value={value} 
+                onChange={onChange} 
+                required={required} 
+                rows="4" 
+                className="w-full bg-void border border-border p-4 focus:border-cyan outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+            />
+        ) : (
+            <input 
+                type={type}
+                value={value} 
+                onChange={onChange} 
+                required={required} 
+                className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+            />
+        )}
+    </div>
+);
 
 
 function AdminDashboard() {
@@ -62,7 +87,6 @@ function AdminDashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // --- All handler functions (handleCreate, handleUpdate, etc.) are unchanged ---
   const handleCreate = async (e, type) => {
     e.preventDefault();
     try {
@@ -70,18 +94,10 @@ function AdminDashboard() {
         const { error } = await supabase.from('tasks').insert({ title: formData.title, description: formData.description, points: formData.points });
         if (error) throw error;
         
-        const announcementTitle = "new task dropped check your dashboard.";
-        const announcementContent = `a new task : "${formData.title}" has been dropped on your dashboard.`;
-        const { error: announceError } = await supabase.from('announcements').insert({
-          title: announcementTitle,
-          content: announcementContent,
-          author_id: user.id
-        });
-        
-        if (announceError) {
-          console.error('Error auto-creating announcement:', announceError.message);
-        }
-
+        const announcementTitle = "New Directive Active!";
+        const announcementContent = `A new directive "${formData.title}" is available. Execute to earn ${formData.points} metrics.`;
+        const { error: announceError } = await supabase.from('announcements').insert({ title: announcementTitle, content: announcementContent, author_id: user.id });
+        if (announceError) console.error('Error auto-creating announcement:', announceError.message);
       } else if (type === 'announcement') {
         const { error } = await supabase.from('announcements').insert({ title: formData.title, content: formData.content, author_id: user.id });
         if (error) throw error;
@@ -130,68 +146,313 @@ function AdminDashboard() {
       setModals({ ...modals, review: false });
     } catch (error) { console.error("Error rejecting:", error.message); }
   };
-  // --- End of handler functions ---
 
+  if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="AETHEL_CORE_INITIALIZING..." /></div>;
 
-  if (loading) return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Loading Admin Data...</div>;
-
-  const TabButton = ({ name, label }) => (
-    <button onClick={() => setActiveTab(name)} className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === name ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}>
-      {label}
+  const TabButton = ({ name, label, count }) => (
+    <button 
+        onClick={() => setActiveTab(name)} 
+        className={clsx('px-6 py-3 font-mono text-xs uppercase tracking-widest transition-colors border', activeTab === name ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}
+    >
+        [ {label} {count !== undefined ? `(${count})` : ''} ]
     </button>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center">
-        <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white">Admin Dashboard</h1>
-        <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">Manage your program with ease.</p>
-      </div>
+    <div className="bg-void min-h-screen pb-20 pt-20 relative">
       
-      {/* --- MODIFICATION: Added flex-col sm:flex-row to stack tabs on mobile --- */}
-      <div className="mt-8 flex flex-col sm:flex-row justify-center p-1.5 space-y-1 sm:space-y-0 sm:space-x-2 bg-slate-100 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-700">
-        <TabButton name="submissions" label={`Review Submissions (${submissions.filter(s => s.status === 'Pending').length})`} />
-        <TabButton name="tasks" label="Manage Tasks" />
-        <TabButton name="students" label="View Students" />
-        <TabButton name="announcements" label="Announcements" />
+      {/* Background Grid */}
+      <div className="absolute inset-0 axis-grid-bg opacity-30 pointer-events-none fixed"></div>
+
+      {/* Header */}
+      <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10 animate-fade-in-up">
+            <div>
+                <TerminalLabel prefix=">">AETHEL_COMMAND // ROOT_ACCESS</TerminalLabel>
+                <h1 className="text-4xl font-display font-black text-white tracking-widest uppercase mt-4">Terminal</h1>
+                <p className="mt-2 text-sandstone-dim font-mono text-sm max-w-xl">Grid overview, node management, and directive authorization.</p>
+            </div>
+            <div className="flex gap-4">
+                <div className="bg-obsidian border border-border p-4 flex flex-col items-center">
+                    <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-1">Pending_Reviews</span>
+                    <span className="text-2xl font-mono font-bold text-white">{submissions.filter(s => s.status === 'Pending').length}</span>
+                </div>
+            </div>
+        </div>
       </div>
 
-      <div className="mt-8">
-        <div style={{ display: activeTab === 'submissions' ? 'block' : 'none' }}>
-            {/* --- MODIFICATION: Added overflow-x-auto to this div --- */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto shadow-sm">
-                <table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-900"><tr><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Student</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Task</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Context</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Status</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Actions</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700">{submissions.map(sub => <tr key={sub.id}><td className="px-6 py-4 text-slate-700 dark:text-slate-300">{sub.profiles.full_name}</td><td className="px-6 py-4 text-slate-700 dark:text-slate-300">{sub.tasks.title}</td><td className="px-6 py-4"><p className="w-48 truncate text-slate-500 dark:text-slate-400">{sub.submission_context}</p></td><td className="px-6 py-4"><StatusBadge status={sub.status} /></td><td className="px-6 py-4">{sub.status === 'Pending' && <button onClick={() => { setSelectedItem(sub); setModals({ ...modals, review: true }) }} className="flex items-center text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"><EyeIcon />Review</button>}</td></tr>)}</tbody></table>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
+        
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up">
+          <TabButton name="submissions" label="Submissions" count={submissions.filter(s => s.status === 'Pending').length} />
+          <TabButton name="tasks" label="Directives" />
+          <TabButton name="students" label="Nodes" />
+          <TabButton name="announcements" label="Comms" />
         </div>
-        <div style={{ display: activeTab === 'tasks' ? 'block' : 'none' }}>
-            <div className="flex justify-end mb-4"><button onClick={() => { setFormData({ title: '', description: '', points: 0 }); setModals({ ...modals, create: true }) }} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg">Add New Task</button></div>
-            {/* --- MODIFICATION: Added overflow-x-auto to this div --- */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto shadow-sm">
-                <table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-900"><tr><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Title</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Points</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Actions</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700">{tasks.map(task => <tr key={task.id}><td className="px-6 py-4 text-slate-700 dark:text-slate-300">{task.title}</td><td className="px-6 py-4 text-blue-600 dark:text-blue-400 font-semibold">{task.points}</td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"><PencilIcon /></button><button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"><TrashIcon /></button></div></td></tr>)}</tbody></table>
-            </div>
-        </div>
-        <div style={{ display: activeTab === 'students' ? 'block' : 'none' }}>
-            {/* --- MODIFICATION: Added overflow-x-auto to this div --- */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto shadow-sm">
-                <table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-900"><tr><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Name</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Points</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Tasks Approved</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700">{students.map(student => <tr key={student.id}><td className="px-6 py-4 text-slate-700 dark:text-slate-300">{student.full_name}</td><td className="px-6 py-4 font-semibold text-blue-600 dark:text-blue-400">{student.points}</td><td className="px-6 py-4 text-slate-700 dark:text-slate-300">{submissions.filter(s => s.student_id === student.id && s.status === 'Approved').length}</td></tr>)}</tbody></table>
-            </div>
-        </div>
-        <div style={{ display: activeTab === 'announcements' ? 'block' : 'none' }}>
-            <div className="flex justify-end mb-4"><button onClick={() => { setFormData({ title: '', content: '' }); setModals({ ...modals, announce: true }) }} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg">Create Announcement</button></div>
-            {/* --- MODIFICATION: Added overflow-x-auto to this div --- */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto shadow-sm">
-                <table className="w-full text-left"><thead className="bg-slate-50 dark:bg-slate-900"><tr><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Title</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Date</th><th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Actions</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700">{announcements.map(item => <tr key={item.id}><td className="px-6 py-4 text-slate-700 dark:text-slate-300">{item.title}</td><td className="px-6 py-4 text-slate-500 dark:text-slate-400">{new Date(item.created_at).toLocaleDateString()}</td><td className="px-6 py-4"><button onClick={() => { setSelectedItem(item); setModals({ ...modals, deleteAnnounce: true }) }} className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"><TrashIcon /></button></td></tr>)}</tbody></table>
-            </div>
+
+        <div className="animate-fade-in">
+            {/* Submissions Tab */}
+            {activeTab === 'submissions' && (
+                <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left font-mono">
+                            <thead className="bg-obsidian border-b border-border">
+                                <tr>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">DIRECTIVE</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">STATUS</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border bg-obsidian-soft">
+                                {submissions.length === 0 ? (
+                                    <tr><td colSpan="4" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_SUBMISSIONS_DETECTED</td></tr>
+                                ) : (
+                                    submissions.map(sub => (
+                                    <tr key={sub.id} className="hover:bg-obsidian transition-colors">
+                                        <td className="px-6 py-4 text-sm font-bold text-white uppercase">{sub.profiles.full_name}</td>
+                                        <td className="px-6 py-4 text-sm text-sandstone max-w-xs truncate">{sub.tasks.title}</td>
+                                        <td className="px-6 py-4"><StatusBadge status={sub.status} /></td>
+                                        <td className="px-6 py-4 text-right">
+                                            {sub.status === 'Pending' && (
+                                                <button onClick={() => { setSelectedItem(sub); setModals({ ...modals, review: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-4 py-2 uppercase tracking-widest transition-colors shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+                                                    REVIEW
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </AxisFrame>
+            )}
+
+            {/* Tasks Tab */}
+            {activeTab === 'tasks' && (
+                <div>
+                    <div className="flex justify-end mb-6">
+                        <button onClick={() => { setFormData({ title: '', description: '', points: 0 }); setModals({ ...modals, create: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                            + ADD_DIRECTIVE
+                        </button>
+                    </div>
+                    <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left font-mono">
+                                <thead className="bg-obsidian border-b border-border">
+                                    <tr>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TITLE</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">METRICS</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border bg-obsidian-soft">
+                                    {tasks.length === 0 ? (
+                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_DIRECTIVES_DETECTED</td></tr>
+                                    ) : (
+                                        tasks.map(task => (
+                                        <tr key={task.id} className="hover:bg-obsidian transition-colors">
+                                            <td className="px-6 py-4 text-sm font-bold text-white uppercase">{task.title}</td>
+                                            <td className="px-6 py-4 text-sm font-bold text-cyan">+{task.points}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-3">
+                                                    <button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
+                                                    <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </AxisFrame>
+                </div>
+            )}
+
+            {/* Students Tab */}
+            {activeTab === 'students' && (
+                <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left font-mono">
+                            <thead className="bg-obsidian border-b border-border">
+                                <tr>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TOTAL_METRICS</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">VERIFIED_DIRECTIVES</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border bg-obsidian-soft">
+                                {students.length === 0 ? (
+                                    <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_NODES_DETECTED</td></tr>
+                                ) : (
+                                    students.map(student => (
+                                    <tr key={student.id} className="hover:bg-obsidian transition-colors">
+                                        <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
+                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{student.points}</td>
+                                        <td className="px-6 py-4 text-sm text-sandstone">
+                                            {submissions.filter(s => s.student_id === student.id && s.status === 'Approved').length}
+                                        </td>
+                                    </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </AxisFrame>
+            )}
+
+            {/* Announcements Tab */}
+            {activeTab === 'announcements' && (
+                <div>
+                    <div className="flex justify-end mb-6">
+                        <button onClick={() => { setFormData({ title: '', content: '' }); setModals({ ...modals, announce: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                            + BROADCAST_COMMS
+                        </button>
+                    </div>
+                    <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left font-mono">
+                                <thead className="bg-obsidian border-b border-border">
+                                    <tr>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TITLE</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TIMESTAMP</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border bg-obsidian-soft">
+                                    {announcements.length === 0 ? (
+                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_BROADCASTS_DETECTED</td></tr>
+                                    ) : (
+                                        announcements.map(item => (
+                                        <tr key={item.id} className="hover:bg-obsidian transition-colors">
+                                            <td className="px-6 py-4 text-sm font-bold text-white uppercase">{item.title}</td>
+                                            <td className="px-6 py-4 text-sm text-sandstone-dim">{new Date(item.created_at).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button onClick={() => { setSelectedItem(item); setModals({ ...modals, deleteAnnounce: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
+                                            </td>
+                                        </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </AxisFrame>
+                </div>
+            )}
         </div>
       </div>
       
-      {/* --- All Modals are unchanged by this --- */}
-      {modals.create && <Modal onClose={() => setModals({ ...modals, create: false })} title="Add New Task"><form onSubmit={(e) => handleCreate(e, 'task')} className="space-y-4"><div><label className="text-sm font-medium">Title</label><input value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div><label className="text-sm font-medium">Description</label><textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div><label className="text-sm font-medium">Points</label><input type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div className="flex justify-end gap-x-4 pt-4"><button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700">Cancel</button><button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 text-white">Create Task</button></div></form></Modal>}
-      {modals.edit && <Modal onClose={() => setModals({ ...modals, edit: false })} title="Edit Task"><form onSubmit={handleUpdate} className="space-y-4"><div><label className="text-sm font-medium">Title</label><input value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div><label className="text-sm font-medium">Description</label><textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div><label className="text-sm font-medium">Points</label><input type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div className="flex justify-end gap-x-4 pt-4"><button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700">Cancel</button><button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 text-white">Save Changes</button></div></form></Modal>}
-      {modals.delete && <Modal onClose={() => setModals({ ...modals, delete: false })} title="Confirm Deletion"><p className="text-slate-600 dark:text-slate-300">Are you sure you want to delete the task: "{selectedItem?.title}"?</p><div className="flex justify-end gap-x-4 mt-6"><button onClick={() => setModals({ ...modals, delete: false })} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700">Cancel</button><button onClick={() => handleDelete('tasks')} className="px-4 py-2 rounded-lg bg-red-600 text-white">Delete Task</button></div></Modal>}
-      {modals.review && <Modal onClose={() => setModals({ ...modals, review: false })} title={`Review: ${selectedItem?.tasks.title}`}><div className="space-y-4 text-sm"><p><strong className="text-slate-900 dark:text-white">Student:</strong> <span className="text-slate-600 dark:text-slate-300">{selectedItem?.profiles.full_name}</span></p><p><strong className="text-slate-900 dark:text-white">Task Description:</strong> <span className="text-slate-600 dark:text-slate-300">{selectedItem?.tasks.description}</span></p><p><strong className="text-slate-900 dark:text-white">Submission:</strong> <span className="text-slate-600 dark:text-slate-300">{selectedItem?.submission_context}</span></p><textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Rejection reason (required if rejecting)" className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-2" /><div className="flex justify-end gap-x-4 pt-2"><button onClick={() => handleReject()} disabled={!rejectionReason} className="px-4 py-2 rounded-lg bg-red-600 text-white disabled:opacity-50">Reject</button><button onClick={() => handleApprove()} className="px-4 py-2 rounded-lg bg-green-600 text-white">Approve ({selectedItem?.tasks.points} pts)</button></div></div></Modal>}
-      {modals.announce && <Modal onClose={() => setModals({ ...modals, announce: false })} title="Create Announcement"><form onSubmit={(e) => handleCreate(e, 'announcement')} className="space-y-4"><div><label className="text-sm font-medium">Title</label><input value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div><label className="text-sm font-medium">Content</label><textarea value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} required rows="4" className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mt-1" /></div><div className="flex justify-end gap-x-4 pt-4"><button type="button" onClick={() => setModals({ ...modals, announce: false })} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700">Cancel</button><button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 text-white">Post</button></div></form></Modal>}
-      {modals.deleteAnnounce && <Modal onClose={() => setModals({ ...modals, deleteAnnounce: false })} title="Confirm Deletion"><p className="text-slate-600 dark:text-slate-300">Are you sure you want to delete the announcement: "{selectedItem?.title}"?</p><div className="flex justify-end gap-x-4 mt-6"><button onClick={() => setModals({ ...modals, deleteAnnounce: false })} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700">Cancel</button><button onClick={() => handleDelete('announcements')} className="px-4 py-2 rounded-lg bg-red-600 text-white">Delete</button></div></Modal>}
+      {/* Modals */}
+      {modals.create && (
+        <Modal onClose={() => setModals({ ...modals, create: false })} title="INITIATE_DIRECTIVE">
+            <form onSubmit={(e) => handleCreate(e, 'task')} className="space-y-4">
+                <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
+                <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
+                <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
+                    <button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">EXECUTE</button>
+                </div>
+            </form>
+        </Modal>
+      )}
+
+      {modals.edit && (
+        <Modal onClose={() => setModals({ ...modals, edit: false })} title="MODIFY_DIRECTIVE">
+            <form onSubmit={handleUpdate} className="space-y-4">
+                <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
+                <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
+                <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
+                    <button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">OVERWRITE</button>
+                </div>
+            </form>
+        </Modal>
+      )}
+
+      {modals.delete && (
+        <Modal onClose={() => setModals({ ...modals, delete: false })} title="CONFIRM_DELETION" variant="danger">
+            <div className="flex items-start gap-4 mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono uppercase">
+                <span className="font-bold">{'>'}</span>
+                <p>Warning: Deleting directive <strong>"{selectedItem?.title}"</strong> is permanent. Confirm purge.</p>
+            </div>
+            <div className="flex justify-end gap-4 border-t border-border pt-6 mt-6">
+                <button onClick={() => setModals({ ...modals, delete: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                <button onClick={() => handleDelete('tasks')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">PURGE_DATA</button>
+            </div>
+        </Modal>
+      )}
+
+      {modals.review && (
+        <Modal onClose={() => setModals({ ...modals, review: false })} title="REVIEW_SUBMISSION">
+            <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4 border border-border bg-obsidian-soft p-4">
+                    <div>
+                        <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-1">NODE_ID</span>
+                        <span className="font-mono font-bold text-white uppercase">{selectedItem?.profiles.full_name}</span>
+                    </div>
+                    <div>
+                        <span className="text-[10px] font-mono font-bold text-cyan uppercase tracking-widest block mb-1">REWARD</span>
+                        <span className="font-mono font-bold text-cyan">+{selectedItem?.tasks.points} METRICS</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">DIRECTIVE_PARAMETERS</span>
+                    <div className="border border-border bg-obsidian-soft p-4">
+                        <h4 className="font-display font-bold text-white uppercase mb-2">{selectedItem?.tasks.title}</h4>
+                        <p className="text-sm font-mono text-sandstone">{selectedItem?.tasks.description}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">EXECUTION_LOG</span>
+                    <div className="border border-border bg-void p-4 text-sm font-mono text-white whitespace-pre-wrap">
+                        {selectedItem?.submission_context}
+                    </div>
+                </div>
+                
+                <div>
+                    <InputField label="REJECTION_LOG (Optional)" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+                </div>
+
+                <div className="flex justify-end gap-4 pt-6 border-t border-border">
+                    <button onClick={() => handleReject()} disabled={!rejectionReason} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
+                    <button onClick={() => handleApprove()} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">VERIFY_AND_AWARD</button>
+                </div>
+            </div>
+        </Modal>
+      )}
+
+      {modals.announce && (
+        <Modal onClose={() => setModals({ ...modals, announce: false })} title="TRANSMIT_BROADCAST">
+            <form onSubmit={(e) => handleCreate(e, 'announcement')} className="space-y-4">
+                <InputField label="BROADCAST_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
+                <InputField label="PAYLOAD" multiline value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} required />
+                <div className="flex justify-end gap-4 pt-6 border-t border-border mt-6">
+                    <button type="button" onClick={() => setModals({ ...modals, announce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">TRANSMIT</button>
+                </div>
+            </form>
+        </Modal>
+      )}
+
+      {modals.deleteAnnounce && (
+        <Modal onClose={() => setModals({ ...modals, deleteAnnounce: false })} title="CONFIRM_DELETION" variant="danger">
+            <div className="flex items-start gap-4 mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono uppercase">
+                <span className="font-bold">{'>'}</span>
+                <p>Warning: Deleting broadcast <strong>"{selectedItem?.title}"</strong> is permanent. Confirm purge.</p>
+            </div>
+            <div className="flex justify-end gap-4 border-t border-border pt-6 mt-6">
+                <button onClick={() => setModals({ ...modals, deleteAnnounce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                <button onClick={() => handleDelete('announcements')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">PURGE_DATA</button>
+            </div>
+        </Modal>
+      )}
     </div>
   );
 }

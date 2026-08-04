@@ -1,294 +1,265 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import logoLight from '../assets/logo-light.png';
 import logoDark from '../assets/logo-dark.png';
+import { AxisFrame } from '../components/motifs/AxisFrame';
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
+import { LensingRing } from '../components/motifs/LensingRing';
+import { Crosshair } from '../components/motifs/Crosshair';
+import { IoChevronDown } from 'react-icons/io5';
 
-// --- MODIFICATION: Import all icons from react-icons ---
-import { 
-  IoChevronDown, 
-  IoMail, 
-  IoCall, 
-  IoRocketSharp 
-} from 'react-icons/io5';
-import { 
-  BsPeopleFill, 
-  BsPersonFill, 
-  BsCheckCircleFill, 
-  BsGiftFill 
-} from 'react-icons/bs';
-import { 
-  FaSchool, 
-  FaLightbulb, 
-  FaClipboardList, 
-  FaTrophy, 
-  FaUsers, 
-  FaQuestionCircle 
-} from 'react-icons/fa';
-// --- END MODIFICATION ---
+// --- Diagnostic Readout Card (Benefits) ---
+const DiagnosticCard = ({ index, title, children }) => ( 
+    <AxisFrame variant="cyan" hover={true} className="flex flex-col h-full group">
+        <TerminalLabel prefix="//">{`DIAGNOSTIC_0${index + 1}`}</TerminalLabel>
+        <h3 className="text-xl font-display font-bold text-white mt-4 mb-2 group-hover:text-cyan transition-colors">{title}</h3> 
+        <p className="text-sm font-mono text-sandstone-dim leading-relaxed">{children}</p> 
+        <div className="mt-auto pt-6 flex justify-end">
+            <Crosshair className="opacity-30 group-hover:opacity-100 transition-opacity" />
+        </div>
+    </AxisFrame>
+);
 
+const FaqItem = ({ question, answer, isOpen, onClick, index }) => ( 
+    <div className="border-b border-border py-5 font-mono"> 
+        <button onClick={onClick} className="flex justify-between items-center w-full text-left group focus:outline-none" aria-expanded={isOpen}> 
+            <div className="flex items-center space-x-4">
+                <span className="text-cyan text-sm">
+                    {`[0${index + 1}]`}
+                </span>
+                <span className="font-medium text-sm md:text-base text-sandstone group-hover:text-cyan transition-colors">{question}</span> 
+            </div>
+            <div className="text-cyan">
+                {isOpen ? '×' : '+'}
+            </div>
+        </button> 
+        <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden">
+                <p className="pl-12 text-sm text-sandstone-dim leading-relaxed"> 
+                    {answer} 
+                </p> 
+            </div>
+        </div> 
+    </div> 
+);
 
-// --- MODIFICATION: All local SVG components have been DELETED ---
+const ContactTerminal = ({ name, phone, email, role }) => ( 
+    <div className="bg-obsidian border border-border p-6 flex flex-col font-mono text-sm relative group"> 
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <TerminalLabel className="mb-4">{role}</TerminalLabel>
+        <div className="space-y-2 text-sandstone">
+            <div className="flex justify-between border-b border-border/50 pb-2">
+                <span className="opacity-50">NAME:</span>
+                <span className="text-white">{name}</span>
+            </div>
+            <div className="flex justify-between border-b border-border/50 py-2">
+                <span className="opacity-50">COMMS:</span>
+                <a href={`tel:${phone}`} className="text-cyan hover:text-cyan-soft transition-colors">{phone}</a>
+            </div>
+            <div className="flex justify-between pt-2">
+                <span className="opacity-50">NODE:</span>
+                <a href={`mailto:${email}`} className="text-amber hover:text-amber-bright transition-colors truncate ml-4">{email}</a>
+            </div>
+        </div>
+    </div> 
+);
 
-
-// --- Card components (Now use react-icons) ---
-const BenefitCard = ({ icon, title, children }) => ( <div className="bg-white dark:bg-slate-800/50 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col items-center text-center"> <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-500/10 mb-4">{icon}</div> <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3> <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{children}</p> </div> );
-const PerkCard = ({ title, children }) => ( <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"> <h3 className="font-bold text-blue-600 dark:text-blue-400">{title}</h3> <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{children}</p> </div> );
-const FaqItem = ({ question, answer, isOpen, onClick }) => ( <div className="border-b border-slate-200 dark:border-slate-700 py-4"> <button onClick={onClick} className="flex justify-between items-center w-full font-semibold text-slate-900 dark:text-white cursor-pointer text-left list-none" aria-expanded={isOpen}> <span>{question}</span> {/* --- MODIFICATION: Used react-icon --- */}<IoChevronDown className={`h-6 w-6 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} /> </button> {isOpen && ( <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 text-left"> {answer} </p> )} </div> );
-const ContactCard = ({ name, phone }) => ( <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center"> <h3 className="text-lg font-bold text-slate-900 dark:text-white">{name}</h3> <div className="mt-4 flex justify-center"> <a href={`tel:${phone}`} className="flex items-center text-sm text-slate-600 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"> <IoCall className="h-4 w-4 mr-2" /> <span>{phone}</span> </a> </div> </div> );
-
-
-// --- StatCard with count-up animation (Logic unchanged) ---
-const StatCard = ({ endValue, prefix, suffix, label, duration = 1500, isVisible }) => {
+// --- StatCard with count-up animation ---
+const StatCard = ({ endValue, prefix, suffix, label, duration = 2000, isVisible }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!isVisible) return; 
-
     let startTime = null;
     const animation = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
-      const percentage = Math.min(progress / duration, 1);
-      
-      const newCount = Math.floor(percentage * endValue);
+      const easeOutQuart = 1 - Math.pow(1 - Math.min(progress / duration, 1), 4);
+      const newCount = Math.floor(easeOutQuart * endValue);
       setCount(newCount);
-
-      if (progress < duration) {
-        requestAnimationFrame(animation);
-      } else {
-        setCount(endValue);
-      }
+      if (progress < duration) requestAnimationFrame(animation);
+      else setCount(endValue);
     };
-
     requestAnimationFrame(animation);
-
-    return () => {
-        setCount(endValue);
-    }
+    return () => setCount(endValue);
   }, [isVisible, endValue, duration]);
 
   return (
-    <div className="text-center">
-      <span className="text-4xl sm:text-5xl font-extrabold text-blue-600 dark:text-blue-400">
-        {prefix && count < 10 ? prefix : ''}{count}{suffix}
-      </span>
-      <p className="mt-1 text-sm sm:text-base font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
-    </div>
+    <AxisFrame variant="cyan" hover={true} className="text-center group overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+      <div className="relative z-10 flex flex-col items-center">
+        <Crosshair className="absolute -top-2 -right-2 opacity-50" size={12} />
+        <span className="text-4xl sm:text-5xl font-mono font-bold text-cyan drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">
+          {prefix && count < 10 ? prefix : ''}{count}{suffix}
+        </span>
+        <p className="mt-4 text-xs font-mono font-bold uppercase tracking-[0.2em] text-sandstone-dim group-hover:text-sandstone transition-colors">{label}</p>
+      </div>
+    </AxisFrame>
   );
 };
 
-
 function HomePage() {
   const [openFaq, setOpenFaq] = useState(null);
-  const handleFaqClick = (index) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
-
+  const handleFaqClick = (index) => setOpenFaq(openFaq === index ? null : index);
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
   
-  // Logic for Intersection Observer (Unchanged)
   const statsRef = useRef(null);
   const [isStatsVisible, setIsStatsVisible] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
+        if (entries[0].isIntersecting) {
           setIsStatsVisible(true); 
           observer.disconnect();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.3 }
     );
-
-    const currentStatsRef = statsRef.current;
-    if (currentStatsRef) {
-      observer.observe(currentStatsRef);
-    }
-
-    return () => {
-      if (currentStatsRef) {
-        observer.disconnect();
-      }
-    };
+    if (statsRef.current) observer.observe(statsRef.current);
+    return () => observer.disconnect();
   }, []); 
 
   useEffect(() => {
     if (!loading && profile) {
-      if (profile.role === 'student') {
-        navigate('/dashboard', { replace: true });
-      } else if (profile.role === 'organizer') {
-        navigate('/admin', { replace: true });
-      }
+      if (profile.role === 'student') navigate('/dashboard', { replace: true });
+      else if (profile.role === 'organizer') navigate('/admin', { replace: true });
     }
   }, [profile, loading, navigate]);
 
-  if (loading || profile) {
-    return <div className="w-full min-h-screen bg-white dark:bg-slate-900" />;
-  }
+  if (loading || profile) return <div className="w-full min-h-screen bg-void" />;
   
-  // --- MODIFICATION: Stored icon class name for section headings ---
-  const sectionIconClass = "h-12 w-12 text-blue-600 dark:text-blue-400";
-
   return (
-    <div className="animate-fade-in-up">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center pt-16 pb-24 sm:pt-20 sm:pb-32">
-          {/* Logo size is already h-20 sm:h-32, which is correct */}
-          <img 
-            src={logoLight} 
-            alt="Event Logo" 
-            className="h-20 sm:h-32 w-auto mx-auto mb-6 block dark:hidden" 
-          />
-          <img 
-            src={logoDark} 
-            alt="Event Logo" 
-            className="h-20 sm:h-32 w-auto mx-auto mb-6 hidden dark:block" 
-          />
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-500 dark:text-slate-400"> presents </h2>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mt-4 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 text-transparent bg-clip-text inline-block pb-3"> Campus Ambassador Program </h1>
-          <p className="mt-4 max-w-3xl mx-auto text-lg text-slate-600 dark:text-slate-400">
-            From DMs to Registrations — You Make It Happen! Be the face of AXIS, Central India's Largest Technical Fest by VNIT NAGPUR in your college and city by joining the AXIS Campus Ambassador Program.
-          </p>
-          <div className="mt-8 flex justify-center">
+    <div className="bg-void min-h-screen relative overflow-hidden">
+      
+      {/* Global Grid Motif */}
+      <div className="fixed inset-0 axis-grid-bg pointer-events-none z-0"></div>
+
+      {/* --- HERO SECTION --- */}
+      <section className="relative min-h-screen flex items-center justify-center pt-20 pb-10 z-10">
+        
+        {/* Split Diagonal Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+            {/* Aethel side (Left/Top) */}
+            <div className="absolute -top-[50%] -left-[50%] w-[100%] h-[150%] bg-gradient-to-br from-cyan-deep/20 to-transparent -rotate-12 transform origin-center"></div>
+            {/* Nix side (Right/Bottom) */}
+            <div className="absolute -bottom-[50%] -right-[50%] w-[100%] h-[150%] bg-gradient-to-tl from-amber-deep/10 to-transparent -rotate-12 transform origin-center"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center w-full">
+          
+          <div className="relative flex justify-center items-center mb-8 h-48 sm:h-64">
+            <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" className="absolute" />
+            <img src={logoDark} alt="AXIS'27" className="relative h-20 sm:h-28 w-auto z-10 animate-scale-in" />
+          </div>
+          
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
+            <span className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Convergence</span>
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-cyan pb-2 pr-2">Initiated</span>
+          </h1>
+          
+          <div className="mt-8 mb-12 font-mono text-cyan-soft tracking-[0.3em] uppercase text-sm sm:text-base">
+            <span className="opacity-50">{'//'}</span> Illuminate the Infinite <span className="opacity-50">{'//'}</span>
+          </div>
+          
+          <div className="mt-12 flex justify-center relative z-30">
             <Link 
               to="/login" 
               state={{ isRegister: true }}
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="group relative inline-flex items-center justify-center px-8 py-4 font-mono font-bold tracking-widest text-void bg-amber hover:bg-amber-bright uppercase text-sm transition-all duration-300 shadow-[0_0_20px_rgba(255,158,0,0.4)] hover:shadow-[0_0_40px_rgba(255,158,0,0.6)]"
             >
-              Register Now
+              <span>Initialize_Sequence</span>
+              <span className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-void group-hover:w-6 transition-all"></span>
             </Link>
           </div>
         </div>
-      </div>
 
-      <div className="bg-slate-50 dark:bg-slate-900/50 py-20 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* --- MODIFICATION: Icon above heading --- */}
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
-              <IoRocketSharp className={sectionIconClass} />
-              <span>Join Central India's Largest Tech Fest</span>
-            </h2>
-            <p className="mt-4 text-base text-slate-600 dark:text-slate-400">
-              The AXIS'25 Campus Ambassador program is designed for students who carry great interest and passionately participate in and promote the AXIS'25 technical fest on their college campuses. The Campus Ambassador program is an excellent opportunity for students to actively engage with AXIS'25, gain valuable event management and promotion experience, and contribute to the success of the technical fest on their campus.
-            </p>
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-cyan opacity-50 z-20">
+          <IoChevronDown className="h-6 w-6" />
+        </div>
+      </section>
+
+      {/* --- STATS SECTION --- */}
+      <section className="py-20 relative z-20 border-y border-border bg-obsidian-soft/50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 flex justify-center">
+            <TerminalLabel prefix=">">SYSTEM_METRICS_READOUT</TerminalLabel>
           </div>
-          {/* Updated StatCard props (Request 1) */}
-          <div ref={statsRef} className="mt-16 grid grid-cols-1 md:grid-cols-5 gap-y-12 gap-x-8">
+          <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             <StatCard endValue={3} prefix="0" label="Days" isVisible={isStatsVisible} />
             <StatCard endValue={35} suffix="+" label="Events" isVisible={isStatsVisible} />
             <StatCard endValue={170} suffix="+" label="Colleges" isVisible={isStatsVisible} />
             <StatCard endValue={25} suffix="k+" label="Footfall" isVisible={isStatsVisible} />
-            <StatCard endValue={35} suffix="k+" label="Participants" isVisible={isStatsVisible} className="md:col-span-1" />
           </div>
         </div>
-      </div>
-      
-      <div className="py-20 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* --- MODIFICATION: Icon above heading --- */}
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
-              <FaSchool className={sectionIconClass} />
-              <span>About VNIT Nagpur</span>
-            </h2>
-            <p className="mt-4 text-base text-slate-600 dark:text-slate-400">
-              Established in 1960, VNIT is one of the top engineering colleges in India that offer both Under Graduate and Post Graduate level programs for students. With a sprawling campus located in the center of the city, the college also excels in the field of cutting-edge research and technology in engineering, architecture, and science.
-            </p>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      <div className="bg-slate-50 dark:bg-slate-900/50 py-20 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            {/* --- MODIFICATION: Icon above heading --- */}
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
-              <FaLightbulb className={sectionIconClass} />
-              <span>Why Become a Campus Ambassador?</span>
-            </h2>
-            <p className="mt-4 max-w-3xl mx-auto text-base text-slate-600 dark:text-slate-400">
-              Our College Ambassador Program seeks to ignite a passion for leadership, innovation, and community-building among students. Through mentorship, networking, and hands-on experiences, we aim to nurture tomorrow's change-makers, providing a platform for them to amplify their voices, drive positive impact, and create lasting connections. Join us in shaping the future, one ambassador at a time.
-            </p>
+      {/* --- BENEFITS SECTION --- */}
+      <section className="py-24 relative z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Protocol Advantages</h2>
+             <p className="text-sandstone-dim font-mono text-sm max-w-2xl mx-auto">Analyze the strategic benefits of joining the AXIS'27 grid as a primary node.</p>
           </div>
-          {/* --- MODIFICATION: BenefitCard icons --- */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <BenefitCard icon={<BsPeopleFill className="h-8 w-8 text-blue-500" />} title="Networking">Connect with students, professionals, and mentors from across the nation.</BenefitCard>
-            <BenefitCard icon={<BsPersonFill className="h-8 w-8 text-blue-500" />} title="Leadership">Develop crucial leadership and management skills by leading your college's participation.</BenefitCard>
-            <BenefitCard icon={<BsCheckCircleFill className="h-8 w-8 text-blue-500" />} title="Skill Development">Enhance your communication, marketing, and organizational abilities.</BenefitCard>
-            <BenefitCard icon={<BsGiftFill className="h-8 w-8 text-blue-500" />} title="Rewards & Recognition">Earn exclusive goodies, certificates, and recognition for your efforts.</BenefitCard>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <DiagnosticCard index={0} title="Networking">Establish high-bandwidth connections with technical nodes and industry mentors nationwide.</DiagnosticCard>
+            <DiagnosticCard index={1} title="Leadership">Execute command protocols by mobilizing and directing your local campus sub-grid.</DiagnosticCard>
+            <DiagnosticCard index={2} title="Skill Upgrade">Install new communication, marketing, and strategic planning modules to your skill tree.</DiagnosticCard>
+            <DiagnosticCard index={3} title="Rewards">Acquire exclusive hardware (goodies), verified credentials (certificates), and system privileges.</DiagnosticCard>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="py-20 sm:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* --- MODIFICATION: Icon above heading --- */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
-              <FaClipboardList className={sectionIconClass} />
-            <span>Your Responsibilities</span>
-          </h2>
-          <ul className="mt-8 text-left space-y-3 text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            <li className="flex items-start"><span className="text-blue-500 font-bold mr-2">✓</span><span>Act as the primary point of contact between AXIS, VNIT Nagpur, and your college.</span></li>
-            <li className="flex items-start"><span className="text-blue-500 font-bold mr-2">✓</span><span>Promote AXIS events and workshops through social media and on-campus activities.</span></li>
-            <li className="flex items-start"><span className="text-blue-500 font-bold mr-2">✓</span><span>Encourage participation and help register students from your college for various events.</span></li>
-            <li className="flex items-start"><span className="text-blue-500 font-bold mr-2">✓</span><span>Coordinate with the AXIS team to organize promotional activities and info sessions.</span></li>
-          </ul>
-        </div>
-      </div>
-      
-      <div className="bg-slate-50 dark:bg-slate-900/50 py-20 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* --- MODIFICATION: Icon above heading --- */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
-            <FaTrophy className={sectionIconClass} />
-            <span>Incentives & Perks</span>
-          </h2>
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
-            <PerkCard title="Certificates">Receive a prestigious certificate from AXIS, VNIT Nagpur, recognizing your contribution.</PerkCard>
-            <PerkCard title="Letter of Recommendation (LOR)">Top-performing ambassadors will receive a valuable LOR from the esteemed faculty of VNIT.</PerkCard>
-            <PerkCard title="Internship Opportunities">Gain a chance to secure internship opportunities with our associated companies.</PerkCard>
-            <PerkCard title="Exclusive Goodies">Win exclusive AXIS merchandise, tech gadgets, and swag based on your performance.</PerkCard>
-            <PerkCard title="Social Media Shoutouts">Get featured on all the official social media handles of AXIS, VNIT Nagpur.</PerkCard>
-            <PerkCard title="Free Passes & Workshops">Enjoy complimentary access to paid workshops and premium events during the festival.</PerkCard>
+      {/* --- CONTACT SECTION (Terminal Form) --- */}
+      <section id="contact" className="py-24 relative z-20 border-t border-border bg-obsidian">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-16">
+             <TerminalLabel prefix=">">AETHEL_COMMS_SECTOR // SUPPORT</TerminalLabel>
+             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Establish Connection</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+            <ContactTerminal role="PRIMARY_NODE_LEAD" name="Arya Mali" phone="+91 70588 08402" email="arya@axisvnit.in" />
+            <ContactTerminal role="SECONDARY_NODE_LEAD" name="Arnav Garg" phone="+91 72196 53464" email="arnav@axisvnit.in" />
           </div>
         </div>
-      </div>
+      </section>
       
-      <div id="contact" className="py-20 sm:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* --- MODIFICATION: Icon above heading --- */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white flex flex-col items-center justify-center gap-y-4">
-            <FaUsers className={sectionIconClass} />
-            <span>Get in Touch</span>
-          </h2>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400"> Have questions or want to learn more? Reach out to one of our organizing heads. </p>
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <ContactCard name="Arya Mali"  phone="+91 70588 08402" />
-            <ContactCard name="Arnav Garg" phone="+91 72196 53464" />
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-slate-50 dark:bg-slate-900/50 py-20 sm:py-24">
+      {/* --- FAQ SECTION --- */}
+      <section className="py-24 relative z-20 border-t border-border bg-obsidian-soft/80 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* --- MODIFICATION: Icon above heading --- */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white text-center flex flex-col items-center justify-center gap-y-4">
-            <FaQuestionCircle className={sectionIconClass} />
-            <span>Frequently Asked Questions</span>
-          </h2>
-          <div className="mt-10">
-            <FaqItem question="Who can apply for the Campus Ambassador program?" answer="Any student currently enrolled in an undergraduate or postgraduate program in any college or university is eligible to apply. We are looking for enthusiastic individuals with strong communication skills, a robust social network, and a passion for technology and community building. First and second-year students are especially encouraged to apply." isOpen={openFaq === 0} onClick={() => handleFaqClick(0)} />
-            <FaqItem question="Is there any registration fee?" answer="Absolutely not! The Campus Ambassador program is a completely free initiative. Our goal is to build a nationwide community of student leaders, and we believe there should be no financial barriers to joining and showcasing your talent." isOpen={openFaq === 1} onClick={() => handleFaqClick(1)} />
-            <FaqItem question="What is the duration of the program?" answer="The program will officially commence from the date of your selection and will continue until the conclusion of our annual fest, AXIS'25. The entire duration is designed to provide you with ample time to complete tasks, network, and grow with us. The exact timeline will be communicated to all selected ambassadors via email." isOpen={openFaq === 2} onClick={() => handleFaqClick(2)} />
-            <FaqItem question="How will my performance be judged?" answer="Your performance is judged based on a transparent point system. You will be assigned various tasks, such as social media promotion, content creation, and referral registrations. Points are awarded upon successful completion and review of these tasks through this portal. Your total score determines your position on the leaderboard and your eligibility for our exciting range of rewards and incentives." isOpen={openFaq === 3} onClick={() => handleFaqClick(3)} />
+          <div className="mb-12">
+             <TerminalLabel prefix=">">KNOWLEDGE_BASE // QUERY</TerminalLabel>
+             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Frequently Asked Questions</h2>
+          </div>
+          <div className="bg-obsidian border border-border p-6 sm:p-8 relative">
+            {/* Decorative Corner Markers for the whole FAQ block */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-sandstone-dim opacity-30"></div>
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-sandstone-dim opacity-30"></div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-sandstone-dim opacity-30"></div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-sandstone-dim opacity-30"></div>
+
+            {[
+                {q: "Who can initiate the Ambassador sequence?", a: "Any active student node currently enrolled in an undergraduate or postgraduate program. First and second-year nodes are highly prioritized for installation."},
+                {q: "Are there any credit requirements (fees)?", a: "Negative. The sequence is completely open-source and free. We are establishing a nationwide mesh network of student leaders."},
+                {q: "What is the uptime duration?", a: "The sequence runs continuously from initial handshake (selection) until the final runtime of AXIS'27. Timestamps will be relayed via secure email."},
+                {q: "How are metrics calculated?", a: "Performance is tracked via a transparent point system on the grid. Tasks yield points upon successful execution and verification. Total score determines leaderboard ranking."}
+            ].map((faq, index) => (
+                <FaqItem 
+                    key={index}
+                    index={index}
+                    question={faq.q} 
+                    answer={faq.a} 
+                    isOpen={openFaq === index} 
+                    onClick={() => handleFaqClick(index)} 
+                />
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
     </div>
   );
 }

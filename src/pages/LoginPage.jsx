@@ -2,8 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import logoDark from '../assets/logo-dark.png';
+import { AxisFrame } from '../components/motifs/AxisFrame';
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
+import { Crosshair } from '../components/motifs/Crosshair';
+import { TerminalLoader } from '../components/motifs/TerminalLoader';
 
-const GoogleIcon = () => ( <svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.048,36.336,44,30.651,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg> );
+const GoogleIcon = () => ( <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.048,36.336,44,30.651,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg> );
+
+const InputField = ({ label, id, type, value, onChange, placeholder, required }) => (
+  <div className="relative group">
+      <label htmlFor={id} className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-amber">{label}</label>
+      <input 
+          type={type} 
+          name={id} 
+          id={id} 
+          value={value} 
+          onChange={onChange} 
+          className="bg-obsidian border border-border text-white text-sm focus:border-amber block w-full p-3 transition-all outline-none font-mono focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] rounded-panel" 
+          placeholder={placeholder} 
+          required={required} 
+      />
+  </div>
+);
 
 function LoginPage() {
   const { user, signIn, signUp, signInWithGoogle, signOut } = useAuth();
@@ -15,6 +36,7 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -26,6 +48,8 @@ function LoginPage() {
     e.preventDefault();
     setError('');
     setMessage('');
+    setIsLoading(true);
+    
     if (isRegister) {
       try {
         const { error } = await signUp({ email, password, options: { data: { full_name: fullName, role: 'student' } } });
@@ -33,6 +57,7 @@ function LoginPage() {
         setMessage('Registration successful! Please sign in.');
         setIsRegister(false);
       } catch (error) { setError(error.message); }
+      finally { setIsLoading(false); }
     } else {
       try {
         const { data: authData, error: authError } = await signIn({ email, password });
@@ -48,6 +73,7 @@ function LoginPage() {
           }
         }
       } catch (error) { setError(error.message); }
+      finally { setIsLoading(false); }
     }
   };
 
@@ -62,58 +88,131 @@ function LoginPage() {
   };
   
   if (user) {
-    return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Redirecting...</div>;
+    return <div className="min-h-screen bg-void flex items-center justify-center"><TerminalLoader text="REDIRECTING_TO_DASHBOARD..." /></div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
-      <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow border border-slate-200 dark:border-slate-700 md:mt-0 sm:max-w-md xl:p-0">
-        <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-          <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white md:text-2xl">
-            {isRegister ? 'Create a Student Account' : 'Sign in to your account'}
-          </h1>
-          <button onClick={handleGoogleSignIn} className="w-full flex items-center justify-center gap-x-3 py-2.5 px-4 text-sm font-semibold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-200">
-            <GoogleIcon /> Sign in with Google
-          </button>
-          <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-              <span className="flex-shrink mx-4 text-slate-500 dark:text-slate-400 text-xs">OR</span>
-              <div className="flex-grow border-t border-slate-300 dark:border-slate-600"></div>
-          </div>
-          <form className="space-y-4 md:space-y-6" onSubmit={handleAuthAction}>
-            {isRegister && (
-              <div>
-                <label htmlFor="name" className="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Full Name</label>
-                <input type="text" name="name" id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Your full name" required />
-              </div>
-            )}
-            <div>
-              <label htmlFor="email" className="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Your email</label>
-              <input type="email" name="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required />
-            </div>
-            <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Password</label>
-              <input type="password" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required />
-            </div>
-            {!isRegister && ( <div className="flex items-center justify-end"><Link to="/forgot-password" className="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">Forgot password?</Link></div> )}
-            {error && <p className="text-sm font-medium text-red-500 text-center">{error}</p>}
-            {message && <p className="text-sm font-medium text-green-500 text-center">{message}</p>}
-            <button type="submit" className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-              {isRegister ? 'Create an account' : 'Sign in'}
-            </button>
-            <p className="text-sm font-light text-slate-500 dark:text-slate-400">
-              {isRegister ? 'Already have an account? ' : 'Don’t have an account yet? '}
-              <button type="button" onClick={() => setIsRegister(!isRegister)} className="font-medium text-blue-600 dark:text-blue-500 hover:underline">{isRegister ? 'Login here' : 'Sign up'}</button>
+    <div className="min-h-screen bg-void flex flex-col md:flex-row relative">
+      
+      {/* Back Button */}
+      <Link to="/" className="absolute top-6 left-6 z-20 flex items-center text-cyan hover:text-cyan-soft font-mono text-sm tracking-widest uppercase transition-colors group">
+        <span className="mr-2 opacity-50">{'<'}</span> Back to Grid
+      </Link>
+
+      {/* Left Panel - Brand (Hidden on Mobile) */}
+      <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-void relative overflow-hidden flex-col justify-center items-start px-12 lg:px-24 border-r border-border">
+        {/* Background Grid */}
+        <div className="absolute inset-0 axis-grid-bg opacity-30 pointer-events-none"></div>
+        {/* Nix Glow */}
+        <div className="absolute bottom-0 left-0 w-full h-[50%] bg-gradient-to-t from-amber-deep/10 to-transparent pointer-events-none"></div>
+
+        <div className="relative z-10">
+            <img src={logoDark} alt="AXIS Logo" className="h-16 lg:h-24 mb-12" />
+            <TerminalLabel prefix=">" className="mb-4 text-amber">NIX_PROTOCOLS // AUTHORIZED_PERSONNEL_ONLY</TerminalLabel>
+            <h1 className="text-4xl lg:text-6xl font-display font-black text-white leading-none mb-6 uppercase">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-amber-bright">Initiate</span> <br/>
+                Your Sequence.
+            </h1>
+            <p className="text-sm font-mono text-sandstone-dim max-w-md border-l-2 border-amber pl-4">
+                Join the largest student network in Central India. Execute tasks, acquire points, and dominate the leaderboard.
             </p>
-          </form>
-          <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700">
-            <Link to="/login/organizer" className="text-xs text-slate-500 dark:text-slate-400 hover:text-blue-500 hover:underline transition-colors">
-              Are you an organizer? Login here.
-            </Link>
-          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="w-full md:w-1/2 lg:w-2/5 flex flex-col justify-center items-center px-6 py-20 relative bg-obsidian-soft/50">
+        <div className="w-full max-w-md">
+            
+            {/* Header */}
+            <div className="text-center mb-10">
+                <img src={logoDark} alt="AXIS Logo" className="h-12 mx-auto mb-8 block md:hidden" />
+                <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
+                    {isRegister ? 'New Node Reg' : 'Session Init'}
+                </h2>
+                <p className="text-sandstone-dim font-mono text-xs tracking-widest uppercase">
+                    {isRegister ? 'Enter parameters to generate ID' : 'Provide credentials for access'}
+                </p>
+            </div>
+
+            {/* Form Card */}
+            <AxisFrame variant="amber" className="!p-8">
+                
+                {/* Google Sign In */}
+                <button onClick={handleGoogleSignIn} className="w-full flex items-center justify-center gap-x-3 py-3 px-4 font-mono font-bold text-sm tracking-wider uppercase border border-border bg-obsidian hover:border-amber transition-colors text-sandstone hover:text-white group">
+                    <GoogleIcon /> OAUTH_GOOGLE
+                </button>
+                
+                <div className="relative flex py-8 items-center">
+                    <div className="flex-grow border-t border-border"></div>
+                    <span className="flex-shrink mx-4 text-border font-mono text-xs">{'// OR //'}</span>
+                    <div className="flex-grow border-t border-border"></div>
+                </div>
+
+                {/* Status Toasts */}
+                {error && (
+                    <div className="mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono flex items-start">
+                        <span className="mr-2">{'>'}</span>
+                        <span>{error}</span>
+                    </div>
+                )}
+                {message && (
+                    <div className="mb-6 p-4 border border-success/50 bg-success/10 text-success text-sm font-mono flex items-start">
+                        <span className="mr-2">{'>'}</span>
+                        <span>{message}</span>
+                    </div>
+                )}
+
+                <form className="space-y-5" onSubmit={handleAuthAction}>
+                    
+                    {/* Animated Tab Switch content */}
+                    <div className={`space-y-5 overflow-hidden transition-all duration-500 ease-in-out ${isRegister ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0 hidden'}`}>
+                        <InputField label="NODE_ALIAS (Name)" id="name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" required={isRegister} />
+                    </div>
+
+                    <InputField label="COMM_ADDRESS (Email)" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@college.edu" required={true} />
+                    
+                    <div>
+                        <InputField label="ACCESS_KEY (Password)" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
+                        {!isRegister && ( 
+                            <div className="flex items-center justify-end mt-2">
+                                <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Key Recovery?</Link>
+                            </div> 
+                        )}
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        disabled={isLoading}
+                        className="w-full mt-4 font-mono font-bold tracking-widest uppercase px-6 py-4 bg-amber hover:bg-amber-bright text-void transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {isLoading ? 'PROCESSING...' : (isRegister ? 'GENERATE_ID' : 'EXECUTE')}
+                        {!isLoading && <Crosshair size={12} className="text-void opacity-50" />}
+                    </button>
+                </form>
+                
+                {/* Toggle Register/Login */}
+                <div className="mt-8 pt-6 border-t border-border text-center">
+                    <p className="text-xs font-mono text-sandstone-dim uppercase">
+                        {isRegister ? 'Node already registered? ' : 'Unregistered node? '}
+                        <button type="button" onClick={() => {setIsRegister(!isRegister); setError(''); setMessage('');}} className="text-amber hover:text-amber-bright transition-colors ml-2">
+                            {isRegister ? 'Init Session' : 'Reg Node'}
+                        </button>
+                    </p>
+                </div>
+            </AxisFrame>
+
+            {/* Organizer Login Link */}
+            <div className="mt-8 text-center">
+                <Link to="/login/organizer" className="inline-flex items-center text-xs font-mono text-sandstone-dim hover:text-cyan transition-colors uppercase group">
+                    Aethel Administration 
+                    <span className="ml-2 text-cyan opacity-50 group-hover:opacity-100 transition-opacity">{'->'}</span>
+                </Link>
+            </div>
+
         </div>
       </div>
     </div>
   );
 }
+
 export default LoginPage;
