@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import logoDark from '../assets/logo-dark.png';
+
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { LensingRing } from '../components/motifs/LensingRing';
@@ -65,32 +65,56 @@ const ContactTerminal = ({ name, phone, email, role }) => (
 );
 
 // --- StatCard with count-up animation ---
-const StatCard = ({ endValue, prefix, suffix, label, duration = 2000, isVisible }) => {
-  const [count, setCount] = useState(0);
+const ROLLING_COLUMN = [];
+for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 10; j++) {
+    ROLLING_COLUMN.push(j);
+  }
+}
+
+const RollingDigit = ({ digit, isVisible, delay = 0 }) => {
+  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
-    if (!isVisible) return; 
-    let startTime = null;
-    const animation = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = timestamp - startTime;
-      const easeOutQuart = 1 - Math.pow(1 - Math.min(progress / duration, 1), 4);
-      const newCount = Math.floor(easeOutQuart * endValue);
-      setCount(newCount);
-      if (progress < duration) requestAnimationFrame(animation);
-      else setCount(endValue);
-    };
-    requestAnimationFrame(animation);
-    return () => setCount(endValue);
-  }, [isVisible, endValue, duration]);
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        setOffset(20 + parseInt(digit, 10));
+      }, delay);
+      return () => clearTimeout(timer);
+    } else {
+      setOffset(0);
+    }
+  }, [isVisible, digit, delay]);
+
+  return (
+    <div className="inline-block relative h-[1em] overflow-hidden leading-none align-bottom">
+      <div 
+        className="flex flex-col transition-transform duration-[2500ms] ease-[cubic-bezier(0.1,0.9,0.2,1)]" 
+        style={{ transform: `translateY(-${offset}em)` }}
+      >
+        {ROLLING_COLUMN.map((n, i) => (
+          <span key={i} className="h-[1em] flex items-center justify-center leading-none">{n}</span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ endValue, prefix, suffix, label, duration = 2000, isVisible }) => {
+  const endValueStr = String(endValue);
+  const digits = endValueStr.split('');
 
   return (
     <AxisFrame variant="cyan" hover={true} className="text-center group overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
       <div className="relative z-10 flex flex-col items-center">
         <Crosshair className="absolute -top-2 -right-2 opacity-50" size={12} />
-        <span className="text-4xl sm:text-5xl font-mono font-bold text-cyan drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">
-          {prefix && count < 10 ? prefix : ''}{count}{suffix}
+        <span className="text-4xl sm:text-5xl font-mono font-bold text-cyan drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] flex items-center justify-center">
+          {prefix && <span>{prefix}</span>}
+          {digits.map((digit, i) => (
+            <RollingDigit key={i} digit={digit} isVisible={isVisible} delay={i * 150} />
+          ))}
+          {suffix && <span>{suffix}</span>}
         </span>
         <p className="mt-4 text-xs font-mono font-bold uppercase tracking-[0.2em] text-sandstone-dim group-hover:text-sandstone transition-colors">{label}</p>
       </div>
@@ -150,14 +174,16 @@ function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center w-full">
           
           <div className="relative flex justify-center items-center mb-8 h-48 sm:h-64">
-            <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" className="absolute" />
-            <img src={logoDark} alt="AXIS'27" className="relative h-20 sm:h-28 w-auto z-10 animate-scale-in" />
+            <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+              <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" />
+            </div>
+            <span className="font-logo text-7xl sm:text-8xl md:text-9xl text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
           </div>
           
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
-            <span className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Convergence</span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
+            <span className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Ambassador</span>
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-cyan pb-2 pr-2">Initiated</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-cyan pb-2 pr-2">Network</span>
           </h1>
           
           <div className="mt-8 mb-12 font-mono text-cyan-soft tracking-[0.3em] uppercase text-sm sm:text-base">

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Ethnocentric';
+  src: url('./assets/Ethnocentric.woff2') format('woff2'),
+       url('./assets/Ethnocentric.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Core brand */
   --color-void: #121216;
@@ -26,6 +35,7 @@
   --font-display: "Space Grotesk", ui-sans-serif, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-body: "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-logo: "Ethnocentric", sans-serif;
 
   /* Radii — sharp/angular per brand, not soft rounded */
   --radius-panel: 2px;

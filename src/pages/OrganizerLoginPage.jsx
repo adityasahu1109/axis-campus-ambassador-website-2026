@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import logoDark from '../assets/logo-dark.png';
+
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { Crosshair } from '../components/motifs/Crosshair';
@@ -79,7 +79,7 @@ function OrganizerLoginPage() {
         <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-gradient-to-bl from-cyan-deep/20 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10">
-            <img src={logoDark} alt="AXIS Logo" className="h-16 lg:h-24 mb-12" />
+            <div className="mb-12"><span className="font-logo text-5xl lg:text-6xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
             <TerminalLabel prefix=">" className="mb-4">AETHEL_PROTOCOLS // COMMAND_LEVEL_ACCESS</TerminalLabel>
             <h1 className="text-4xl lg:text-6xl font-display font-black text-white leading-none mb-6 uppercase">
                 Aethel <br/>
@@ -97,7 +97,7 @@ function OrganizerLoginPage() {
             
             {/* Header */}
             <div className="text-center mb-10">
-                <img src={logoDark} alt="AXIS Logo" className="h-12 mx-auto mb-8 block md:hidden" />
+                <div className="mb-8 block md:hidden"><span className="font-logo text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
                 <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
                     Admin Auth
                 </h2>

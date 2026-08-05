@@ -13,9 +13,7 @@ function Footer() {
           
           {/* Logo / System ID Column */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            <div className="font-mono text-sm tracking-widest text-cyan uppercase">
-              SYS.ID: AXIS-2027
-            </div>
+            <span className="font-logo text-3xl sm:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
             <p className="text-sm text-sandstone-dim font-mono text-center md:text-left">
               Developed by AXIS,<br/>VNIT Nagpur
             </p>
@@ -34,19 +32,19 @@ function Footer() {
              <h4 className="text-xs font-bold text-sandstone uppercase tracking-widest mb-1 opacity-50 font-mono">// EXTERNAL_COMMS</h4>
              <div className="flex space-x-4">
                 <a href="https://www.instagram.com/axis_vnit/" target="_blank" rel="noopener noreferrer" 
-                   className="relative w-10 h-10 bg-obsidian flex items-center justify-center text-sandstone hover:text-cyan hover:bg-cyan/10 transition-all group">
+                   className="relative w-10 h-10 bg-void border border-border flex items-center justify-center text-white hover:text-cyan hover:border-cyan transition-all duration-300 group hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                   <CornerMarkers className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="sr-only">Instagram</span>
                   <FaInstagram className="h-4 w-4 relative z-10" />
                 </a>
                 <a href="https://twitter.com/axisvnit" target="_blank" rel="noopener noreferrer" 
-                   className="relative w-10 h-10 bg-obsidian flex items-center justify-center text-sandstone hover:text-cyan hover:bg-cyan/10 transition-all group">
+                   className="relative w-10 h-10 bg-void border border-border flex items-center justify-center text-white hover:text-cyan hover:border-cyan transition-all duration-300 group hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                   <CornerMarkers className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="sr-only">Twitter</span>
                   <FaTwitter className="h-4 w-4 relative z-10" />
                 </a>
                 <a href="https://www.linkedin.com/company/axis-vnit-nagpur/" target="_blank" rel="noopener noreferrer" 
-                   className="relative w-10 h-10 bg-obsidian flex items-center justify-center text-sandstone hover:text-cyan hover:bg-cyan/10 transition-all group">
+                   className="relative w-10 h-10 bg-void border border-border flex items-center justify-center text-white hover:text-cyan hover:border-cyan transition-all duration-300 group hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                   <CornerMarkers className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="sr-only">LinkedIn</span>
                   <FaLinkedinIn className="h-4 w-4 relative z-10" />

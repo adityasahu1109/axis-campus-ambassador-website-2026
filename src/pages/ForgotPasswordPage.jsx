@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Link } from 'react-router-dom';
-import logoDark from '../assets/logo-dark.png';
+
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { Crosshair } from '../components/motifs/Crosshair';
@@ -60,7 +60,7 @@ function ForgotPasswordPage() {
         {/* Logo */}
         <div className="mb-8 z-10 animate-fade-in-up">
             <Link to="/">
-                <img src={logoDark} alt="AXIS Logo" className="h-16" />
+                <span className="font-logo text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] block hover:scale-105 transition-transform">AXIS</span>
             </Link>
         </div>
 
