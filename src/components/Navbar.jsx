@@ -3,7 +3,7 @@ import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 
-import { IoLogOutOutline, IoPersonOutline } from 'react-icons/io5';
+import { PiSignOut, PiUser, PiBell } from 'react-icons/pi';
 import { TerminalLabel } from './motifs/TerminalLabel';
 import { AxisFrame } from './motifs/AxisFrame';
 
@@ -41,6 +41,7 @@ function Navbar() {
   const [profile, setProfile] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -63,8 +64,18 @@ function Navbar() {
       if (user) {
         const { data } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
         setProfile(data);
+        
+        // Fetch unread notifications count
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('profile_id', user.id)
+          .eq('read', false);
+          
+        if (!error) setUnreadCount(count || 0);
       } else {
         setProfile(null);
+        setUnreadCount(0);
       }
     }
     getProfile();
@@ -137,6 +148,10 @@ function Navbar() {
         <>
           <NavItem to="/admin">Terminal</NavItem>
           <NavItem to="/leaderboard">Grid_Status</NavItem>
+          <Link to="/notifications" className="mx-2 relative text-cyan hover:text-white transition-colors">
+            <PiBell size={24} />
+            {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber text-void text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">{unreadCount}</span>}
+          </Link>
           <UserDropdown />
         </>
       );
@@ -147,6 +162,10 @@ function Navbar() {
           <NavItem to="/dashboard">Dashboard</NavItem>
           <NavItem to="/announcements">Comms</NavItem>
           <NavItem to="/leaderboard">Rank</NavItem>
+          <Link to="/notifications" className="mx-2 relative text-cyan hover:text-white transition-colors">
+            <PiBell size={24} />
+            {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber text-void text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">{unreadCount}</span>}
+          </Link>
           <UserDropdown />
         </>
       );
@@ -170,6 +189,9 @@ function Navbar() {
         <>
           <NavItem to="/admin" isMobile>Terminal</NavItem>
           <NavItem to="/leaderboard" isMobile>Grid_Status</NavItem>
+          <NavItem to="/notifications" isMobile>
+            Alerts {unreadCount > 0 && <span className="ml-2 bg-amber text-void px-2 py-0.5 text-[10px] rounded-full">{unreadCount}</span>}
+          </NavItem>
           <NavItem to="/profile/organizer" isMobile>System_ID</NavItem>
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger hover:!bg-red-600 !text-white`}>End_Session</button>
         </>
@@ -181,6 +203,9 @@ function Navbar() {
           <NavItem to="/dashboard" isMobile>Dashboard</NavItem>
           <NavItem to="/announcements" isMobile>Comms</NavItem>
           <NavItem to="/leaderboard" isMobile>Rank</NavItem>
+          <NavItem to="/notifications" isMobile>
+            Alerts {unreadCount > 0 && <span className="ml-2 bg-amber text-void px-2 py-0.5 text-[10px] rounded-full">{unreadCount}</span>}
+          </NavItem>
           <NavItem to="/profile" isMobile>Profile</NavItem>
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>
         </>
@@ -210,10 +235,10 @@ function Navbar() {
             </div>
             <div className="p-1">
               <Link to={profileLink} className="flex items-center px-4 py-2.5 text-sm text-sandstone hover:bg-obsidian hover:text-cyan transition-colors font-mono">
-                <IoPersonOutline className="mr-3 h-4 w-4" /> System_ID
+                <PiUser className="mr-3 h-4 w-4" /> System_ID
               </Link>
               <button onClick={handleSignOut} className="flex w-full items-center px-4 py-2.5 text-sm text-danger hover:bg-obsidian transition-colors font-mono mt-1">
-                <IoLogOutOutline className="mr-3 h-4 w-4" /> End_Session
+                <PiSignOut className="mr-3 h-4 w-4" /> End_Session
               </button>
             </div>
           </div>

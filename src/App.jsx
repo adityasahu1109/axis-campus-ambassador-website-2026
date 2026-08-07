@@ -2,8 +2,12 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer'; 
-import ProtectedRoute from './components/ProtectedRoute';
+import OnboardingGate from './components/OnboardingGate';
 import HomePage from './pages/HomePage';
+import OnboardingDetailsPage from './pages/onboarding/OnboardingDetailsPage';
+import OnboardingDomainTaskPage from './pages/onboarding/OnboardingDomainTaskPage';
+import OnboardingPendingPage from './pages/onboarding/OnboardingPendingPage';
+import NotificationsPage from './pages/NotificationsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import LoginPage from './pages/LoginPage';
 import OrganizerLoginPage from './pages/OrganizerLoginPage';
@@ -25,13 +29,18 @@ function App() {
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/login/organizer" element={<OrganizerLoginPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
+          <Route path="/announcements" element={<OnboardingGate><AnnouncementsPage /></OnboardingGate>} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/update-password" element={<UpdatePasswordPage />} />
-          <Route path="/dashboard" element={<MyDashboardPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/profile/organizer" element={<OrganizerProfilePage />} />
-          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<OnboardingGate><MyDashboardPage /></OnboardingGate>} />
+          <Route path="/profile" element={<OnboardingGate><ProfilePage /></OnboardingGate>} />
+          <Route path="/profile/organizer" element={<OnboardingGate><OrganizerProfilePage /></OnboardingGate>} />
+          <Route path="/admin" element={<OnboardingGate><AdminDashboard /></OnboardingGate>} />
+          <Route path="/notifications" element={<OnboardingGate><NotificationsPage /></OnboardingGate>} />
+          {/* Onboarding Routes */}
+          <Route path="/onboarding/details" element={<OnboardingGate><OnboardingDetailsPage /></OnboardingGate>} />
+          <Route path="/onboarding/domain-task" element={<OnboardingGate><OnboardingDomainTaskPage /></OnboardingGate>} />
+          <Route path="/onboarding/pending" element={<OnboardingGate><OnboardingPendingPage /></OnboardingGate>} />
         </Routes>
       </main>
       <Footer />

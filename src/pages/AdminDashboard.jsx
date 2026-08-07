@@ -23,11 +23,12 @@ const Modal = ({ children, onClose, title, variant = "cyan" }) => (
 
 const StatusBadge = ({ status }) => {
     const format = {
-        'Approved': { text: '[ VERIFIED ]', color: 'text-cyan' },
-        'Pending': { text: '[ PENDING ]', color: 'text-amber' },
-        'Rejected': { text: '[ REJECTED ]', color: 'text-danger' },
+        'approved': { text: '[ VERIFIED ]', color: 'text-cyan' },
+        'pending': { text: '[ PENDING ]', color: 'text-amber' },
+        'needs_revision': { text: '[ REVISION ]', color: 'text-amber' },
+        'rejected': { text: '[ REJECTED ]', color: 'text-danger' },
     };
-    const { text, color } = format[status] || { text: `[ ${status.toUpperCase()} ]`, color: 'text-sandstone' };
+    const { text, color } = format[status] || { text: `[ ${status?.toUpperCase()} ]`, color: 'text-sandstone' };
     return <span className={clsx("font-mono text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
 
@@ -129,10 +130,14 @@ function AdminDashboard() {
 
   const handleApprove = async () => {
     try {
-      await supabase.from('submissions').update({ status: 'Approved' }).eq('id', selectedItem.id);
-      if (selectedItem.status !== 'Approved') {
-        await supabase.rpc('award_points', { user_id: selectedItem.student_id, points_to_add: selectedItem.tasks.points });
-      }
+      const { error } = await supabase.rpc('submit_review', {
+        p_submission_id: selectedItem.id,
+        p_decision: 'approved',
+        p_notes: rejectionReason || 'Approved',
+        p_points_awarded: selectedItem.tasks.points,
+        p_reviewed_by: user.id
+      });
+      if (error) throw error;
       fetchData();
       setModals({ ...modals, review: false });
     } catch (error) { console.error("Error approving:", error.message); }
@@ -140,11 +145,38 @@ function AdminDashboard() {
 
   const handleReject = async () => {
     try {
-      await supabase.from('submissions').update({ status: 'Rejected', rejection_reason: rejectionReason }).eq('id', selectedItem.id);
+      const { error } = await supabase.rpc('submit_review', {
+        p_submission_id: selectedItem.id,
+        p_decision: 'rejected',
+        p_notes: rejectionReason || 'Rejected',
+        p_points_awarded: 0,
+        p_reviewed_by: user.id
+      });
+      if (error) throw error;
       fetchData();
       setRejectionReason('');
       setModals({ ...modals, review: false });
     } catch (error) { console.error("Error rejecting:", error.message); }
+  };
+
+  const handleNeedsRevision = async () => {
+    if (!rejectionReason) {
+      alert("Feedback notes are required for revision requests.");
+      return;
+    }
+    try {
+      const { error } = await supabase.rpc('submit_review', {
+        p_submission_id: selectedItem.id,
+        p_decision: 'needs_revision',
+        p_notes: rejectionReason,
+        p_points_awarded: 0,
+        p_reviewed_by: user.id
+      });
+      if (error) throw error;
+      fetchData();
+      setRejectionReason('');
+      setModals({ ...modals, review: false });
+    } catch (error) { console.error("Error requesting revision:", error.message); }
   };
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="AETHEL_CORE_INITIALIZING..." /></div>;
@@ -175,7 +207,7 @@ function AdminDashboard() {
             <div className="flex gap-4">
                 <div className="bg-obsidian border border-border p-4 flex flex-col items-center">
                     <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-1">Pending_Reviews</span>
-                    <span className="text-2xl font-mono font-bold text-white">{submissions.filter(s => s.status === 'Pending').length}</span>
+                    <span className="text-2xl font-mono font-bold text-white">{submissions.filter(s => s.status === 'pending').length}</span>
                 </div>
             </div>
         </div>
@@ -185,7 +217,7 @@ function AdminDashboard() {
         
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up">
-          <TabButton name="submissions" label="Submissions" count={submissions.filter(s => s.status === 'Pending').length} />
+          <TabButton name="submissions" label="Submissions" count={submissions.filter(s => s.status === 'pending').length} />
           <TabButton name="tasks" label="Directives" />
           <TabButton name="students" label="Nodes" />
           <TabButton name="announcements" label="Comms" />
@@ -215,7 +247,7 @@ function AdminDashboard() {
                                         <td className="px-6 py-4 text-sm text-sandstone max-w-xs truncate">{sub.tasks.title}</td>
                                         <td className="px-6 py-4"><StatusBadge status={sub.status} /></td>
                                         <td className="px-6 py-4 text-right">
-                                            {sub.status === 'Pending' && (
+                                            {sub.status === 'pending' && (
                                                 <button onClick={() => { setSelectedItem(sub); setModals({ ...modals, review: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-4 py-2 uppercase tracking-widest transition-colors shadow-[0_0_10px_rgba(0,240,255,0.3)]">
                                                     REVIEW
                                                 </button>
@@ -293,7 +325,7 @@ function AdminDashboard() {
                                         <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
                                         <td className="px-6 py-4 text-sm font-bold text-cyan">{student.points}</td>
                                         <td className="px-6 py-4 text-sm text-sandstone">
-                                            {submissions.filter(s => s.student_id === student.id && s.status === 'Approved').length}
+                                            {submissions.filter(s => s.student_id === student.id && s.status === 'approved').length}
                                         </td>
                                     </tr>
                                     ))
@@ -410,9 +442,11 @@ function AdminDashboard() {
                 </div>
 
                 <div>
-                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">EXECUTION_LOG</span>
-                    <div className="border border-border bg-void p-4 text-sm font-mono text-white whitespace-pre-wrap">
-                        {selectedItem?.submission_context}
+                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">EXECUTION_PAYLOAD (Drive Link)</span>
+                    <div className="border border-border bg-void p-4 text-sm font-mono text-cyan truncate">
+                        <a href={selectedItem?.drive_link} target="_blank" rel="noreferrer" className="hover:underline">
+                            {selectedItem?.drive_link}
+                        </a>
                     </div>
                 </div>
                 
@@ -420,9 +454,12 @@ function AdminDashboard() {
                     <InputField label="REJECTION_LOG (Optional)" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
                 </div>
 
-                <div className="flex justify-end gap-4 pt-6 border-t border-border">
-                    <button onClick={() => handleReject()} disabled={!rejectionReason} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
-                    <button onClick={() => handleApprove()} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">VERIFY_AND_AWARD</button>
+                <div className="flex justify-between gap-4 pt-6 border-t border-border">
+                    <button onClick={() => handleNeedsRevision()} disabled={!rejectionReason} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
+                    <div className="flex gap-4">
+                        <button onClick={() => handleReject()} disabled={!rejectionReason} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
+                        <button onClick={() => handleApprove()} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">VERIFY_AND_AWARD</button>
+                    </div>
                 </div>
             </div>
         </Modal>

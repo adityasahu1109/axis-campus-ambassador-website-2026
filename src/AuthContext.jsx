@@ -9,24 +9,68 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async (userId) => {
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching profile:', error);
+      setProfile(null);
+    } else {
+      setProfile(data);
+    }
+  };
 
   useEffect(() => {
     // Check for an active session when the component mounts
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Supabase getSession error:", error.message);
+        }
+        
+        const session = data?.session || null;
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        console.error("Unexpected error during session initialization:", err);
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getSession();
 
     // Listen for changes in authentication state (e.g., user signs in/out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       }
     );
 
@@ -51,12 +95,29 @@ export function AuthProvider({ children }) {
     signOut: () => supabase.auth.signOut(),
     user,
     session,
+    profile,
+    refetchProfile: async () => {
+      if (user) await fetchProfile(user.id);
+    }
   };
 
   // Render the children components only when not loading
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {loading ? (
+        <div className="flex justify-center items-center h-screen bg-void">
+          <div className="flex flex-col items-center justify-center font-mono space-y-4">
+            <div className="relative w-48 h-1 bg-obsidian-soft overflow-hidden rounded-full">
+              <div className="absolute inset-0 bg-cyan w-1/3 rounded-full animate-scanline" style={{ animationDirection: 'alternate' }}></div>
+            </div>
+            <div className="text-cyan text-sm tracking-widest flex items-center gap-2">
+              <span className="animate-pulse">{'>'}</span> SYSTEM_INITIALIZING...
+            </div>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }

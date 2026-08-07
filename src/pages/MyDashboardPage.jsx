@@ -9,12 +9,13 @@ import { clsx } from 'clsx';
 
 const StatusBadge = ({ status }) => {
     const format = {
-        'Approved': { text: '[ VERIFIED ]', color: 'text-cyan' },
-        'Pending': { text: '[ PENDING ]', color: 'text-amber' },
-        'Rejected': { text: '[ REJECTED ]', color: 'text-danger' },
-        'Not Submitted': { text: '[ UNASSIGNED ]', color: 'text-sandstone-dim' },
+        'approved': { text: '[ VERIFIED ]', color: 'text-cyan' },
+        'pending': { text: '[ PENDING ]', color: 'text-amber' },
+        'needs_revision': { text: '[ REVISION ]', color: 'text-amber' },
+        'rejected': { text: '[ REJECTED ]', color: 'text-danger' },
+        'not_submitted': { text: '[ UNASSIGNED ]', color: 'text-sandstone-dim' },
     };
-    const { text, color } = format[status] || format['Not Submitted'];
+    const { text, color } = format[status] || format['not_submitted'];
     return <span className={clsx("font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
 
@@ -47,7 +48,7 @@ function MyDashboardPage() {
     const [lastSeenTaskId, setLastSeenTaskId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
-    const [submissionContext, setSubmissionContext] = useState('');
+    const [driveLink, setDriveLink] = useState('');
 
     const fetchData = useCallback(async () => {
         if (!user) { setLoading(false); return; }
@@ -80,17 +81,21 @@ function MyDashboardPage() {
     const handleTaskClick = (task) => {
         setSelectedTask(task);
         const existingSubmission = submissions.find(s => s.task_id === task.id);
-        setSubmissionContext(existingSubmission?.submission_context || '');
+        setDriveLink(existingSubmission?.drive_link || '');
         setIsModalOpen(true);
     };
 
     const handleSubmitForReview = async (e) => {
         e.preventDefault();
         if (!selectedTask || !user) return;
+        if (!driveLink.startsWith('https://drive.google.com')) {
+            alert('A valid Google Drive link is required.');
+            return;
+        }
         try {
             const { error } = await supabase.from('submissions').upsert({
-                student_id: user.id, task_id: selectedTask.id, submission_context: submissionContext,
-                status: 'Pending', rejection_reason: null
+                student_id: user.id, task_id: selectedTask.id, drive_link: driveLink,
+                status: 'pending'
             }, { onConflict: 'student_id, task_id' });
             if (error) throw error;
             fetchData();
@@ -103,7 +108,7 @@ function MyDashboardPage() {
 
     const getSubmissionForTask = (taskId) => submissions.find(sub => sub.task_id === taskId);
     const myRank = leaderboard.findIndex(p => p.id === user?.id) + 1;
-    const completedTasksCount = submissions.filter(s => s.status === 'Approved').length;
+    const completedTasksCount = submissions.filter(s => s.status === 'approved').length;
 
     return (
         <div className="bg-void min-h-screen pb-20 pt-20 relative">
@@ -166,10 +171,10 @@ function MyDashboardPage() {
                             </div>
                         ) : (
                             tasks.map((task, index) => {
-                                const status = getSubmissionForTask(task.id)?.status || 'Not Submitted';
+                                const status = getSubmissionForTask(task.id)?.status || 'not_submitted';
                                 const isNew = task.id > lastSeenTaskId;
-                                const isVerified = status === 'Approved';
-                                const isPending = status === 'Pending';
+                                const isVerified = status === 'approved';
+                                const isPending = status === 'pending';
                                 
                                 const frameVariant = isVerified ? "cyan" : isPending ? "amber" : "cyan";
                                 
@@ -210,57 +215,57 @@ function MyDashboardPage() {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={() => setIsModalOpen(false)}>
-                    <AxisFrame variant={getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'cyan' : 'amber'} className="!p-0 w-full max-w-lg max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <AxisFrame variant={getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'cyan' : 'amber'} className="!p-0 w-full max-w-lg max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
                         
-                        <div className={clsx("px-6 py-4 flex justify-between items-center border-b", getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'border-cyan/30 bg-cyan/10' : 'border-amber/30 bg-amber/10')}>
-                            <TerminalLabel prefix=">">{getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'DIRECTIVE_VERIFIED' : 'EXECUTE_DIRECTIVE'}</TerminalLabel>
-                            <button onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'text-cyan' : 'text-amber')}>×</button>
+                        <div className={clsx("px-6 py-4 flex justify-between items-center border-b", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'border-cyan/30 bg-cyan/10' : 'border-amber/30 bg-amber/10')}>
+                            <TerminalLabel prefix=">">{getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'DIRECTIVE_VERIFIED' : 'EXECUTE_DIRECTIVE'}</TerminalLabel>
+                            <button onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>×</button>
                         </div>
 
                         <div className="p-6 overflow-y-auto shrink bg-obsidian">
                             <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
                                 <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
-                                <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'text-cyan' : 'text-amber')}>+{selectedTask?.points}</span>
+                                <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{selectedTask?.points}</span>
                             </div>
                             
                             <p className="text-sm font-mono text-sandstone bg-obsidian-soft border border-border p-4 leading-relaxed mb-6 whitespace-pre-wrap">
                                 {selectedTask?.description || "No description provided."}
                             </p>
 
-                            {getSubmissionForTask(selectedTask?.id)?.status === 'Rejected' && (
+                            {['rejected', 'needs_revision'].includes(getSubmissionForTask(selectedTask?.id)?.status) && (
                                 <div className="mb-6 p-4 border border-danger/50 bg-danger/10 flex items-start">
                                     <span className="text-danger font-mono font-bold mr-3">{'>'}</span>
                                     <div>
-                                        <h4 className="font-mono font-bold text-danger text-sm uppercase">SUBMISSION_REJECTED</h4>
-                                        <p className="text-xs mt-1 text-danger/80 font-mono">REASON: {getSubmissionForTask(selectedTask?.id)?.rejection_reason}</p>
+                                        <h4 className="font-mono font-bold text-danger text-sm uppercase">ADMIN_FEEDBACK</h4>
+                                        <p className="text-xs mt-1 text-danger/80 font-mono">REASON: {getSubmissionForTask(selectedTask?.id)?.reviewer_notes || getSubmissionForTask(selectedTask?.id)?.rejection_reason}</p>
                                     </div>
                                 </div>
                             )}
 
                             <form onSubmit={handleSubmitForReview}>
                                 <div>
-                                    <label htmlFor="submission" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">PROOF_OF_EXECUTION</label>
-                                    <p className="text-[10px] font-mono text-sandstone-dim uppercase mb-3">Provide URI links or plain text describing execution.</p>
-                                    <textarea 
-                                        id="submission" 
-                                        rows="4" 
+                                    <label htmlFor="driveLink" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">PROOF_OF_EXECUTION</label>
+                                    <p className="text-[10px] font-mono text-sandstone-dim uppercase mb-3">Provide Google Drive Link to execution payload.</p>
+                                    <input 
+                                        type="url"
+                                        id="driveLink"
                                         required 
-                                        value={submissionContext} 
-                                        onChange={(e) => setSubmissionContext(e.target.value)} 
+                                        value={driveLink} 
+                                        onChange={(e) => setDriveLink(e.target.value)} 
                                         className="w-full bg-void border border-border p-4 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] disabled:opacity-50"
-                                        placeholder="Input parameters..."
-                                        disabled={['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
-                                    ></textarea>
+                                        placeholder="https://drive.google.com/..."
+                                        disabled={['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
+                                    />
                                 </div>
                                 <div className="mt-6 flex justify-end gap-x-4">
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                                     <button 
                                         type="submit" 
-                                        disabled={['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)} 
-                                        className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                        disabled={['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)} 
+                                        className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                     >
-                                        { getSubmissionForTask(selectedTask?.id)?.status === 'Approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'Pending' ? 'PENDING' : 'TRANSMIT' }
-                                        {!['Approved', 'Pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
+                                        { getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : 'TRANSMIT' }
+                                        {!['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
                                     </button>
                                 </div>
                             </form>
