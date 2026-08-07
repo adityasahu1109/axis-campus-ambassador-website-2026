@@ -57,13 +57,13 @@ function MyDashboardPage() {
             const seenId = localStorage.getItem('lastSeenTaskId');
             setLastSeenTaskId(seenId ? parseInt(seenId) : 0);
             
-            const { data: profileData } = await supabase.from('profiles').select('full_name, points').eq('id', user.id).single();
+            const { data: profileData } = await supabase.from('profiles').select('full_name, total_points').eq('id', user.id).single();
             setProfile(profileData);
             
             const { data: tasksData } = await supabase.from('tasks').select('*').order('id', { ascending: false });
             setTasks(tasksData || []);
             
-            const { data: leaderboardData } = await supabase.from('profiles').select('id, points').order('points', { ascending: false });
+            const { data: leaderboardData } = await supabase.from('profiles').select('id, total_points').order('total_points', { ascending: false });
             setLeaderboard(leaderboardData || []);
             
             const { data: submissionsData } = await supabase.from('submissions').select('*').eq('student_id', user.id);
@@ -145,7 +145,7 @@ function MyDashboardPage() {
                     <AxisFrame variant="amber" hover={true} className="!p-6 flex flex-col items-center text-center">
                         <TerminalLabel className="mb-2 text-amber">TOTAL_METRICS</TerminalLabel>
                         <p className="text-4xl font-mono font-bold text-amber">
-                            <AnimatedCounter value={profile.points} />
+                            <AnimatedCounter value={profile.total_points} />
                         </p>
                     </AxisFrame>
 

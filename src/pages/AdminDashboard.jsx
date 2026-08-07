@@ -323,7 +323,7 @@ function AdminDashboard() {
                                     students.map(student => (
                                     <tr key={student.id} className="hover:bg-obsidian transition-colors">
                                         <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
-                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{student.points}</td>
+                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{student.total_points}</td>
                                         <td className="px-6 py-4 text-sm text-sandstone">
                                             {submissions.filter(s => s.student_id === student.id && s.status === 'approved').length}
                                         </td>

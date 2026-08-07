@@ -19,7 +19,7 @@ function LeaderboardPage() {
       try {
         setLoading(true);
         const { data: leaderboardData, error: leaderboardError } = await supabase
-          .from('profiles').select('id, full_name, points').order('points', { ascending: false });
+          .from('profiles').select('id, full_name, total_points').order('total_points', { ascending: false });
         if (leaderboardError) throw leaderboardError;
         setLeaderboard(leaderboardData || []);
 
@@ -72,15 +72,15 @@ function LeaderboardPage() {
             
             <div className={clsx("w-full border-t border-cyan/50 bg-gradient-to-t from-cyan/10 to-transparent pt-4 flex flex-col items-center", isFirst ? 'h-32 md:h-40 border-t-2 border-cyan' : rank === 2 ? 'h-24 md:h-32' : 'h-20 md:h-24')}>
                 <span className="font-mono font-bold text-white text-xs md:text-sm text-center px-1 truncate w-full uppercase tracking-wider">{profile.full_name?.split(' ')[0]}</span>
-                <span className="font-mono text-cyan text-lg md:text-xl mt-2">{profile.points}</span>
+                <span className="font-mono text-cyan text-lg md:text-xl mt-2">{profile.total_points}</span>
             </div>
         </div>
     );
   };
 
-  const getPointsBarWidth = (points) => {
-    const maxPoints = dataToDisplay[0]?.points || 1;
-    return `${Math.max(5, (points / maxPoints) * 100)}%`;
+  const getPointsBarWidth = (total_points) => {
+    const maxPoints = dataToDisplay[0]?.total_points || 1;
+    return `${Math.max(5, (total_points / maxPoints) * 100)}%`;
   };
 
   return (
@@ -162,11 +162,11 @@ function LeaderboardPage() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap w-1/3">
                                         <div className="w-full h-1 bg-obsidian-soft border border-border">
-                                            <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.points) }}></div>
+                                            <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <span className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.points}</span>
+                                        <span className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.total_points}</span>
                                     </td>
                                 </tr>
                             )
@@ -199,10 +199,10 @@ function LeaderboardPage() {
                                         {profileRow.full_name} {isMe && <span className="text-amber ml-1 text-xs">[YOU]</span>}
                                     </span>
                                 </div>
-                                <span className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.points}</span>
+                                <span className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.total_points}</span>
                             </div>
                             <div className="w-full h-1 bg-obsidian border border-border mt-1">
-                                <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.points) }}></div>
+                                <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
                             </div>
                         </div>
                     )
