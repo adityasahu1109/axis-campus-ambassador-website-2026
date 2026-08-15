@@ -103,7 +103,7 @@ export default function NotificationsDropdown() {
             {unreadCount > 0 && <span className="text-[10px] text-cyan font-mono">{unreadCount} UNREAD</span>}
           </div>
           
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[360px] overflow-y-auto scrollbar-thin scrollbar-thumb-cyan/30 scrollbar-track-obsidian-soft">
             {notifications.length === 0 ? (
               <div className="p-6 text-center text-sandstone-dim text-xs font-mono uppercase tracking-widest">
                 NO_MESSAGES_DETECTED

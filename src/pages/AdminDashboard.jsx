@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { usePaginatedQuery } from '../hooks/usePaginatedQuery';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
 import { AxisFrame } from '../components/motifs/AxisFrame';
@@ -61,39 +62,51 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
+  const [stats, setStats] = useState({ students: 0, pendingSubs: 0, pendingOnboarding: 0, thisWeekSubs: 0 });
   const [modals, setModals] = useState({ create: false, edit: false, delete: false, review: false, announce: false, deleteAnnounce: false });
   const [selectedItem, setSelectedItem] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [awardedPoints, setAwardedPoints] = useState(0);
-  const [formData, setFormData] = useState({ title: '', description: '', content: '', points: 0 });
+  const [formData, setFormData] = useState({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [tasksRes, studentsRes, submissionsRes, announcementsRes] = await Promise.all([
+      const [tasksRes, studentsRes, pendingSubsRes, pendingOnboardingRes, thisWeekSubsRes] = await Promise.all([
         supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('*').eq('role', 'student'),
-        supabase.from('submissions').select(`*, profiles(full_name, id), tasks(title, description, points)`),
-        supabase.from('announcements').select('*').order('created_at', { ascending: false })
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student').eq('status', 'pending'),
+        supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('submitted_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       ]);
       setTasks(tasksRes.data || []);
-      setStudents(studentsRes.data || []);
-      setSubmissions(submissionsRes.data || []);
-      setAnnouncements(announcementsRes.data || []);
+      setStats({
+          students: studentsRes.count || 0,
+          pendingSubs: pendingSubsRes.count || 0,
+          pendingOnboarding: pendingOnboardingRes.count || 0,
+          thisWeekSubs: thisWeekSubsRes.count || 0,
+      });
     } catch (error) { console.error('Error fetching data:', error.message); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const studentsQuery = usePaginatedQuery('profiles', '*', 25, { filters: { role: 'student' } });
+  const submissionsQuery = usePaginatedQuery('submissions', '*, profiles!submissions_student_id_fkey(full_name, id), tasks(title, description, points)', 25, { orderBy: { column: 'submitted_at', ascending: false } });
+  const announcementsQuery = usePaginatedQuery('announcements', '*', 25, { orderBy: { column: 'created_at', ascending: false } });
+
   const handleCreate = async (e, type) => {
     e.preventDefault();
     try {
       if (type === 'task') {
-        const { error } = await supabase.from('tasks').insert({ title: formData.title, description: formData.description, points: formData.points });
+        const { error } = await supabase.from('tasks').insert({ 
+            title: formData.title, 
+            description: formData.description, 
+            points: formData.points,
+            domain: formData.domain || null,
+            is_initial_task: formData.is_initial_task
+        });
         if (error) throw error;
         
         const announcementTitle = "New Directive Active!";
@@ -105,8 +118,9 @@ function AdminDashboard() {
         if (error) throw error;
       }
       fetchData(); 
+      announcementsQuery.refresh();
       setModals({ ...modals, create: false, announce: false });
-      setFormData({ title: '', description: '', content: '', points: 0 });
+      setFormData({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
     } catch (error) { 
       console.error(`Error creating ${type}:`, error.message); 
       alert(`Error creating ${type}: ${error.message}`);
@@ -116,7 +130,13 @@ function AdminDashboard() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from('tasks').update({ title: formData.title, description: formData.description, points: formData.points }).eq('id', selectedItem.id);
+      const { error } = await supabase.from('tasks').update({ 
+          title: formData.title, 
+          description: formData.description, 
+          points: formData.points,
+          domain: formData.domain || null,
+          is_initial_task: formData.is_initial_task 
+      }).eq('id', selectedItem.id);
       if (error) throw error;
       fetchData();
       setModals({ ...modals, edit: false });
@@ -128,6 +148,7 @@ function AdminDashboard() {
       const { error } = await supabase.from(type).delete().eq('id', selectedItem.id);
       if (error) throw error;
       fetchData();
+      if (type === 'announcements') announcementsQuery.refresh();
       setModals({ ...modals, delete: false, deleteAnnounce: false });
     } catch (error) { console.error(`Error deleting ${type}:`, error.message); }
   };
@@ -148,6 +169,7 @@ function AdminDashboard() {
       });
       if (error) throw error;
       fetchData();
+      submissionsQuery.refresh();
       setRejectionReason('');
       setModals({ ...modals, review: false });
     } catch (error) { 
@@ -167,6 +189,30 @@ function AdminDashboard() {
     </button>
   );
 
+  const PaginationControls = ({ query }) => (
+      <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-obsidian">
+          <span className="text-xs font-mono text-sandstone">
+              Page {query.page + 1}
+          </span>
+          <div className="flex gap-2">
+              <button 
+                  onClick={query.prevPage} 
+                  disabled={query.page === 0}
+                  className="px-3 py-1 text-xs font-mono font-bold text-sandstone hover:text-cyan disabled:opacity-50 disabled:hover:text-sandstone transition-colors border border-border hover:border-cyan cursor-pointer"
+              >
+                  {'<'} PREV
+              </button>
+              <button 
+                  onClick={query.nextPage} 
+                  disabled={!query.hasMore}
+                  className="px-3 py-1 text-xs font-mono font-bold text-sandstone hover:text-cyan disabled:opacity-50 disabled:hover:text-sandstone transition-colors border border-border hover:border-cyan cursor-pointer"
+              >
+                  NEXT {'>'}
+              </button>
+          </div>
+      </div>
+  );
+
   return (
     <div className="bg-void min-h-screen pb-20 pt-20 relative">
       
@@ -184,7 +230,7 @@ function AdminDashboard() {
             <div className="flex gap-4">
                 <div className="bg-obsidian border border-border p-4 flex flex-col items-center">
                     <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-1">Pending_Reviews</span>
-                    <span className="text-2xl font-mono font-bold text-white">{submissions.filter(s => s.status === 'pending').length}</span>
+                    <span className="text-2xl font-mono font-bold text-white">{stats.pendingSubs}</span>
                 </div>
             </div>
         </div>
@@ -195,9 +241,9 @@ function AdminDashboard() {
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up border-b border-border pb-4">
           <TabButton name="overview" label="Overview" />
-          <TabButton name="submissions" label="Review Queue" count={submissions.filter(s => s.status === 'pending').length} />
-          <TabButton name="tasks" label="Directives" />
-          <TabButton name="students" label="Nodes" />
+          <TabButton name="submissions" label="Review Queue" count={stats.pendingSubs} />
+          <TabButton name="tasks" label="Directives" count={tasks.length} />
+          <TabButton name="students" label="Nodes" count={stats.students} />
           <TabButton name="announcements" label="Comms" />
         </div>
 
@@ -205,17 +251,25 @@ function AdminDashboard() {
             {/* Overview Tab */}
             {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12">
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2">Active_Nodes</span>
-                        <span className="text-4xl font-display font-black text-white">{students.length}</span>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active_Nodes</span>
+                        <span className="text-4xl font-display font-black text-white">{stats.students}</span>
                     </AxisFrame>
-                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12">
-                        <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2">Pending_Reviews</span>
-                        <span className="text-4xl font-display font-black text-white">{submissions.filter(s => s.status === 'pending').length}</span>
+                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('submissions')}>
+                        <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">Pending_Reviews</span>
+                        <span className="text-4xl font-display font-black text-white">{stats.pendingSubs}</span>
                     </AxisFrame>
-                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12">
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2">Active_Directives</span>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('tasks')}>
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active_Directives</span>
                         <span className="text-4xl font-display font-black text-white">{tasks.length}</span>
+                    </AxisFrame>
+                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
+                        <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">Pending_Onboarding</span>
+                        <span className="text-4xl font-display font-black text-white">{stats.pendingOnboarding}</span>
+                    </AxisFrame>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('submissions')}>
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">This_Week_Subs</span>
+                        <span className="text-4xl font-display font-black text-white">{stats.thisWeekSubs}</span>
                     </AxisFrame>
                 </div>
             )}
@@ -233,13 +287,15 @@ function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-obsidian-soft">
-                                {submissions.length === 0 ? (
+                                {submissionsQuery.loading ? (
+                                    <tr><td colSpan="4" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
+                                ) : submissionsQuery.data.length === 0 ? (
                                     <tr><td colSpan="4" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_SUBMISSIONS_DETECTED</td></tr>
                                 ) : (
-                                    submissions.map(sub => (
+                                    submissionsQuery.data.map(sub => (
                                     <tr key={sub.id} className="hover:bg-obsidian transition-colors">
-                                        <td className="px-6 py-4 text-sm font-bold text-white uppercase">{sub.profiles.full_name}</td>
-                                        <td className="px-6 py-4 text-sm text-sandstone max-w-xs truncate">{sub.tasks.title}</td>
+                                        <td className="px-6 py-4 text-sm font-bold text-white uppercase">{sub.profiles?.full_name}</td>
+                                        <td className="px-6 py-4 text-sm text-sandstone max-w-xs truncate">{sub.tasks?.title}</td>
                                         <td className="px-6 py-4"><StatusBadge status={sub.status} /></td>
                                         <td className="px-6 py-4 text-right">
                                             {sub.status === 'pending' && (
@@ -253,6 +309,7 @@ function AdminDashboard() {
                                 )}
                             </tbody>
                         </table>
+                        <PaginationControls query={submissionsQuery} />
                     </div>
                 </AxisFrame>
             )}
@@ -312,21 +369,24 @@ function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-obsidian-soft">
-                                {students.length === 0 ? (
+                                {studentsQuery.loading ? (
+                                    <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
+                                ) : studentsQuery.data.length === 0 ? (
                                     <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_NODES_DETECTED</td></tr>
                                 ) : (
-                                    students.map(student => (
+                                    studentsQuery.data.map(student => (
                                     <tr key={student.id} className="hover:bg-obsidian transition-colors">
                                         <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
                                         <td className="px-6 py-4 text-sm font-bold text-cyan">{student.total_points}</td>
                                         <td className="px-6 py-4 text-sm text-sandstone">
-                                            {submissions.filter(s => s.student_id === student.id && s.status === 'approved').length}
+                                            {student.domain || 'Unassigned'}
                                         </td>
                                     </tr>
                                     ))
                                 )}
                             </tbody>
                         </table>
+                        <PaginationControls query={studentsQuery} />
                     </div>
                 </AxisFrame>
             )}
@@ -350,10 +410,12 @@ function AdminDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border bg-obsidian-soft">
-                                    {announcements.length === 0 ? (
+                                    {announcementsQuery.loading ? (
+                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
+                                    ) : announcementsQuery.data.length === 0 ? (
                                         <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_BROADCASTS_DETECTED</td></tr>
                                     ) : (
-                                        announcements.map(item => (
+                                        announcementsQuery.data.map(item => (
                                         <tr key={item.id} className="hover:bg-obsidian transition-colors">
                                             <td className="px-6 py-4 text-sm font-bold text-white uppercase">{item.title}</td>
                                             <td className="px-6 py-4 text-sm text-sandstone-dim">{new Date(item.created_at).toLocaleDateString()}</td>
@@ -365,6 +427,7 @@ function AdminDashboard() {
                                     )}
                                 </tbody>
                             </table>
+                            <PaginationControls query={announcementsQuery} />
                         </div>
                     </AxisFrame>
                 </div>
@@ -379,6 +442,33 @@ function AdminDashboard() {
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                
+                <div className="relative group">
+                    <label className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-amber">DOMAIN</label>
+                    <select 
+                        value={formData.domain} 
+                        onChange={(e) => setFormData({...formData, domain: e.target.value})} 
+                        className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white"
+                    >
+                        <option value="">Global (No Domain)</option>
+                        <option value="design">Design</option>
+                        <option value="digital_marketing">Digital Marketing</option>
+                        <option value="social_media_marketing">Social Media Marketing</option>
+                        <option value="event_management">Event Management</option>
+                        <option value="web_development">Web Development</option>
+                    </select>
+                </div>
+                
+                <div className="flex items-center gap-3 mt-4">
+                    <input 
+                        type="checkbox" 
+                        id="is_initial_task" 
+                        checked={formData.is_initial_task} 
+                        onChange={(e) => setFormData({...formData, is_initial_task: e.target.checked})} 
+                        className="w-4 h-4 bg-void border-border text-cyan focus:ring-cyan"
+                    />
+                    <label htmlFor="is_initial_task" className="text-xs font-mono tracking-widest text-sandstone uppercase">INITIAL_TASK (ONBOARDING)</label>
+                </div>
                 <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                     <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">EXECUTE</button>
@@ -393,6 +483,33 @@ function AdminDashboard() {
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+
+                <div className="relative group">
+                    <label className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-amber">DOMAIN</label>
+                    <select 
+                        value={formData.domain} 
+                        onChange={(e) => setFormData({...formData, domain: e.target.value})} 
+                        className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white"
+                    >
+                        <option value="">Global (No Domain)</option>
+                        <option value="design">Design</option>
+                        <option value="digital_marketing">Digital Marketing</option>
+                        <option value="social_media_marketing">Social Media Marketing</option>
+                        <option value="event_management">Event Management</option>
+                        <option value="web_development">Web Development</option>
+                    </select>
+                </div>
+                
+                <div className="flex items-center gap-3 mt-4">
+                    <input 
+                        type="checkbox" 
+                        id="is_initial_task_edit" 
+                        checked={formData.is_initial_task} 
+                        onChange={(e) => setFormData({...formData, is_initial_task: e.target.checked})} 
+                        className="w-4 h-4 bg-void border-border text-cyan focus:ring-cyan"
+                    />
+                    <label htmlFor="is_initial_task_edit" className="text-xs font-mono tracking-widest text-sandstone uppercase">INITIAL_TASK (ONBOARDING)</label>
+                </div>
                 <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                     <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">OVERWRITE</button>

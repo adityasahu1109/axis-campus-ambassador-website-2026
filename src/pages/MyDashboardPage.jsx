@@ -254,18 +254,18 @@ function MyDashboardPage() {
                                         onChange={(e) => setDriveLink(e.target.value)} 
                                         className="w-full bg-void border border-border p-4 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] disabled:opacity-50"
                                         placeholder="https://drive.google.com/..."
-                                        disabled={['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
+                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
                                     />
                                 </div>
                                 <div className="mt-6 flex justify-end gap-x-4">
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                                     <button 
                                         type="submit" 
-                                        disabled={['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status)} 
-                                        className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status)} 
+                                        className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                     >
-                                        { getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : 'TRANSMIT' }
-                                        {!['approved', 'pending'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
+                                        { getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'RETRANSMIT' : 'TRANSMIT' }
+                                        {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
                                     </button>
                                 </div>
                             </form>

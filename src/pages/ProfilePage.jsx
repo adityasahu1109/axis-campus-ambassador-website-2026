@@ -54,7 +54,7 @@ const InputField = ({ label, id, type = "text", value, onChange, placeholder, re
 function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState({
-    full_name: '', bio: '', college_name: '', year: '', branch: '', primary_phone: '', additional_phone: ''
+    full_name: '', bio: '', college_name: '', year: '', branch: '', primary_phone: '', additional_phone: '', referral_code: ''
   });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -69,7 +69,7 @@ function ProfilePage() {
           setLoading(true);
           const { data, error } = await supabase
             .from('profiles')
-            .select('full_name, bio, college_name, year, branch, primary_phone, additional_phone')
+            .select('full_name, bio, college_name, year, branch, primary_phone, additional_phone, referral_code')
             .eq('id', user.id).single();
           if (error) throw error;
           if (data) setProfile(data);
@@ -161,8 +161,12 @@ function ProfilePage() {
             <Toast msg={message} />
 
             <form onSubmit={handleUpdateProfile}>
-                <InputField label="NODE_ALIAS (Full Name)" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
-                <InputField label="COMM_ADDRESS (Email)" id="email" type="email" value={user?.email || ''} disabled />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                    <InputField label="NODE_ALIAS (Full Name)" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
+                    <InputField label="COMM_ADDRESS (Email)" id="email" type="email" value={user?.email || ''} disabled />
+                </div>
+                
+                <InputField label="YOUR_REFERRAL_CODE" id="referral_code" type="text" value={profile.referral_code || 'UNASSIGNED'} disabled />
                 <InputField label="BIOGRAPHY_LOG" id="bio" type="textarea" value={profile.bio || ''} onChange={handleProfileChange} placeholder="Input background data..." />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">

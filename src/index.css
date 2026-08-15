@@ -30,6 +30,14 @@
   --color-warning: var(--theme-amber-bright);
   --color-danger: var(--theme-amber-deep);
   --color-border: var(--theme-border);
+  --font-display: "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-body: "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-logo: "Ethnocentric", sans-serif;
+
+  /* Radii — sharp/angular per brand, not soft rounded */
+  --radius-panel: 2px;
+  --radius-chip: 999px; /* pills stay round for badges/status */
 }
 
 @layer base {
@@ -64,17 +72,6 @@
     --theme-cyan-deep: #005792;
     --theme-border: #2A2A32;
   }
-}
-
-  /* Fonts */
-  --font-display: "Space Grotesk", ui-sans-serif, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-body: "Space Grotesk", ui-sans-serif, sans-serif;
-  --font-logo: "Ethnocentric", sans-serif;
-
-  /* Radii — sharp/angular per brand, not soft rounded */
-  --radius-panel: 2px;
-  --radius-chip: 999px; /* pills stay round for badges/status */
 }
 
 /* Animations */

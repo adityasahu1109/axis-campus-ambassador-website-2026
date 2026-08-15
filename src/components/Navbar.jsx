@@ -3,7 +3,7 @@ import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import NotificationsDropdown from './NotificationsDropdown';
-
+import clsx from 'clsx';
 import { PiSignOut, PiUser, PiSun, PiMoon } from 'react-icons/pi';
 import { TerminalLabel } from './motifs/TerminalLabel';
 import { AxisFrame } from './motifs/AxisFrame';
@@ -43,10 +43,10 @@ function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
-    // Light mode by default, unless explicitly set to dark
+    // Dark mode by default (matches the sci-fi brand aesthetic)
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) return storedTheme === 'dark';
-    return false;
+    return true;
   });
   const dropdownRef = useRef(null);
 
@@ -140,7 +140,7 @@ function Navbar() {
   };
 
   const ThemeToggle = ({ isMobile = false }) => (
-    <button 
+    <button
       onClick={() => setIsDark(!isDark)}
       className={clsx(
         "flex items-center justify-center transition-colors text-cyan hover:text-cyan-bright",
