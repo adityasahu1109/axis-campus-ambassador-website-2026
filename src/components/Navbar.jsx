@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import NotificationsDropdown from './NotificationsDropdown';
 
-import { PiSignOut, PiUser, PiBell } from 'react-icons/pi';
+import { PiSignOut, PiUser, PiSun, PiMoon } from 'react-icons/pi';
 import { TerminalLabel } from './motifs/TerminalLabel';
 import { AxisFrame } from './motifs/AxisFrame';
 
@@ -41,8 +42,24 @@ function Navbar() {
   const [profile, setProfile] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [isDark, setIsDark] = useState(() => {
+    // Light mode by default, unless explicitly set to dark
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme) return storedTheme === 'dark';
+    return false;
+  });
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -64,18 +81,8 @@ function Navbar() {
       if (user) {
         const { data } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
         setProfile(data);
-        
-        // Fetch unread notifications count
-        const { count, error } = await supabase
-          .from('notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('profile_id', user.id)
-          .eq('read', false);
-          
-        if (!error) setUnreadCount(count || 0);
       } else {
         setProfile(null);
-        setUnreadCount(0);
       }
     }
     getProfile();
@@ -111,11 +118,11 @@ function Navbar() {
 
     if (isMobile) {
       return to ? (
-        <NavLink to={to} className="block w-full mt-2" onClick={onClick}>
+        <NavLink to={to} className="block w-full mt-2" onClick={() => { if (onClick) onClick(); setIsMobileMenuOpen(false); }}>
           {content}
         </NavLink>
       ) : (
-        <button onClick={onClick} className="block w-full mt-2">
+        <button onClick={() => { if (onClick) onClick(); setIsMobileMenuOpen(false); }} className="block w-full mt-2">
           {content}
         </button>
       );
@@ -131,6 +138,20 @@ function Navbar() {
       </button>
     );
   };
+
+  const ThemeToggle = ({ isMobile = false }) => (
+    <button 
+      onClick={() => setIsDark(!isDark)}
+      className={clsx(
+        "flex items-center justify-center transition-colors text-cyan hover:text-cyan-bright",
+        isMobile ? "w-full py-4 bg-obsidian border-y border-border" : "mx-2 w-10 h-10 border border-transparent hover:border-cyan hover:bg-obsidian-soft"
+      )}
+      aria-label="Toggle Theme"
+    >
+      {isDark ? <PiSun size={isMobile ? 24 : 20} className="mr-2 md:mr-0" /> : <PiMoon size={isMobile ? 24 : 20} className="mr-2 md:mr-0" />}
+      {isMobile && <span className="font-mono text-sm uppercase tracking-widest">{isDark ? 'LIGHT_MODE' : 'DARK_MODE'}</span>}
+    </button>
+  );
 
   const renderDesktopLinks = () => {
     if (!user) {
@@ -148,10 +169,10 @@ function Navbar() {
         <>
           <NavItem to="/admin">Terminal</NavItem>
           <NavItem to="/leaderboard">Grid_Status</NavItem>
-          <Link to="/notifications" className="mx-2 relative text-cyan hover:text-white transition-colors">
-            <PiBell size={24} />
-            {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber text-void text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">{unreadCount}</span>}
-          </Link>
+          <div className="mx-2 flex items-center">
+            <NotificationsDropdown />
+          </div>
+          <ThemeToggle />
           <UserDropdown />
         </>
       );
@@ -162,10 +183,10 @@ function Navbar() {
           <NavItem to="/dashboard">Dashboard</NavItem>
           <NavItem to="/announcements">Comms</NavItem>
           <NavItem to="/leaderboard">Rank</NavItem>
-          <Link to="/notifications" className="mx-2 relative text-cyan hover:text-white transition-colors">
-            <PiBell size={24} />
-            {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber text-void text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">{unreadCount}</span>}
-          </Link>
+          <div className="mx-2 flex items-center">
+            <NotificationsDropdown />
+          </div>
+          <ThemeToggle />
           <UserDropdown />
         </>
       );
@@ -180,6 +201,7 @@ function Navbar() {
           <NavItem to="/" isMobile>Home</NavItem>
           <NavItem to="/leaderboard" isMobile>Leaderboard</NavItem>
           <NavItem onClick={handleScrollToContact} isMobile>Contact</NavItem>
+          <ThemeToggle isMobile />
           <Link to="/login" className={mobileGetStartedClass}>Init_Session</Link>
         </>
       );
@@ -189,10 +211,9 @@ function Navbar() {
         <>
           <NavItem to="/admin" isMobile>Terminal</NavItem>
           <NavItem to="/leaderboard" isMobile>Grid_Status</NavItem>
-          <NavItem to="/notifications" isMobile>
-            Alerts {unreadCount > 0 && <span className="ml-2 bg-amber text-void px-2 py-0.5 text-[10px] rounded-full">{unreadCount}</span>}
-          </NavItem>
+          <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile/organizer" isMobile>System_ID</NavItem>
+          <ThemeToggle isMobile />
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger hover:!bg-red-600 !text-white`}>End_Session</button>
         </>
       );
@@ -203,10 +224,9 @@ function Navbar() {
           <NavItem to="/dashboard" isMobile>Dashboard</NavItem>
           <NavItem to="/announcements" isMobile>Comms</NavItem>
           <NavItem to="/leaderboard" isMobile>Rank</NavItem>
-          <NavItem to="/notifications" isMobile>
-            Alerts {unreadCount > 0 && <span className="ml-2 bg-amber text-void px-2 py-0.5 text-[10px] rounded-full">{unreadCount}</span>}
-          </NavItem>
+          <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile" isMobile>Profile</NavItem>
+          <ThemeToggle isMobile />
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>
         </>
       );

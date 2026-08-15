@@ -56,11 +56,7 @@ export default function OnboardingDomainTaskPage() {
         setError(null);
         try {
           const { data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .eq('is_initial_task', true)
-            .eq('domain', selectedDomain)
-            .limit(1)
+            .rpc('get_initial_task_for_domain', { domain_name: selectedDomain })
             .maybeSingle();
             
           if (error) throw error;
@@ -87,34 +83,14 @@ export default function OnboardingDomainTaskPage() {
     setError(null);
 
     try {
-      // 1. Update domain on profile (if not already set or changed)
-      if (profile?.domain !== selectedDomain) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ domain: selectedDomain })
-          .eq('id', user.id);
-        if (profileError) throw profileError;
-      }
+      // Use the RPC to atomically update profile and create submission
+      const { error: submissionError } = await supabase.rpc('submit_initial_task', {
+        p_domain_name: selectedDomain,
+        p_task_id: initialTask.id,
+        p_drive_link: driveLink
+      });
 
-      // 2. Submit the task
-      const { error: submissionError } = await supabase
-        .from('submissions')
-        .insert({
-          student_id: user.id,
-          task_id: initialTask.id,
-          drive_link: driveLink,
-          status: 'pending'
-        });
-        
       if (submissionError) throw submissionError;
-
-      // 3. Update profile status to pending_review
-      const { error: statusError } = await supabase
-        .from('profiles')
-        .update({ status: 'pending_review' })
-        .eq('id', user.id);
-        
-      if (statusError) throw statusError;
 
       await refetchProfile();
       navigate('/onboarding/pending', { replace: true });
@@ -124,6 +100,7 @@ export default function OnboardingDomainTaskPage() {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">

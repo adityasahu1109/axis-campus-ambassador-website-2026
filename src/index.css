@@ -10,26 +10,61 @@
 }
 
 @theme {
-  /* Core brand */
-  --color-void: #121216;
-  --color-obsidian: #16161A;
-  --color-obsidian-soft: #1C1C22;
-  --color-sandstone: #DAD2C5;
-  --color-sandstone-dim: #B8AF9F;
+  /* Core brand mapped to CSS variables for dynamic theming */
+  --color-void: var(--theme-void);
+  --color-obsidian: var(--theme-obsidian);
+  --color-obsidian-soft: var(--theme-obsidian-soft);
+  --color-sandstone: var(--theme-sandstone);
+  --color-sandstone-dim: var(--theme-sandstone-dim);
 
-  --color-amber: #FF9E00;
-  --color-amber-bright: #FFD166;
-  --color-amber-deep: #FF3D00;
+  --color-amber: var(--theme-amber);
+  --color-amber-bright: var(--theme-amber-bright);
+  --color-amber-deep: var(--theme-amber-deep);
 
-  --color-cyan: #00F0FF;
-  --color-cyan-soft: #90E0EF;
-  --color-cyan-deep: #005792;
+  --color-cyan: var(--theme-cyan);
+  --color-cyan-soft: var(--theme-cyan-soft);
+  --color-cyan-deep: var(--theme-cyan-deep);
 
   /* Semantic */
   --color-success: #4ADE80;
-  --color-warning: #FFD166;
-  --color-danger: #FF3D00;
-  --color-border: #2A2A32;
+  --color-warning: var(--theme-amber-bright);
+  --color-danger: var(--theme-amber-deep);
+  --color-border: var(--theme-border);
+}
+
+@layer base {
+  :root {
+    /* Warm palette / Light mode default */
+    --theme-void: #FBF6EE;
+    --theme-obsidian: #F3EAD3;
+    --theme-obsidian-soft: #EFE4C8;
+    --theme-sandstone: #3A3A3A;
+    --theme-sandstone-dim: #6B6B6B;
+    --theme-amber: #D62828;
+    --theme-amber-bright: #F77F00;
+    --theme-amber-deep: #D62828;
+    --theme-cyan: #0077B6;
+    --theme-cyan-soft: #0096C7;
+    --theme-cyan-deep: #023E8A;
+    --theme-border: #E5D5B5;
+  }
+
+  .dark {
+    /* Original dark mode (neon sci-fi) */
+    --theme-void: #121216;
+    --theme-obsidian: #16161A;
+    --theme-obsidian-soft: #1C1C22;
+    --theme-sandstone: #DAD2C5;
+    --theme-sandstone-dim: #B8AF9F;
+    --theme-amber: #FF9E00;
+    --theme-amber-bright: #FFD166;
+    --theme-amber-deep: #FF3D00;
+    --theme-cyan: #00F0FF;
+    --theme-cyan-soft: #90E0EF;
+    --theme-cyan-deep: #005792;
+    --theme-border: #2A2A32;
+  }
+}
 
   /* Fonts */
   --font-display: "Space Grotesk", ui-sans-serif, sans-serif;

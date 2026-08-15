@@ -58,7 +58,7 @@ const InputField = ({ label, type = "text", value, onChange, required, multiline
 
 function AdminDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('submissions');
+  const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
   const [students, setStudents] = useState([]);
@@ -67,6 +67,7 @@ function AdminDashboard() {
   const [modals, setModals] = useState({ create: false, edit: false, delete: false, review: false, announce: false, deleteAnnounce: false });
   const [selectedItem, setSelectedItem] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [awardedPoints, setAwardedPoints] = useState(0);
   const [formData, setFormData] = useState({ title: '', description: '', content: '', points: 0 });
 
   const fetchData = useCallback(async () => {
@@ -131,55 +132,28 @@ function AdminDashboard() {
     } catch (error) { console.error(`Error deleting ${type}:`, error.message); }
   };
 
-  const handleApprove = async () => {
-    try {
-      const { error } = await supabase.rpc('submit_review', {
-        p_submission_id: selectedItem.id,
-        p_decision: 'approved',
-        p_notes: rejectionReason || 'Approved',
-        p_points_awarded: selectedItem.tasks.points,
-        p_reviewed_by: user.id
-      });
-      if (error) throw error;
-      fetchData();
-      setModals({ ...modals, review: false });
-    } catch (error) { console.error("Error approving:", error.message); }
-  };
-
-  const handleReject = async () => {
-    try {
-      const { error } = await supabase.rpc('submit_review', {
-        p_submission_id: selectedItem.id,
-        p_decision: 'rejected',
-        p_notes: rejectionReason || 'Rejected',
-        p_points_awarded: 0,
-        p_reviewed_by: user.id
-      });
-      if (error) throw error;
-      fetchData();
-      setRejectionReason('');
-      setModals({ ...modals, review: false });
-    } catch (error) { console.error("Error rejecting:", error.message); }
-  };
-
-  const handleNeedsRevision = async () => {
-    if (!rejectionReason) {
-      alert("Feedback notes are required for revision requests.");
+  const handleReviewSubmit = async (decision) => {
+    if ((decision === 'needs_revision' || decision === 'rejected') && !rejectionReason) {
+      alert("Feedback notes are required for this decision.");
       return;
     }
     try {
+      const finalPoints = decision === 'approved' ? awardedPoints : 0;
       const { error } = await supabase.rpc('submit_review', {
         p_submission_id: selectedItem.id,
-        p_decision: 'needs_revision',
-        p_notes: rejectionReason,
-        p_points_awarded: 0,
+        p_decision: decision,
+        p_notes: rejectionReason || (decision === 'approved' ? 'Approved' : ''),
+        p_points_awarded: finalPoints,
         p_reviewed_by: user.id
       });
       if (error) throw error;
       fetchData();
       setRejectionReason('');
       setModals({ ...modals, review: false });
-    } catch (error) { console.error("Error requesting revision:", error.message); }
+    } catch (error) { 
+      console.error(`Error with review decision ${decision}:`, error.message);
+      alert(`Error: ${error.message}`);
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="AETHEL_CORE_INITIALIZING..." /></div>;
@@ -219,14 +193,32 @@ function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
         
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up">
-          <TabButton name="submissions" label="Submissions" count={submissions.filter(s => s.status === 'pending').length} />
+        <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up border-b border-border pb-4">
+          <TabButton name="overview" label="Overview" />
+          <TabButton name="submissions" label="Review Queue" count={submissions.filter(s => s.status === 'pending').length} />
           <TabButton name="tasks" label="Directives" />
           <TabButton name="students" label="Nodes" />
           <TabButton name="announcements" label="Comms" />
         </div>
 
         <div className="animate-fade-in">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12">
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2">Active_Nodes</span>
+                        <span className="text-4xl font-display font-black text-white">{students.length}</span>
+                    </AxisFrame>
+                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12">
+                        <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2">Pending_Reviews</span>
+                        <span className="text-4xl font-display font-black text-white">{submissions.filter(s => s.status === 'pending').length}</span>
+                    </AxisFrame>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12">
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2">Active_Directives</span>
+                        <span className="text-4xl font-display font-black text-white">{tasks.length}</span>
+                    </AxisFrame>
+                </div>
+            )}
             {/* Submissions Tab */}
             {activeTab === 'submissions' && (
                 <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
@@ -431,8 +423,8 @@ function AdminDashboard() {
                         <span className="font-mono font-bold text-white uppercase">{selectedItem?.profiles.full_name}</span>
                     </div>
                     <div>
-                        <span className="text-[10px] font-mono font-bold text-cyan uppercase tracking-widest block mb-1">REWARD</span>
-                        <span className="font-mono font-bold text-cyan">+{selectedItem?.tasks.points} METRICS</span>
+                        <span className="text-[10px] font-mono font-bold text-cyan uppercase tracking-widest block mb-1">MAX_REWARD</span>
+                        <span className="font-mono font-bold text-cyan">{selectedItem?.tasks.points} METRICS</span>
                     </div>
                 </div>
 
@@ -453,15 +445,24 @@ function AdminDashboard() {
                     </div>
                 </div>
                 
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <InputField label="AWARDED_METRICS" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-sandstone mt-6 opacity-70">If rejected or requires revision, awarded metrics will automatically be 0. Ensure it does not exceed {selectedItem?.tasks.points}.</p>
+                    </div>
+                </div>
+
                 <div>
-                    <InputField label="REJECTION_LOG (Optional)" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+                    <InputField label="REVIEW_LOG / FEEDBACK" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
                 </div>
 
                 <div className="flex justify-between gap-4 pt-6 border-t border-border">
-                    <button onClick={() => handleNeedsRevision()} disabled={!rejectionReason} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
+                    <button onClick={() => handleReviewSubmit('needs_revision')} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
                     <div className="flex gap-4">
-                        <button onClick={() => handleReject()} disabled={!rejectionReason} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
-                        <button onClick={() => handleApprove()} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">VERIFY_AND_AWARD</button>
+                        <button onClick={() => handleReviewSubmit('rejected')} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
+                        <button onClick={() => handleReviewSubmit('approved')} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">VERIFY_AND_AWARD</button>
                     </div>
                 </div>
             </div>

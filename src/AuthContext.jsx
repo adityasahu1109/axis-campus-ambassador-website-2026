@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [timeoutReached, setTimeoutReached] = useState(false);
 
   const fetchProfile = async (userId) => {
     if (!userId) {
@@ -32,13 +33,23 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // Check for an active session when the component mounts
+    // Hard timeout for infinite loader
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => {
+        setTimeoutReached(true);
+      }, 8000);
+    } else {
+      setTimeoutReached(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  useEffect(() => {
     const getSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Supabase getSession error:", error.message);
-        }
+        if (error) console.error("Supabase getSession error:", error.message);
         
         const session = data?.session || null;
         setSession(session);
@@ -61,37 +72,46 @@ export function AuthProvider({ children }) {
 
     getSession();
 
-    // Listen for changes in authentication state (e.g., user signs in/out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
+        
+        // Ensure TOKEN_REFRESHED, USER_UPDATED, SIGNED_IN trigger a re-fetch
+        if (session?.user && ['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED', 'INITIAL_SESSION'].includes(event)) {
           await fetchProfile(session.user.id);
-        } else {
+        } else if (!session?.user) {
           setProfile(null);
         }
       }
     );
 
-    // Clean up the subscription when the component unmounts
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          await fetchProfile(data.session.user.id);
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       subscription?.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
-  // The value provided to consuming components
   const value = {
     signUp: (data) => supabase.auth.signUp(data),
     signIn: (data) => supabase.auth.signInWithPassword(data),
-    // --- MODIFICATION: Added redirectTo option for Google Sign-In ---
     signInWithGoogle: () => supabase.auth.signInWithOAuth({ 
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`
       }
     }),
-    // --- END MODIFICATION ---
     signOut: () => supabase.auth.signOut(),
     user,
     session,
@@ -101,20 +121,35 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Render the children components only when not loading
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
-        <div className="flex justify-center items-center h-screen bg-void">
-          <div className="flex flex-col items-center justify-center font-mono space-y-4">
-            <div className="relative w-48 h-1 bg-obsidian-soft overflow-hidden rounded-full">
-              <div className="absolute inset-0 bg-cyan w-1/3 rounded-full animate-scanline" style={{ animationDirection: 'alternate' }}></div>
-            </div>
-            <div className="text-cyan text-sm tracking-widest flex items-center gap-2">
-              <span className="animate-pulse">{'>'}</span> SYSTEM_INITIALIZING...
+        timeoutReached ? (
+          <div className="flex justify-center items-center h-screen bg-void">
+            <div className="flex flex-col items-center justify-center font-mono space-y-4">
+              <div className="text-cyan text-sm tracking-widest text-center">
+                <span className="text-amber animate-pulse">!</span> TAKING LONGER THAN EXPECTED
+              </div>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 border border-cyan text-cyan text-xs font-bold tracking-widest hover:bg-cyan/10 transition-colors"
+              >
+                RETRY CONNECTION
+              </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex justify-center items-center h-screen bg-void">
+            <div className="flex flex-col items-center justify-center font-mono space-y-4">
+              <div className="relative w-48 h-1 bg-obsidian-soft overflow-hidden rounded-full">
+                <div className="absolute inset-0 bg-cyan w-1/3 rounded-full animate-scanline" style={{ animationDirection: 'alternate' }}></div>
+              </div>
+              <div className="text-cyan text-sm tracking-widest flex items-center gap-2">
+                <span className="animate-pulse">{'>'}</span> SYSTEM_INITIALIZING...
+              </div>
+            </div>
+          </div>
+        )
       ) : (
         children
       )}

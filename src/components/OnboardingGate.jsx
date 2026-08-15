@@ -47,6 +47,13 @@ function OnboardingGate({ children }) {
     if (isTargetingOnboarding) {
       return <Navigate to="/dashboard" replace />;
     }
+  } else {
+    // Unexpected status = fail loud, not silent
+    return (
+      <div className="flex justify-center items-center h-screen bg-void text-red-500 font-mono">
+        <h1>UNEXPECTED_STATUS_ERROR: {profile?.status}</h1>
+      </div>
+    );
   }
 
   return children;

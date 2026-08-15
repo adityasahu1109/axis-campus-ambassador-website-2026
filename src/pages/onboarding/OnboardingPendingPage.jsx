@@ -22,7 +22,7 @@ export default function OnboardingPendingPage() {
         .select(`
           *,
           tasks (
-            id, title, description, is_initial_task
+            id, title, description
           )
         `)
         .eq('student_id', user.id)

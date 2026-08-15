@@ -18,6 +18,7 @@ import AnnouncementsPage from './pages/AnnouncementsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import OrganizerProfilePage from './pages/OrganizerProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
           <Route path="/onboarding/details" element={<OnboardingGate><OnboardingDetailsPage /></OnboardingGate>} />
           <Route path="/onboarding/domain-task" element={<OnboardingGate><OnboardingDomainTaskPage /></OnboardingGate>} />
           <Route path="/onboarding/pending" element={<OnboardingGate><OnboardingPendingPage /></OnboardingGate>} />
+          
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <Footer />
