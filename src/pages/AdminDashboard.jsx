@@ -106,7 +106,10 @@ function AdminDashboard() {
       fetchData(); 
       setModals({ ...modals, create: false, announce: false });
       setFormData({ title: '', description: '', content: '', points: 0 });
-    } catch (error) { console.error(`Error creating ${type}:`, error.message); }
+    } catch (error) { 
+      console.error(`Error creating ${type}:`, error.message); 
+      alert(`Error creating ${type}: ${error.message}`);
+    }
   };
 
   const handleUpdate = async (e) => {

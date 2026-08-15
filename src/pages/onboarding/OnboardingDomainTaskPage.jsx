@@ -6,10 +6,36 @@ import { AxisFrame } from '../../components/motifs/AxisFrame';
 import { TerminalLoader } from '../../components/motifs/TerminalLoader';
 
 const DOMAINS = [
-  { id: 'management_design', label: 'Management & Design' },
-  { id: 'software_electronics', label: 'Software & Electronics' },
-  { id: 'robotics', label: 'Robotics & Automation' },
-  { id: 'convergence', label: 'Convergence' }
+  { 
+    id: 'design', 
+    label: 'Design',
+    suits: 'Visual design, Canva/Figma/Photoshop',
+    deliverable: 'Localized posters, social creatives, merch mockups'
+  },
+  { 
+    id: 'digital_marketing', 
+    label: 'Digital Marketing',
+    suits: 'Growth, ads, analytics',
+    deliverable: 'Registration-driving campaigns, referral tracking, community posting'
+  },
+  { 
+    id: 'social_media_marketing', 
+    label: 'Social Media Marketing',
+    suits: 'Active on Instagram/LinkedIn, content-native',
+    deliverable: 'Reels, stories, hashtag campaigns, outreach'
+  },
+  { 
+    id: 'event_management', 
+    label: 'Event Management',
+    suits: 'Organizers, club leads, on-ground doers',
+    deliverable: 'Campus roadshows, info-sessions, contingent building'
+  },
+  { 
+    id: 'web_development', 
+    label: 'Web Development',
+    suits: 'Coders, even beginners',
+    deliverable: 'Small features/bug fixes for the CA website post-launch'
+  }
 ];
 
 export default function OnboardingDomainTaskPage() {
@@ -126,9 +152,10 @@ export default function OnboardingDomainTaskPage() {
             }`}>
               {domain.label}
             </h3>
-            <p className="text-sm text-sandstone opacity-70">
-              Specialized pathway for {domain.label.toLowerCase()} tasks.
-            </p>
+            <div className="text-xs space-y-1">
+              <p className="text-sandstone opacity-80"><strong className="text-white opacity-90">Who It Suits:</strong> {domain.suits}</p>
+              <p className="text-sandstone opacity-80"><strong className="text-white opacity-90">Deliverable:</strong> {domain.deliverable}</p>
+            </div>
           </button>
         ))}
       </div>
