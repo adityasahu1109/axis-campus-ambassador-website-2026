@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { useAuth } from '../../AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { AxisFrame } from '../../components/motifs/AxisFrame';
 import { TerminalLoader } from '../../components/motifs/TerminalLoader';
 
@@ -39,7 +39,7 @@ const DOMAINS = [
 ];
 
 export default function OnboardingDomainTaskPage() {
-  const { user, profile, refetchProfile } = useAuth();
+  const { profile, refetchProfile } = useAuth();
   const navigate = useNavigate();
   
   const [selectedDomain, setSelectedDomain] = useState(profile?.domain || null);
@@ -56,7 +56,7 @@ export default function OnboardingDomainTaskPage() {
         setError(null);
         try {
           const { data, error } = await supabase
-            .rpc('get_initial_task_for_domain', { domain_name: selectedDomain })
+            .rpc('get_initial_task_for_domain', { p_domain: selectedDomain })
             .maybeSingle();
             
           if (error) throw error;

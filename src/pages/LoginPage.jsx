@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -53,7 +53,7 @@ function LoginPage() {
     
     if (isRegister) {
       try {
-        const { data, error } = await signUp({ email, password, options: { data: { full_name: fullName, role: 'student' } } });
+        const { error } = await signUp({ email, password, options: { data: { full_name: fullName, role: 'student' } } });
         if (error) throw error;
 
         if (referralCode.trim()) {

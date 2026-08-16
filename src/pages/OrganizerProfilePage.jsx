@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../supabaseClient';
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';

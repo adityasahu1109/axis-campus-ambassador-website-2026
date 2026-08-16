@@ -1,35 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import React from 'react';
+import { usePaginatedQuery } from '../hooks/usePaginatedQuery';
+import { PaginationControls } from '../components/PaginationControls';
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { TerminalLoader } from '../components/motifs/TerminalLoader';
 import { Crosshair } from '../components/motifs/Crosshair';
 
 function AnnouncementsPage() {
-    const [announcements, setAnnouncements] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function getAnnouncements() {
-            try {
-                setLoading(true);
-                const { data, error } = await supabase
-                    .from('announcements')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                setAnnouncements(data || []);
-            } catch (error) {
-                console.error("Error fetching announcements:", error.message);
-            } finally {
-                setLoading(false);
-            }
-        }
-        getAnnouncements();
-    }, []);
-
-    if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_COMMS_DATA..." /></div>;
+    const query = usePaginatedQuery('announcements', '*', 10, { orderBy: { column: 'created_at', ascending: false } });
+    const announcements = query.data || [];
+    
+    if (query.loading && announcements.length === 0) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_COMMS_DATA..." /></div>;
 
     return (
         <div className="bg-void min-h-screen pb-20 relative pt-20">
@@ -81,6 +62,7 @@ function AnnouncementsPage() {
                                 </AxisFrame>
                             );
                         })}
+                        {announcements.length > 0 && <PaginationControls query={query} />}
                     </div>
                 ) : (
                     <div className="mt-12">

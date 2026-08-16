@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../supabaseClient';
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
@@ -43,7 +43,7 @@ function MyDashboardPage() {
     const [profile, setProfile] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [submissions, setSubmissions] = useState([]);
-    const [leaderboard, setLeaderboard] = useState([]);
+    const [myRank, setMyRank] = useState(0);
     const [loading, setLoading] = useState(true);
     const [lastSeenTaskId, setLastSeenTaskId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,19 +56,19 @@ function MyDashboardPage() {
             setLoading(true);
             const seenId = localStorage.getItem('lastSeenTaskId');
             setLastSeenTaskId(seenId ? parseInt(seenId) : 0);
-            
+
             const { data: profileData } = await supabase.from('profiles').select('full_name, total_points').eq('id', user.id).single();
             setProfile(profileData);
-            
+
             const { data: tasksData } = await supabase.from('tasks').select('*').order('id', { ascending: false });
             setTasks(tasksData || []);
-            
-            const { data: leaderboardData } = await supabase.from('profiles').select('id, total_points').order('total_points', { ascending: false });
-            setLeaderboard(leaderboardData || []);
-            
+
+            const { data: rankData } = await supabase.rpc('get_my_rank', { p_user_id: user.id }).maybeSingle();
+            if (rankData) setMyRank(rankData.rank);
+
             const { data: submissionsData } = await supabase.from('submissions').select('*').eq('student_id', user.id);
             setSubmissions(submissionsData || []);
-            
+
             if (tasksData && tasksData.length > 0) {
                 localStorage.setItem('lastSeenTaskId', tasksData[0].id.toString());
             }
@@ -107,12 +107,11 @@ function MyDashboardPage() {
     if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">NO_ACTIVE_SESSION</div>;
 
     const getSubmissionForTask = (taskId) => submissions.find(sub => sub.task_id === taskId);
-    const myRank = leaderboard.findIndex(p => p.id === user?.id) + 1;
     const completedTasksCount = submissions.filter(s => s.status === 'approved').length;
 
     return (
         <div className="bg-void min-h-screen pb-20 pt-20 relative">
-            
+
             {/* Background Grid */}
             <div className="absolute inset-0 axis-grid-bg opacity-20 pointer-events-none fixed"></div>
 
@@ -132,7 +131,7 @@ function MyDashboardPage() {
             </div>
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
-                
+
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12 animate-slide-in-up">
                     <AxisFrame variant="cyan" hover={true} className="!p-6 flex flex-col items-center text-center">
@@ -141,7 +140,7 @@ function MyDashboardPage() {
                             {myRank > 0 ? (myRank < 10 ? `0${myRank}` : myRank) : '--'}
                         </p>
                     </AxisFrame>
-                    
+
                     <AxisFrame variant="amber" hover={true} className="!p-6 flex flex-col items-center text-center">
                         <TerminalLabel className="mb-2 text-amber">TOTAL_METRICS</TerminalLabel>
                         <p className="text-4xl font-mono font-bold text-amber">
@@ -175,19 +174,17 @@ function MyDashboardPage() {
                                 const isNew = task.id > lastSeenTaskId;
                                 const isVerified = status === 'approved';
                                 const isPending = status === 'pending';
-                                
-                                const frameVariant = isVerified ? "cyan" : isPending ? "amber" : "cyan";
-                                
+
                                 return (
-                                    <div 
-                                        key={task.id} 
-                                        onClick={() => handleTaskClick(task)} 
+                                    <div
+                                        key={task.id}
+                                        onClick={() => handleTaskClick(task)}
                                         className={clsx("group cursor-pointer animate-fade-in-up border transition-all duration-300 relative overflow-hidden", isVerified ? "border-cyan/30 bg-cyan/5 hover:bg-cyan/10" : isPending ? "border-amber/50 bg-amber/5 hover:bg-amber/10" : "border-border bg-obsidian hover:border-cyan/50 hover:bg-obsidian-soft")}
                                         style={{ animationDelay: `${index * 50}ms` }}
                                     >
                                         {/* Accent bar */}
                                         <div className={clsx("absolute left-0 top-0 bottom-0 w-1 transition-all", isVerified ? "bg-cyan opacity-50" : isPending ? "bg-amber" : "bg-border group-hover:bg-cyan group-hover:opacity-50")}></div>
-                                        
+
                                         <div className="p-5 pl-6 flex flex-col h-full">
                                             <div className="flex justify-between items-start mb-2 gap-4">
                                                 <div className="flex items-center gap-3">
@@ -196,9 +193,9 @@ function MyDashboardPage() {
                                                 </div>
                                                 <span className={clsx("font-mono font-bold text-sm shrink-0", isPending ? "text-amber" : "text-cyan")}>+{task.points}</span>
                                             </div>
-                                            
+
                                             <p className="text-sm font-mono text-sandstone-dim line-clamp-2 mb-6 group-hover:text-sandstone transition-colors">{task.description}</p>
-                                            
+
                                             <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/50">
                                                 <StatusBadge status={status} />
                                                 <Crosshair size={12} className={clsx("opacity-30 transition-all", isVerified ? "text-cyan" : isPending ? "text-amber" : "text-cyan group-hover:opacity-100 group-hover:rotate-90")} />
@@ -216,7 +213,7 @@ function MyDashboardPage() {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={() => setIsModalOpen(false)}>
                     <AxisFrame variant={getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'cyan' : 'amber'} className="!p-0 w-full max-w-lg max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                        
+
                         <div className={clsx("px-6 py-4 flex justify-between items-center border-b", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'border-cyan/30 bg-cyan/10' : 'border-amber/30 bg-amber/10')}>
                             <TerminalLabel prefix=">">{getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'DIRECTIVE_VERIFIED' : 'EXECUTE_DIRECTIVE'}</TerminalLabel>
                             <button onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>×</button>
@@ -227,7 +224,7 @@ function MyDashboardPage() {
                                 <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
                                 <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{selectedTask?.points}</span>
                             </div>
-                            
+
                             <p className="text-sm font-mono text-sandstone bg-obsidian-soft border border-border p-4 leading-relaxed mb-6 whitespace-pre-wrap">
                                 {selectedTask?.description || "No description provided."}
                             </p>
@@ -246,12 +243,12 @@ function MyDashboardPage() {
                                 <div>
                                     <label htmlFor="driveLink" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">PROOF_OF_EXECUTION</label>
                                     <p className="text-[10px] font-mono text-sandstone-dim uppercase mb-3">Provide Google Drive Link to execution payload.</p>
-                                    <input 
+                                    <input
                                         type="url"
                                         id="driveLink"
-                                        required 
-                                        value={driveLink} 
-                                        onChange={(e) => setDriveLink(e.target.value)} 
+                                        required
+                                        value={driveLink}
+                                        onChange={(e) => setDriveLink(e.target.value)}
                                         className="w-full bg-void border border-border p-4 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] disabled:opacity-50"
                                         placeholder="https://drive.google.com/..."
                                         disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
@@ -259,12 +256,12 @@ function MyDashboardPage() {
                                 </div>
                                 <div className="mt-6 flex justify-end gap-x-4">
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status)} 
+                                    <button
+                                        type="submit"
+                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
                                         className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                     >
-                                        { getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'RETRANSMIT' : 'TRANSMIT' }
+                                        {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'RETRANSMIT' : 'TRANSMIT'}
                                         {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
                                     </button>
                                 </div>

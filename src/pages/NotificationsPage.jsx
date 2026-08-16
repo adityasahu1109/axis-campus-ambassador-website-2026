@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { TerminalLoader } from '../components/motifs/TerminalLoader';
@@ -64,7 +64,7 @@ export default function NotificationsPage() {
               NO_ACTIVE_ALERTS
             </AxisFrame>
           ) : (
-            notifications.map((notif, index) => (
+            notifications.map((notif) => (
               <AxisFrame 
                 key={notif.id} 
                 variant={notif.type === 'referral_bonus' ? 'amber' : 'cyan'} 

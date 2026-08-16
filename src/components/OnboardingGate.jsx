@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { TerminalLoader } from './motifs/TerminalLoader';
 
 function OnboardingGate({ children }) {

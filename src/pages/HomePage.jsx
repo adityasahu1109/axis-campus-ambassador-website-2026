@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
@@ -100,7 +100,7 @@ const RollingDigit = ({ digit, isVisible, delay = 0 }) => {
   );
 };
 
-const StatCard = ({ endValue, prefix, suffix, label, duration = 2000, isVisible }) => {
+const StatCard = ({ endValue, prefix, suffix, label, isVisible }) => {
   const endValueStr = String(endValue);
   const digits = endValueStr.split('');
 

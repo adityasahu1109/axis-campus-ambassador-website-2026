@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../supabaseClient';
 import NotificationsDropdown from './NotificationsDropdown';
 import clsx from 'clsx';

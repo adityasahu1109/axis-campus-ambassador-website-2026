@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
-import { useAuth } from '../../AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { AxisFrame } from '../../components/motifs/AxisFrame';
 import { TerminalLoader } from '../../components/motifs/TerminalLoader';
 
 export default function OnboardingPendingPage() {
-  const { user, profile, refetchProfile } = useAuth();
-  const navigate = useNavigate();
+  const { user, refetchProfile } = useAuth();
   
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +13,7 @@ export default function OnboardingPendingPage() {
   const [driveLink, setDriveLink] = useState('');
   const [error, setError] = useState(null);
 
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('submissions')
@@ -41,7 +39,7 @@ export default function OnboardingPendingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     fetchStatus();
@@ -52,7 +50,7 @@ export default function OnboardingPendingPage() {
     }, 10000);
     
     return () => clearInterval(interval);
-  }, [user.id]);
+  }, [user.id, fetchStatus, refetchProfile]);
 
   const handleResubmit = async (e) => {
     e.preventDefault();

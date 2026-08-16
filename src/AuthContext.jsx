@@ -1,9 +1,9 @@
 // src/AuthContext.jsx
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // Create the authentication context
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 // Create a provider component
 export function AuthProvider({ children }) {
@@ -12,7 +12,14 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeoutReached, setTimeoutReached] = useState(false);
-
+  const getSessionWithTimeout = () => {
+    return Promise.race([
+      supabase.auth.getSession(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('getSession timed out')), 5000)
+      ),
+    ]);
+  };
   const fetchProfile = async (userId) => {
     if (!userId) {
       setProfile(null);
@@ -23,7 +30,7 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single();
-    
+
     if (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);
@@ -48,13 +55,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const getSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } = await getSessionWithTimeout();
         if (error) console.error("Supabase getSession error:", error.message);
-        
+
         const session = data?.session || null;
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
@@ -76,7 +83,7 @@ export function AuthProvider({ children }) {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Ensure TOKEN_REFRESHED, USER_UPDATED, SIGNED_IN trigger a re-fetch
         if (session?.user && ['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED', 'INITIAL_SESSION'].includes(event)) {
           await fetchProfile(session.user.id);
@@ -88,13 +95,18 @@ export function AuthProvider({ children }) {
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        const { data } = await supabase.auth.getSession();
-        if (data?.session?.user) {
-          await fetchProfile(data.session.user.id);
+        try {
+          const { data } = await getSessionWithTimeout();
+          if (data?.session?.user) {
+            await fetchProfile(data.session.user.id);
+          }
+        } catch (err) {
+          console.error("Visibility-change session check timed out:", err);
+          // no need to touch loading state here — this path doesn't drive the full-page loader
         }
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
@@ -106,7 +118,7 @@ export function AuthProvider({ children }) {
   const value = {
     signUp: (data) => supabase.auth.signUp(data),
     signIn: (data) => supabase.auth.signInWithPassword(data),
-    signInWithGoogle: () => supabase.auth.signInWithOAuth({ 
+    signInWithGoogle: () => supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`
@@ -130,7 +142,7 @@ export function AuthProvider({ children }) {
               <div className="text-cyan text-sm tracking-widest text-center">
                 <span className="text-amber animate-pulse">!</span> TAKING LONGER THAN EXPECTED
               </div>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-2 border border-cyan text-cyan text-xs font-bold tracking-widest hover:bg-cyan/10 transition-colors"
               >
@@ -155,9 +167,4 @@ export function AuthProvider({ children }) {
       )}
     </AuthContext.Provider>
   );
-}
-
-// Create a custom hook to use the auth context
-export function useAuth() {
-  return useContext(AuthContext);
 }

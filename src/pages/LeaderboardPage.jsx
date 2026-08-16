@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { TerminalLoader } from '../components/motifs/TerminalLoader';
@@ -9,7 +9,6 @@ import { clsx } from 'clsx';
 
 function LeaderboardPage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [myRankData, setMyRankData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,14 +27,12 @@ function LeaderboardPage() {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles').select('role').eq('id', user.id).single();
           if (profileError) throw profileError;
-          setProfile(profileData);
 
           if (profileData.role === 'student') {
             const { data: rankData, error: rankError } = await supabase.rpc('get_my_rank', { p_profile_id: user.id }).maybeSingle();
             if (!rankError && rankData) setMyRankData(rankData);
           }
         } else {
-          setProfile(null);
           setMyRankData(null);
         }
       } catch (error) {

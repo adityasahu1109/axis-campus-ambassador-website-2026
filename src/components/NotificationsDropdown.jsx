@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { PiBell, PiBellRinging } from 'react-icons/pi';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
