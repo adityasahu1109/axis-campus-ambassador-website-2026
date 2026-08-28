@@ -7,6 +7,7 @@ import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { LensingRing } from '../components/motifs/LensingRing';
 import { Crosshair } from '../components/motifs/Crosshair';
 import { IoChevronDown } from 'react-icons/io5';
+import axisLogo from '../assets/logo.png';
 
 // --- Diagnostic Readout Card (Benefits) ---
 const DiagnosticCard = ({ index, title, children }) => ( 
@@ -177,7 +178,7 @@ function HomePage() {
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
               <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" />
             </div>
-            <span className="font-logo text-7xl sm:text-8xl md:text-9xl text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+            <img src={axisLogo} alt="AXIS'27" className="h-32 sm:h-48 md:h-64 object-contain relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
@@ -196,7 +197,7 @@ function HomePage() {
               state={{ isRegister: true }}
               className="group relative inline-flex items-center justify-center px-8 py-4 font-mono font-bold tracking-widest text-void bg-amber hover:bg-amber-bright uppercase text-sm transition-all duration-300 shadow-[0_0_20px_rgba(255,158,0,0.4)] hover:shadow-[0_0_40px_rgba(255,158,0,0.6)]"
             >
-              <span>Initialize_Sequence</span>
+              <span>Initialize Sequence</span>
               <span className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-void group-hover:w-6 transition-all"></span>
             </Link>
           </div>

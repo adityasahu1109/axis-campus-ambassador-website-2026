@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { PiInstagramLogo, PiTwitterLogo, PiLinkedinLogo } from 'react-icons/pi';
 import { AxisFrame } from './motifs/AxisFrame';
 import syntaxLogo from '../assets/syntax_logo.png';
+import logoIconWebp from '../assets/logo-icon.webp';
+import logoIconPng from '../assets/logo-icon.png';
 
 function Footer() {
   const currentYear = new Date().getFullYear();
@@ -17,6 +19,10 @@ function Footer() {
           <div className="flex flex-col items-center md:items-start space-y-4">
             <div className="flex flex-col items-center space-y-3">
               <div className="flex items-center gap-4">
+                <picture className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                  <source srcSet={logoIconWebp} type="image/webp" />
+                  <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                </picture>
                 <span className="font-logo text-3xl sm:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
                 <span className="text-xl text-sandstone-dim font-mono">x</span>
                 <div className="flex items-center gap-3">

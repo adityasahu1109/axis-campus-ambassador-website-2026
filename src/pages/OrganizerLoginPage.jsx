@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
+import axisLogo from '../assets/logo.png';
 
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
@@ -76,7 +77,7 @@ function OrganizerLoginPage() {
         <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-gradient-to-bl from-cyan-deep/20 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10">
-            <div className="mb-12"><span className="font-logo text-5xl lg:text-6xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
+            <div className="mb-12"><img src={axisLogo} alt="AXIS Logo" className="h-16 lg:h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" /></div>
             <TerminalLabel prefix=">" className="mb-4">AETHEL_PROTOCOLS // COMMAND_LEVEL_ACCESS</TerminalLabel>
             <h1 className="text-4xl lg:text-6xl font-display font-black text-white leading-none mb-6 uppercase">
                 Aethel <br/>
@@ -94,7 +95,7 @@ function OrganizerLoginPage() {
             
             {/* Header */}
             <div className="text-center mb-10">
-                <div className="mb-8 block md:hidden"><span className="font-logo text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
+                <div className="mb-8 block md:hidden"><img src={axisLogo} alt="AXIS Logo" className="h-12 object-contain mx-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" /></div>
                 <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
                     Admin Auth
                 </h2>

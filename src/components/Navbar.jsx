@@ -3,9 +3,11 @@ import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NotificationsDropdown from './NotificationsDropdown';
 import clsx from 'clsx';
-import { PiSignOut, PiUser, PiSun, PiMoon } from 'react-icons/pi';
+import { PiSignOut, PiUser } from 'react-icons/pi';
 import { TerminalLabel } from './motifs/TerminalLabel';
 import { AxisFrame } from './motifs/AxisFrame';
+import logoIconWebp from '../assets/logo-icon.webp';
+import logoIconPng from '../assets/logo-icon.png';
 
 const HamburgerIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-cyan">
@@ -22,6 +24,10 @@ const CloseIcon = () => (
 const Logo = () => (
   <div className="flex items-center space-x-3 group relative">
     <div className="absolute inset-0 bg-cyan blur-[20px] opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
+    <picture className="relative z-10 w-8 h-8 flex-shrink-0 animate-spin-slow">
+      <source srcSet={logoIconWebp} type="image/webp" />
+      <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain" />
+    </picture>
     <span className="font-logo text-3xl text-white tracking-widest relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-105">AXIS'27</span>
     <div className="flex flex-col justify-center h-full">
       <span className="text-xs font-display font-bold tracking-widest text-cyan transition-colors leading-[1.1] uppercase">
@@ -40,24 +46,7 @@ function Navbar() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
-    // Dark mode by default (matches the sci-fi brand aesthetic)
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme) return storedTheme === 'dark';
-    return true;
-  });
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -125,19 +114,6 @@ function Navbar() {
     );
   };
 
-  const ThemeToggle = ({ isMobile = false }) => (
-    <button
-      onClick={() => setIsDark(!isDark)}
-      className={clsx(
-        "flex items-center justify-center transition-colors text-cyan hover:text-cyan-bright",
-        isMobile ? "w-full py-4 bg-obsidian border-y border-border" : "mx-2 w-10 h-10 border border-transparent hover:border-cyan hover:bg-obsidian-soft"
-      )}
-      aria-label="Toggle Theme"
-    >
-      {isDark ? <PiSun size={isMobile ? 24 : 20} className="mr-2 md:mr-0" /> : <PiMoon size={isMobile ? 24 : 20} className="mr-2 md:mr-0" />}
-      {isMobile && <span className="font-mono text-sm uppercase tracking-widest">{isDark ? 'LIGHT_MODE' : 'DARK_MODE'}</span>}
-    </button>
-  );
 
   const renderDesktopLinks = () => {
     if (!user) {
@@ -158,7 +134,6 @@ function Navbar() {
           <div className="mx-2 flex items-center">
             <NotificationsDropdown />
           </div>
-          <ThemeToggle />
           <UserDropdown />
         </>
       );
@@ -172,7 +147,6 @@ function Navbar() {
           <div className="mx-2 flex items-center">
             <NotificationsDropdown />
           </div>
-          <ThemeToggle />
           <UserDropdown />
         </>
       );
@@ -187,7 +161,6 @@ function Navbar() {
           <NavItem to="/" isMobile>Home</NavItem>
           <NavItem to="/leaderboard" isMobile>Leaderboard</NavItem>
           <NavItem onClick={handleScrollToContact} isMobile>Contact</NavItem>
-          <ThemeToggle isMobile />
           <Link to="/login" className={mobileGetStartedClass}>Init_Session</Link>
         </>
       );
@@ -199,7 +172,6 @@ function Navbar() {
           <NavItem to="/leaderboard" isMobile>Grid_Status</NavItem>
           <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile/organizer" isMobile>System_ID</NavItem>
-          <ThemeToggle isMobile />
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger hover:!bg-red-600 !text-white`}>End_Session</button>
         </>
       );
@@ -212,7 +184,6 @@ function Navbar() {
           <NavItem to="/leaderboard" isMobile>Rank</NavItem>
           <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile" isMobile>Profile</NavItem>
-          <ThemeToggle isMobile />
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>
         </>
       );
