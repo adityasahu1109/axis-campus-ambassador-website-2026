@@ -2,22 +2,37 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { PiInstagramLogo, PiTwitterLogo, PiLinkedinLogo } from 'react-icons/pi';
 import { AxisFrame } from './motifs/AxisFrame';
+import syntaxLogo from '../assets/syntax_logo.png';
 
 function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer id="contact-footer" className="relative bg-obsidian-soft border-t border-border mt-auto">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <AxisFrame variant="cyan" hover={false} className="!p-8 sm:!p-12 mb-8">
+      <div className="max-w-[1500px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <AxisFrame variant="cyan" hover={false} className="!p-8 sm:!p-12 mb-8 w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-center md:items-start">
           
           {/* Logo / System ID Column */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            <span className="font-logo text-3xl sm:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
-            <p className="text-sm text-sandstone-dim font-mono text-center md:text-left">
-              Made in collaboration with<br/>SyntaX, VNIT
-            </p>
+            <div className="flex flex-col items-center space-y-3">
+              <div className="flex items-center gap-4">
+                <span className="font-logo text-3xl sm:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+                <span className="text-xl text-sandstone-dim font-mono">x</span>
+                <div className="flex items-center gap-3">
+                  <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-14 md:h-16 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                  <span 
+                    className="text-3xl sm:text-4xl font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
+                    style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+                  >
+                    SyntaX
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-sandstone-dim font-mono text-center">
+                Made in collaboration with<br/>SyntaX, VNIT
+              </p>
+            </div>
           </div>
 
           {/* Quick Links Column */}
