@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../supabaseClient';
 import NotificationsDropdown from './NotificationsDropdown';
 import clsx from 'clsx';
 import { PiSignOut, PiUser, PiSun, PiMoon } from 'react-icons/pi';
@@ -36,10 +35,9 @@ const Logo = () => (
 );
 
 function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [profile, setProfile] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
@@ -75,18 +73,6 @@ function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    async function getProfile() {
-      if (user) {
-        const { data } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
-        setProfile(data);
-      } else {
-        setProfile(null);
-      }
-    }
-    getProfile();
-  }, [user]);
 
   const handleSignOut = async () => { setIsDropdownOpen(false); await signOut(); navigate('/'); };
 

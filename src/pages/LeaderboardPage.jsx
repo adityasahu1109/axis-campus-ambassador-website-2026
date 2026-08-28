@@ -8,7 +8,7 @@ import { LensingRing } from '../components/motifs/LensingRing';
 import { clsx } from 'clsx';
 
 function LeaderboardPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
   const [myRankData, setMyRankData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,12 +24,8 @@ function LeaderboardPage() {
         setLeaderboard(top10Data || []);
 
         if (user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles').select('role').eq('id', user.id).single();
-          if (profileError) throw profileError;
-
-          if (profileData.role === 'student') {
-            const { data: rankData, error: rankError } = await supabase.rpc('get_my_rank', { p_profile_id: user.id }).maybeSingle();
+          if (profile?.role === 'student') {
+            const { data: rankData, error: rankError } = await supabase.rpc('get_my_rank', { p_user_id: user.id }).maybeSingle();
             if (!rankError && rankData) setMyRankData(rankData);
           }
         } else {
@@ -42,7 +38,7 @@ function LeaderboardPage() {
       }
     }
     fetchData();
-  }, [user]);
+  }, [user, profile?.role]);
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_GRID_DATA..." /></div>;
 

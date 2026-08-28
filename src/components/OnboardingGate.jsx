@@ -3,12 +3,11 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { TerminalLoader } from './motifs/TerminalLoader';
 
-function OnboardingGate({ children }) {
-  const { user, profile } = useAuth();
+function OnboardingGate({ children, requiredRole }) {
+  const { user, profile, authLoading, profileLoading, profileError, refetchProfile, signOut } = useAuth();
   const location = useLocation();
 
-  if (user === undefined || (user && profile === undefined) || (user && profile === null)) {
-    // Wait until profile is fully fetched
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="flex justify-center items-center h-screen bg-void">
           <TerminalLoader text="Authenticating_Session..." />
@@ -19,6 +18,22 @@ function OnboardingGate({ children }) {
   // If no user, redirect to login for protected routes.
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (profileError || !profile) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-void px-6 text-center font-mono">
+        <p className="text-sm tracking-widest text-danger">PROFILE_CONNECTION_FAILED</p>
+        <div className="flex gap-3">
+          <button onClick={refetchProfile} className="border border-cyan px-4 py-2 text-xs font-bold tracking-widest text-cyan">RETRY</button>
+          <button onClick={signOut} className="border border-danger px-4 py-2 text-xs font-bold tracking-widest text-danger">END_SESSION</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (requiredRole && profile.role !== requiredRole) {
+    return <Navigate to={profile.role === 'organizer' ? '/admin' : '/dashboard'} replace />;
   }
 
   // For organizers, skip onboarding checks

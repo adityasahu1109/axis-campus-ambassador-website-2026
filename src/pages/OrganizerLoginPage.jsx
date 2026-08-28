@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
 
 import { AxisFrame } from '../components/motifs/AxisFrame';
 import { TerminalLabel } from '../components/motifs/TerminalLabel';
@@ -25,7 +24,7 @@ const InputField = ({ label, id, type, value, onChange, placeholder, required })
 );
 
 function OrganizerLoginPage() {
-  const { user, signIn, signOut } = useAuth();
+  const { user, profile, profileLoading, profileError, refetchProfile, signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,34 +32,32 @@ function OrganizerLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !profileLoading && profile?.role === 'organizer') {
       navigate('/admin', { replace: true });
     }
-  }, [user, navigate]);
+    if (user && !profileLoading && profile && profile.role !== 'organizer') {
+      setError('Access Denied: This is not an organizer account.');
+      void signOut();
+    }
+  }, [user, profile, profileLoading, navigate, signOut]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     try {
-      const { data: authData, error: authError } = await signIn({ email, password });
+      const { error: authError } = await signIn({ email, password });
       if (authError) throw authError;
-      if (authData.user) {
-        const { data: profileData, error: profileError } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
-        if (profileError) throw profileError;
-        if (profileData.role === 'organizer') {
-          navigate('/admin');
-        } else {
-          await signOut();
-          throw new Error('Access Denied: This is not an organizer account.');
-        }
-      }
     } catch (error) { setError(error.message); }
     finally { setIsLoading(false); }
   };
   
-  if (user) {
+  if (user && (profileLoading || (!profile && !profileError))) {
     return <div className="min-h-screen bg-void flex items-center justify-center"><TerminalLoader text="ROUTING_TO_TERMINAL..." /></div>;
+  }
+
+  if (user && profileError) {
+    return <div className="min-h-screen bg-void flex items-center justify-center gap-3 font-mono"><button onClick={refetchProfile} className="border border-cyan px-4 py-2 text-cyan">RETRY</button><button onClick={signOut} className="border border-danger px-4 py-2 text-danger">END_SESSION</button></div>;
   }
 
   return (

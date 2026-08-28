@@ -27,7 +27,7 @@ const InputField = ({ label, id, type, value, onChange, placeholder, required })
 );
 
 function LoginPage() {
-  const { user, signIn, signUp, signInWithGoogle, signOut } = useAuth();
+  const { user, profile, profileLoading, profileError, refetchProfile, signIn, signUp, signInWithGoogle, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isRegister, setIsRegister] = useState(location.state?.isRegister || false);
@@ -40,10 +40,14 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !profileLoading && profile?.role === 'student') {
       navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate]);
+    if (user && !profileLoading && profile && profile.role !== 'student') {
+      setError('Access Denied: This is not a student account.');
+      void signOut();
+    }
+  }, [user, profile, profileLoading, navigate, signOut]);
 
   const handleAuthAction = async (e) => {
     e.preventDefault();
@@ -69,18 +73,8 @@ function LoginPage() {
       finally { setIsLoading(false); }
     } else {
       try {
-        const { data: authData, error: authError } = await signIn({ email, password });
+        const { error: authError } = await signIn({ email, password });
         if (authError) throw authError;
-        if (authData.user) {
-          const { data: profileData, error: profileError } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
-          if (profileError) throw profileError;
-          if (profileData.role === 'student') {
-            navigate('/dashboard');
-          } else {
-            await signOut();
-            throw new Error('Access Denied: This is not a student account.');
-          }
-        }
       } catch (error) { setError(error.message); }
       finally { setIsLoading(false); }
     }
@@ -96,8 +90,12 @@ function LoginPage() {
     }
   };
   
-  if (user) {
+  if (user && (profileLoading || (!profile && !profileError))) {
     return <div className="min-h-screen bg-void flex items-center justify-center"><TerminalLoader text="REDIRECTING_TO_DASHBOARD..." /></div>;
+  }
+
+  if (user && profileError) {
+    return <div className="min-h-screen bg-void flex items-center justify-center gap-3 font-mono"><button onClick={refetchProfile} className="border border-cyan px-4 py-2 text-cyan">RETRY</button><button onClick={signOut} className="border border-danger px-4 py-2 text-danger">END_SESSION</button></div>;
   }
 
   return (

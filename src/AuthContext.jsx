@@ -1,170 +1,132 @@
-// src/AuthContext.jsx
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 
-// Create the authentication context
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext();
 
-// Create a provider component
+const AUTH_TIMEOUT_MS = 5000;
+
+function withTimeout(promise, label) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out`)), AUTH_TIMEOUT_MS);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [timeoutReached, setTimeoutReached] = useState(false);
-  const getSessionWithTimeout = () => {
-    return Promise.race([
-      supabase.auth.getSession(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('getSession timed out')), 5000)
-      ),
-    ]);
-  };
-  const fetchProfile = async (userId) => {
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+
+  const fetchProfile = useCallback(async (userId) => {
     if (!userId) {
       setProfile(null);
-      return;
+      setProfileError(null);
+      setProfileLoading(false);
+      return null;
     }
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
 
-    if (error) {
+    setProfileLoading(true);
+    setProfileError(null);
+
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        'Profile request',
+      );
+
+      if (error) throw error;
+      setProfile(data);
+      return data;
+    } catch (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);
-    } else {
-      setProfile(data);
+      setProfileError(error);
+      return null;
+    } finally {
+      setProfileLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    // Hard timeout for infinite loader
-    let timer;
-    if (loading) {
-      timer = setTimeout(() => {
-        setTimeoutReached(true);
-      }, 8000);
-    } else {
-      setTimeoutReached(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
+    let active = true;
 
-  useEffect(() => {
-    const getSession = async () => {
+    const initialise = async () => {
       try {
-        const { data, error } = await getSessionWithTimeout();
-        if (error) console.error("Supabase getSession error:", error.message);
-
-        const session = data?.session || null;
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-      } catch (err) {
-        console.error("Unexpected error during session initialization:", err);
+        const { data, error } = await withTimeout(supabase.auth.getSession(), 'Session initialization');
+        if (error) throw error;
+        if (!active) return;
+        setSession(data.session ?? null);
+        setUser(data.session?.user ?? null);
+      } catch (error) {
+        console.error('Session initialization failed:', error);
+        if (!active) return;
         setSession(null);
         setUser(null);
-        setProfile(null);
       } finally {
-        setLoading(false);
+        if (active) setAuthLoading(false);
       }
     };
 
-    getSession();
+    initialise();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    // Do not make Supabase calls inside this callback: it can deadlock supabase-js.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+      setSession(nextSession ?? null);
+      setUser(nextSession?.user ?? null);
+      setAuthLoading(false);
+    });
 
-        // Ensure TOKEN_REFRESHED, USER_UPDATED, SIGNED_IN trigger a re-fetch
-        if (session?.user && ['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED', 'INITIAL_SESSION'].includes(event)) {
-          await fetchProfile(session.user.id);
-        } else if (!session?.user) {
-          setProfile(null);
-        }
-      }
-    );
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
 
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        try {
-          const { data } = await getSessionWithTimeout();
-          if (data?.session?.user) {
-            await fetchProfile(data.session.user.id);
-          }
-        } catch (err) {
-          console.error("Visibility-change session check timed out:", err);
-          // no need to touch loading state here — this path doesn't drive the full-page loader
-        }
-      }
+      // Preserve background-tab session recovery without using the auth callback.
+      void withTimeout(supabase.auth.getSession(), 'Visibility session check')
+        .then(({ data, error }) => {
+          if (!active || error) return;
+          const nextSession = data.session ?? null;
+          setSession(nextSession);
+          setUser(nextSession?.user ?? null);
+          if (nextSession?.user) void fetchProfile(nextSession.user.id);
+        })
+        .catch((error) => console.error('Visibility session check failed:', error));
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
-      subscription?.unsubscribe();
+      active = false;
+      subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    void fetchProfile(user?.id);
+  }, [authLoading, user?.id, fetchProfile]);
 
   const value = {
     signUp: (data) => supabase.auth.signUp(data),
     signIn: (data) => supabase.auth.signInWithPassword(data),
     signInWithGoogle: () => supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     }),
     signOut: () => supabase.auth.signOut(),
     user,
     session,
     profile,
-    refetchProfile: async () => {
-      if (user) await fetchProfile(user.id);
-    }
+    authLoading,
+    profileLoading,
+    profileError,
+    refetchProfile: () => fetchProfile(user?.id),
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {loading ? (
-        timeoutReached ? (
-          <div className="flex justify-center items-center h-screen bg-void">
-            <div className="flex flex-col items-center justify-center font-mono space-y-4">
-              <div className="text-cyan text-sm tracking-widest text-center">
-                <span className="text-amber animate-pulse">!</span> TAKING LONGER THAN EXPECTED
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-2 border border-cyan text-cyan text-xs font-bold tracking-widest hover:bg-cyan/10 transition-colors"
-              >
-                RETRY CONNECTION
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center items-center h-screen bg-void">
-            <div className="flex flex-col items-center justify-center font-mono space-y-4">
-              <div className="relative w-48 h-1 bg-obsidian-soft overflow-hidden rounded-full">
-                <div className="absolute inset-0 bg-cyan w-1/3 rounded-full animate-scanline" style={{ animationDirection: 'alternate' }}></div>
-              </div>
-              <div className="text-cyan text-sm tracking-widest flex items-center gap-2">
-                <span className="animate-pulse">{'>'}</span> SYSTEM_INITIALIZING...
-              </div>
-            </div>
-          </div>
-        )
-      ) : (
-        children
-      )}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

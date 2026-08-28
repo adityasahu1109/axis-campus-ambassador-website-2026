@@ -30,18 +30,18 @@ function App() {
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/login/organizer" element={<OrganizerLoginPage />} />
-          <Route path="/announcements" element={<OnboardingGate><AnnouncementsPage /></OnboardingGate>} />
+          <Route path="/announcements" element={<OnboardingGate requiredRole="student"><AnnouncementsPage /></OnboardingGate>} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/update-password" element={<UpdatePasswordPage />} />
-          <Route path="/dashboard" element={<OnboardingGate><MyDashboardPage /></OnboardingGate>} />
-          <Route path="/profile" element={<OnboardingGate><ProfilePage /></OnboardingGate>} />
-          <Route path="/profile/organizer" element={<OnboardingGate><OrganizerProfilePage /></OnboardingGate>} />
-          <Route path="/admin" element={<OnboardingGate><AdminDashboard /></OnboardingGate>} />
+          <Route path="/dashboard" element={<OnboardingGate requiredRole="student"><MyDashboardPage /></OnboardingGate>} />
+          <Route path="/profile" element={<OnboardingGate requiredRole="student"><ProfilePage /></OnboardingGate>} />
+          <Route path="/profile/organizer" element={<OnboardingGate requiredRole="organizer"><OrganizerProfilePage /></OnboardingGate>} />
+          <Route path="/admin" element={<OnboardingGate requiredRole="organizer"><AdminDashboard /></OnboardingGate>} />
           <Route path="/notifications" element={<OnboardingGate><NotificationsPage /></OnboardingGate>} />
           {/* Onboarding Routes */}
-          <Route path="/onboarding/details" element={<OnboardingGate><OnboardingDetailsPage /></OnboardingGate>} />
-          <Route path="/onboarding/domain-task" element={<OnboardingGate><OnboardingDomainTaskPage /></OnboardingGate>} />
-          <Route path="/onboarding/pending" element={<OnboardingGate><OnboardingPendingPage /></OnboardingGate>} />
+          <Route path="/onboarding/details" element={<OnboardingGate requiredRole="student"><OnboardingDetailsPage /></OnboardingGate>} />
+          <Route path="/onboarding/domain-task" element={<OnboardingGate requiredRole="student"><OnboardingDomainTaskPage /></OnboardingGate>} />
+          <Route path="/onboarding/pending" element={<OnboardingGate requiredRole="student"><OnboardingPendingPage /></OnboardingGate>} />
           
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
