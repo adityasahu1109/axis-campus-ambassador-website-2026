@@ -10,17 +10,17 @@ import { TerminalLoader } from '../components/motifs/TerminalLoader';
 
 const InputField = ({ label, id, type, value, onChange, placeholder, required }) => (
   <div className="relative group">
-      <label htmlFor={id} className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-cyan">{label}</label>
-      <input 
-          type={type} 
-          name={id} 
-          id={id} 
-          value={value} 
-          onChange={onChange} 
-          className="bg-obsidian border border-border text-white text-sm focus:border-cyan block w-full p-3 transition-all outline-none font-mono focus:shadow-[0_0_15px_rgba(0,240,255,0.2)] rounded-panel" 
-          placeholder={placeholder} 
-          required={required} 
-      />
+    <label htmlFor={id} className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-cyan">{label}</label>
+    <input
+      type={type}
+      name={id}
+      id={id}
+      value={value}
+      onChange={onChange}
+      className="bg-obsidian border border-border text-white text-sm focus:border-cyan block w-full p-3 transition-all outline-none font-mono focus:shadow-[0_0_15px_rgba(0,240,255,0.2)] rounded-panel"
+      placeholder={placeholder}
+      required={required}
+    />
   </div>
 );
 
@@ -52,7 +52,7 @@ function OrganizerLoginPage() {
     } catch (error) { setError(error.message); }
     finally { setIsLoading(false); }
   };
-  
+
   if (user && (profileLoading || (!profile && !profileError))) {
     return <div className="min-h-screen bg-void flex items-center justify-center"><TerminalLoader text="ROUTING_TO_TERMINAL..." /></div>;
   }
@@ -63,7 +63,7 @@ function OrganizerLoginPage() {
 
   return (
     <div className="min-h-screen bg-void flex flex-col md:flex-row relative">
-      
+
       {/* Back Button */}
       <Link to="/" className="absolute top-6 left-6 z-20 flex items-center text-cyan hover:text-cyan-soft font-mono text-sm tracking-widest uppercase transition-colors group">
         <span className="mr-2 opacity-50">{'<'}</span> Back to Grid
@@ -77,73 +77,73 @@ function OrganizerLoginPage() {
         <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-gradient-to-bl from-cyan-deep/20 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10">
-            <div className="mb-12"><img src={axisLogo} alt="AXIS Logo" className="h-16 lg:h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" /></div>
-            <TerminalLabel prefix=">" className="mb-4">AETHEL_PROTOCOLS // COMMAND_LEVEL_ACCESS</TerminalLabel>
-            <h1 className="text-4xl lg:text-6xl font-display font-black text-white leading-none mb-6 uppercase">
-                Aethel <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sandstone to-cyan">Administration</span>
-            </h1>
-            <p className="text-sm font-mono text-sandstone-dim max-w-md border-l-2 border-cyan pl-4">
-                Execute grid management tasks, verify node submissions, and oversee the AXIS'27 Ambassador network.
-            </p>
+          <div className="mb-12"><span className="font-logo text-5xl lg:text-6xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span></div>
+          <TerminalLabel prefix=">" className="mb-4">AETHEL_PROTOCOLS // COMMAND_LEVEL_ACCESS</TerminalLabel>
+          <h1 className="text-4xl lg:text-6xl font-display font-black text-white leading-none mb-6 uppercase">
+            Aethel <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sandstone to-cyan">Administration</span>
+          </h1>
+          <p className="text-sm font-mono text-sandstone-dim max-w-md border-l-2 border-cyan pl-4">
+            Execute grid management tasks, verify node submissions, and oversee the AXIS'27 Ambassador network.
+          </p>
         </div>
       </div>
 
       {/* Right Panel - Form */}
       <div className="w-full md:w-1/2 lg:w-2/5 flex flex-col justify-center items-center px-6 py-20 relative bg-obsidian">
         <div className="w-full max-w-md">
-            
-            {/* Header */}
-            <div className="text-center mb-10">
-                <div className="mb-8 block md:hidden"><img src={axisLogo} alt="AXIS Logo" className="h-12 object-contain mx-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" /></div>
-                <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
-                    Admin Auth
-                </h2>
-                <p className="text-sandstone-dim font-mono text-xs tracking-widest uppercase">
-                    Provide credentials for terminal access
-                </p>
-            </div>
 
-            {/* Form Card */}
-            <AxisFrame variant="cyan" className="!p-8">
-                
-                {/* Status Toasts */}
-                {error && (
-                    <div className="mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono flex items-start">
-                        <span className="mr-2">{'>'}</span>
-                        <span>{error}</span>
-                    </div>
-                )}
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="mb-8 block md:hidden"><span className="font-logo text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
+            <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
+              Admin Auth
+            </h2>
+            <p className="text-sandstone-dim font-mono text-xs tracking-widest uppercase">
+              Provide credentials for terminal access
+            </p>
+          </div>
 
-                <form className="space-y-5" onSubmit={handleSignIn}>
-                    
-                    <InputField label="ADMIN_ID (Email)" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="organizer@axisvnit.in" required={true} />
-                    
-                    <div>
-                        <InputField label="COMMAND_KEY (Password)" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
-                        <div className="flex items-center justify-end mt-2">
-                            <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Key Recovery?</Link>
-                        </div> 
-                    </div>
+          {/* Form Card */}
+          <AxisFrame variant="cyan" className="!p-8">
 
-                    <button 
-                        type="submit" 
-                        disabled={isLoading}
-                        className="w-full mt-4 font-mono font-bold tracking-widest uppercase px-6 py-4 bg-transparent border border-cyan hover:bg-cyan/10 text-cyan transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {isLoading ? 'PROCESSING...' : 'AUTHORIZE'}
-                        {!isLoading && <Crosshair size={12} className="text-cyan opacity-50" />}
-                    </button>
-                </form>
-            </AxisFrame>
+            {/* Status Toasts */}
+            {error && (
+              <div className="mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono flex items-start">
+                <span className="mr-2">{'>'}</span>
+                <span>{error}</span>
+              </div>
+            )}
 
-            {/* Student Login Link */}
-            <div className="mt-8 text-center">
-                <Link to="/login" className="inline-flex items-center text-xs font-mono text-sandstone-dim hover:text-amber transition-colors uppercase group">
-                    <span className="mr-2 text-amber opacity-50 group-hover:opacity-100 transition-opacity">{'<-'}</span>
-                    Standard Node Access 
-                </Link>
-            </div>
+            <form className="space-y-5" onSubmit={handleSignIn}>
+
+              <InputField label="ADMIN_ID (Email)" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="organizer@axisvnit.in" required={true} />
+
+              <div>
+                <InputField label="COMMAND_KEY (Password)" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
+                <div className="flex items-center justify-end mt-2">
+                  <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Key Recovery?</Link>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-4 font-mono font-bold tracking-widest uppercase px-6 py-4 bg-transparent border border-cyan hover:bg-cyan/10 text-cyan transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isLoading ? 'PROCESSING...' : 'AUTHORIZE'}
+                {!isLoading && <Crosshair size={12} className="text-cyan opacity-50" />}
+              </button>
+            </form>
+          </AxisFrame>
+
+          {/* Student Login Link */}
+          <div className="mt-8 text-center">
+            <Link to="/login" className="inline-flex items-center text-xs font-mono text-sandstone-dim hover:text-amber transition-colors uppercase group">
+              <span className="mr-2 text-amber opacity-50 group-hover:opacity-100 transition-opacity">{'<-'}</span>
+              Standard Node Access
+            </Link>
+          </div>
 
         </div>
       </div>

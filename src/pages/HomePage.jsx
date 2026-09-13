@@ -178,7 +178,7 @@ function HomePage() {
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
               <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" />
             </div>
-            <img src={axisLogo} alt="AXIS'27" className="h-32 sm:h-48 md:h-64 object-contain relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+            <span className="font-logo text-7xl sm:text-8xl md:text-9xl text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
