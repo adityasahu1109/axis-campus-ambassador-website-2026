@@ -104,7 +104,7 @@ function MyDashboardPage() {
     };
 
     if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="INITIALIZING_NODE_INTERFACE..." /></div>;
-    if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">NO_ACTIVE_SESSION</div>;
+    if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">Not logged in</div>;
 
     const getSubmissionForTask = (taskId) => submissions.find(sub => sub.task_id === taskId);
     const completedTasksCount = submissions.filter(s => s.status === 'approved').length;
@@ -122,7 +122,7 @@ function MyDashboardPage() {
                         {(profile.full_name || user.email).charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <TerminalLabel prefix=">">NODE_ID // {profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
+                        <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
                         <h1 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2">
                             Dashboard
                         </h1>
@@ -142,7 +142,7 @@ function MyDashboardPage() {
                     </AxisFrame>
 
                     <AxisFrame variant="amber" hover={true} className="!p-6 flex flex-col items-center text-center">
-                        <TerminalLabel className="mb-2 text-amber">TOTAL_METRICS</TerminalLabel>
+                        <TerminalLabel className="mb-2 text-amber">Total Points</TerminalLabel>
                         <p className="text-4xl font-mono font-bold text-amber">
                             <AnimatedCounter value={profile.total_points} />
                         </p>
@@ -159,14 +159,14 @@ function MyDashboardPage() {
                 {/* Tasks Section */}
                 <div>
                     <div className="mb-6 flex items-center justify-between">
-                        <TerminalLabel prefix=">">ACTIVE_DIRECTIVES</TerminalLabel>
+                        <TerminalLabel prefix=">">Your Tasks</TerminalLabel>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {tasks.length === 0 ? (
                             <div className="col-span-full border border-border bg-obsidian-soft p-12 text-center flex flex-col items-center">
                                 <TerminalLabel prefix=">">STATUS_REPORT</TerminalLabel>
-                                <p className="text-sandstone-dim font-mono text-sm mt-4 uppercase tracking-widest">No directives assigned to this node.</p>
+                                <p className="text-sandstone-dim font-mono text-sm mt-4 uppercase tracking-widest">No tasks assigned yet.</p>
                             </div>
                         ) : (
                             tasks.map((task, index) => {
@@ -241,7 +241,7 @@ function MyDashboardPage() {
 
                             <form onSubmit={handleSubmitForReview}>
                                 <div>
-                                    <label htmlFor="driveLink" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">PROOF_OF_EXECUTION</label>
+                                    <label htmlFor="driveLink" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">Submission Link</label>
                                     <p className="text-[10px] font-mono text-sandstone-dim uppercase mb-3">Provide Google Drive Link to execution payload.</p>
                                     <input
                                         type="url"
@@ -261,7 +261,7 @@ function MyDashboardPage() {
                                         disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status)}
                                         className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                     >
-                                        {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'RETRANSMIT' : 'TRANSMIT'}
+                                        {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'Resubmit' : 'Submit'}
                                         {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
                                     </button>
                                 </div>

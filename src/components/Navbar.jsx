@@ -122,15 +122,15 @@ function Navbar() {
           <NavItem to="/">Home</NavItem>
           <NavItem to="/leaderboard">Leaderboard</NavItem>
           <NavItem onClick={handleScrollToContact}>Contact</NavItem>
-          <Link to="/login" className={getStartedClass}>Init_Session</Link>
+          <Link to="/login" className={getStartedClass}>Log In</Link>
         </>
       );
     }
     if (profile?.role === 'organizer') {
       return (
         <>
-          <NavItem to="/admin">Terminal</NavItem>
-          <NavItem to="/leaderboard">Grid_Status</NavItem>
+          <NavItem to="/admin">Dashboard</NavItem>
+          <NavItem to="/leaderboard">Leaderboard</NavItem>
           <div className="mx-2 flex items-center">
             <NotificationsDropdown />
           </div>
@@ -142,7 +142,7 @@ function Navbar() {
       return (
         <>
           <NavItem to="/dashboard">Dashboard</NavItem>
-          <NavItem to="/announcements">Comms</NavItem>
+          <NavItem to="/announcements">Announcements</NavItem>
           <NavItem to="/leaderboard">Rank</NavItem>
           <div className="mx-2 flex items-center">
             <NotificationsDropdown />
@@ -151,7 +151,7 @@ function Navbar() {
         </>
       );
     }
-    return <button onClick={handleSignOut} className={`${getStartedClass} !bg-danger hover:!bg-red-600`}>End_Session</button>;
+    return <button onClick={handleSignOut} className={`${getStartedClass} !bg-danger hover:!bg-red-600`}>Log Out</button>;
   };
 
   const renderMobileLinks = () => {
@@ -161,18 +161,18 @@ function Navbar() {
           <NavItem to="/" isMobile>Home</NavItem>
           <NavItem to="/leaderboard" isMobile>Leaderboard</NavItem>
           <NavItem onClick={handleScrollToContact} isMobile>Contact</NavItem>
-          <Link to="/login" className={mobileGetStartedClass}>Init_Session</Link>
+          <Link to="/login" className={mobileGetStartedClass}>Log In</Link>
         </>
       );
     }
     if (profile?.role === 'organizer') {
       return (
         <>
-          <NavItem to="/admin" isMobile>Terminal</NavItem>
-          <NavItem to="/leaderboard" isMobile>Grid_Status</NavItem>
+          <NavItem to="/admin" isMobile>Dashboard</NavItem>
+          <NavItem to="/leaderboard" isMobile>Leaderboard</NavItem>
           <NavItem to="/notifications" isMobile>Alerts</NavItem>
-          <NavItem to="/profile/organizer" isMobile>System_ID</NavItem>
-          <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger hover:!bg-red-600 !text-white`}>End_Session</button>
+          <NavItem to="/profile/organizer" isMobile>Profile</NavItem>
+          <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger hover:!bg-red-600 !text-white`}>Log Out</button>
         </>
       );
     }
@@ -180,7 +180,7 @@ function Navbar() {
       return (
         <>
           <NavItem to="/dashboard" isMobile>Dashboard</NavItem>
-          <NavItem to="/announcements" isMobile>Comms</NavItem>
+          <NavItem to="/announcements" isMobile>Announcements</NavItem>
           <NavItem to="/leaderboard" isMobile>Rank</NavItem>
           <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile" isMobile>Profile</NavItem>
@@ -188,7 +188,7 @@ function Navbar() {
         </>
       );
     }
-    return <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>;
+    return <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>Log Out</button>;
   };
 
   const UserDropdown = () => {
@@ -212,7 +212,7 @@ function Navbar() {
             </div>
             <div className="p-1">
               <Link to={profileLink} className="flex items-center px-4 py-2.5 text-sm text-sandstone hover:bg-obsidian hover:text-cyan transition-colors font-mono">
-                <PiUser className="mr-3 h-4 w-4" /> System_ID
+                <PiUser className="mr-3 h-4 w-4" /> Profile
               </Link>
               <button onClick={handleSignOut} className="flex w-full items-center px-4 py-2.5 text-sm text-danger hover:bg-obsidian transition-colors font-mono mt-1">
                 <PiSignOut className="mr-3 h-4 w-4" /> End_Session
@@ -263,7 +263,7 @@ function Navbar() {
           onClick={e => e.stopPropagation()}
         >
           <div className="px-6 mb-6">
-            <TerminalLabel>NAV_SYSTEM</TerminalLabel>
+            <TerminalLabel>Menu</TerminalLabel>
           </div>
           <div className="px-2 space-y-1 overflow-y-auto pb-6">
             {renderMobileLinks()}

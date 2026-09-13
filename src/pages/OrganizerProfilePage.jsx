@@ -105,7 +105,7 @@ function OrganizerProfilePage() {
                 {profile.full_name?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div>
-                <TerminalLabel prefix=">">COMMAND_NODE // ROOT_ACCESS</TerminalLabel>
+                <TerminalLabel prefix=">">Your Profile</TerminalLabel>
                 <h1 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2">
                     Aethel Settings
                 </h1>
@@ -119,7 +119,7 @@ function OrganizerProfilePage() {
         <AxisFrame variant="cyan" className="!p-8 sm:!p-10">
             <div className="flex items-center mb-8 border-b border-border pb-6">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Command Identity</h2>
+                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Your Details</h2>
                     <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Modify admin parameters.</p>
                 </div>
             </div>
@@ -127,12 +127,12 @@ function OrganizerProfilePage() {
             <Toast msg={message} />
 
             <form onSubmit={handleUpdateProfile}>
-                <InputField label="COMMAND_ADDRESS (Email)" id="email" type="email" value={user?.email || ''} disabled />
-                <InputField label="ADMIN_ALIAS (Full Name)" id="full_name" value={profile.full_name || ''} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} required />
+                <InputField label="Email" id="email" type="email" value={user?.email || ''} disabled />
+                <InputField label="Full Name" id="full_name" value={profile.full_name || ''} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} required />
 
                 <div className="flex justify-end mt-8">
                     <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-cyan hover:bg-cyan-soft text-void transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                        OVERWRITE_PARAMETERS
+                        Save Changes
                         <Crosshair size={12} className="opacity-50 text-void" />
                     </button>
                 </div>
@@ -143,7 +143,7 @@ function OrganizerProfilePage() {
         <AxisFrame variant="danger" className="!p-8 sm:!p-10">
             <div className="flex items-center mb-8 border-b border-border pb-6">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Root Security Protocols</h2>
+                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Password & Security</h2>
                     <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Modify root access key.</p>
                 </div>
             </div>
@@ -152,13 +152,13 @@ function OrganizerProfilePage() {
 
             <form onSubmit={handlePasswordUpdate}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="NEW_ROOT_KEY" id="newPassword" type="password" value={password} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" />
+                    <InputField label="New Password" id="newPassword" type="password" value={password} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" />
                     <InputField label="CONFIRM_KEY" id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="••••••••" />
                 </div>
 
                 <div className="flex justify-end mt-4">
                     <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-danger text-danger hover:bg-danger/10 transition-colors flex items-center gap-2">
-                        UPDATE_SECURITY
+                        Update Password
                         <Crosshair size={12} className="opacity-50 text-danger" />
                     </button>
                 </div>

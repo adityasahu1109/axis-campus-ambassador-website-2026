@@ -200,8 +200,8 @@ function AdminDashboard() {
       <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10 animate-fade-in-up">
             <div>
-                <TerminalLabel prefix=">">AETHEL_COMMAND // ROOT_ACCESS</TerminalLabel>
-                <h1 className="text-4xl font-display font-black text-white tracking-widest uppercase mt-4">Terminal</h1>
+                <TerminalLabel prefix=">">Admin Dashboard</TerminalLabel>
+                <h1 className="text-4xl font-display font-black text-white tracking-widest uppercase mt-4">Admin Dashboard</h1>
                 <p className="mt-2 text-sandstone-dim font-mono text-sm max-w-xl">Grid overview, node management, and directive authorization.</p>
             </div>
             <div className="flex gap-4">
@@ -219,9 +219,9 @@ function AdminDashboard() {
         <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up border-b border-border pb-4">
           <TabButton name="overview" label="Overview" />
           <TabButton name="submissions" label="Review Queue" count={stats.pendingSubs} />
-          <TabButton name="tasks" label="Directives" count={tasks.length} />
-          <TabButton name="students" label="Nodes" count={stats.students} />
-          <TabButton name="announcements" label="Comms" />
+          <TabButton name="tasks" label="Tasks" count={tasks.length} />
+          <TabButton name="students" label="Students" count={stats.students} />
+          <TabButton name="announcements" label="Announcements" />
         </div>
 
         <div className="animate-fade-in">
@@ -229,7 +229,7 @@ function AdminDashboard() {
             {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active_Nodes</span>
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active Students</span>
                         <span className="text-4xl font-display font-black text-white">{stats.students}</span>
                     </AxisFrame>
                     <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('submissions')}>
@@ -237,7 +237,7 @@ function AdminDashboard() {
                         <span className="text-4xl font-display font-black text-white">{stats.pendingSubs}</span>
                     </AxisFrame>
                     <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('tasks')}>
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active_Directives</span>
+                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active Tasks</span>
                         <span className="text-4xl font-display font-black text-white">{tasks.length}</span>
                     </AxisFrame>
                     <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
@@ -267,7 +267,7 @@ function AdminDashboard() {
                                 {submissionsQuery.loading ? (
                                     <tr><td colSpan="4" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
                                 ) : submissionsQuery.data.length === 0 ? (
-                                    <tr><td colSpan="4" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_SUBMISSIONS_DETECTED</td></tr>
+                                    <tr><td colSpan="4" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No submissions yet</td></tr>
                                 ) : (
                                     submissionsQuery.data.map(sub => (
                                     <tr key={sub.id} className="hover:bg-obsidian transition-colors">
@@ -296,7 +296,7 @@ function AdminDashboard() {
                 <div>
                     <div className="flex justify-end mb-6">
                         <button onClick={() => { setFormData({ title: '', description: '', points: 0 }); setModals({ ...modals, create: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
-                            + ADD_DIRECTIVE
+                            + Add Task
                         </button>
                     </div>
                     <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
@@ -311,7 +311,7 @@ function AdminDashboard() {
                                 </thead>
                                 <tbody className="divide-y divide-border bg-obsidian-soft">
                                     {tasks.length === 0 ? (
-                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_DIRECTIVES_DETECTED</td></tr>
+                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No tasks yet</td></tr>
                                     ) : (
                                         tasks.map(task => (
                                         <tr key={task.id} className="hover:bg-obsidian transition-colors">
@@ -349,7 +349,7 @@ function AdminDashboard() {
                                 {studentsQuery.loading ? (
                                     <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
                                 ) : studentsQuery.data.length === 0 ? (
-                                    <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_NODES_DETECTED</td></tr>
+                                    <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No students yet</td></tr>
                                 ) : (
                                     studentsQuery.data.map(student => (
                                     <tr key={student.id} className="hover:bg-obsidian transition-colors">
@@ -373,7 +373,7 @@ function AdminDashboard() {
                 <div>
                     <div className="flex justify-end mb-6">
                         <button onClick={() => { setFormData({ title: '', content: '' }); setModals({ ...modals, announce: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
-                            + BROADCAST_COMMS
+                            + New Announcement
                         </button>
                     </div>
                     <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
@@ -390,7 +390,7 @@ function AdminDashboard() {
                                     {announcementsQuery.loading ? (
                                         <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
                                     ) : announcementsQuery.data.length === 0 ? (
-                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">NO_BROADCASTS_DETECTED</td></tr>
+                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No announcements yet</td></tr>
                                     ) : (
                                         announcementsQuery.data.map(item => (
                                         <tr key={item.id} className="hover:bg-obsidian transition-colors">
@@ -414,7 +414,7 @@ function AdminDashboard() {
       
       {/* Modals */}
       {modals.create && (
-        <Modal onClose={() => setModals({ ...modals, create: false })} title="INITIATE_DIRECTIVE">
+        <Modal onClose={() => setModals({ ...modals, create: false })} title="Create Task">
             <form onSubmit={(e) => handleCreate(e, 'task')} className="space-y-4">
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
@@ -448,14 +448,14 @@ function AdminDashboard() {
                 </div>
                 <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">EXECUTE</button>
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Create</button>
                 </div>
             </form>
         </Modal>
       )}
 
       {modals.edit && (
-        <Modal onClose={() => setModals({ ...modals, edit: false })} title="MODIFY_DIRECTIVE">
+        <Modal onClose={() => setModals({ ...modals, edit: false })} title="Edit Task">
             <form onSubmit={handleUpdate} className="space-y-4">
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
@@ -489,21 +489,21 @@ function AdminDashboard() {
                 </div>
                 <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">OVERWRITE</button>
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Save Changes</button>
                 </div>
             </form>
         </Modal>
       )}
 
       {modals.delete && (
-        <Modal onClose={() => setModals({ ...modals, delete: false })} title="CONFIRM_DELETION" variant="danger">
+        <Modal onClose={() => setModals({ ...modals, delete: false })} title="Confirm Delete" variant="danger">
             <div className="flex items-start gap-4 mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono uppercase">
                 <span className="font-bold">{'>'}</span>
                 <p>Warning: Deleting directive <strong>"{selectedItem?.title}"</strong> is permanent. Confirm purge.</p>
             </div>
             <div className="flex justify-end gap-4 border-t border-border pt-6 mt-6">
                 <button onClick={() => setModals({ ...modals, delete: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                <button onClick={() => handleDelete('tasks')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">PURGE_DATA</button>
+                <button onClick={() => handleDelete('tasks')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">Delete</button>
             </div>
         </Modal>
       )}
@@ -531,7 +531,7 @@ function AdminDashboard() {
                 </div>
 
                 <div>
-                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">EXECUTION_PAYLOAD (Drive Link)</span>
+                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">Submission Link</span>
                     <div className="border border-border bg-void p-4 text-sm font-mono text-cyan truncate">
                         <a href={selectedItem?.drive_link} target="_blank" rel="noreferrer" className="hover:underline">
                             {selectedItem?.drive_link}
@@ -541,7 +541,7 @@ function AdminDashboard() {
                 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <InputField label="AWARDED_METRICS" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
+                        <InputField label="Points Awarded" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
                     </div>
                     <div>
                         <p className="text-[10px] text-sandstone mt-6 opacity-70">If rejected or requires revision, awarded metrics will automatically be 0. Ensure it does not exceed {selectedItem?.tasks.points}.</p>
@@ -549,14 +549,14 @@ function AdminDashboard() {
                 </div>
 
                 <div>
-                    <InputField label="REVIEW_LOG / FEEDBACK" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+                    <InputField label="Feedback / Notes" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
                 </div>
 
                 <div className="flex justify-between gap-4 pt-6 border-t border-border">
                     <button onClick={() => handleReviewSubmit('needs_revision')} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
                     <div className="flex gap-4">
                         <button onClick={() => handleReviewSubmit('rejected')} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
-                        <button onClick={() => handleReviewSubmit('approved')} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">VERIFY_AND_AWARD</button>
+                        <button onClick={() => handleReviewSubmit('approved')} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Approve</button>
                     </div>
                 </div>
             </div>
@@ -564,27 +564,27 @@ function AdminDashboard() {
       )}
 
       {modals.announce && (
-        <Modal onClose={() => setModals({ ...modals, announce: false })} title="TRANSMIT_BROADCAST">
+        <Modal onClose={() => setModals({ ...modals, announce: false })} title="New Announcement">
             <form onSubmit={(e) => handleCreate(e, 'announcement')} className="space-y-4">
                 <InputField label="BROADCAST_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="PAYLOAD" multiline value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} required />
                 <div className="flex justify-end gap-4 pt-6 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, announce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">TRANSMIT</button>
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Post</button>
                 </div>
             </form>
         </Modal>
       )}
 
       {modals.deleteAnnounce && (
-        <Modal onClose={() => setModals({ ...modals, deleteAnnounce: false })} title="CONFIRM_DELETION" variant="danger">
+        <Modal onClose={() => setModals({ ...modals, deleteAnnounce: false })} title="Confirm Delete" variant="danger">
             <div className="flex items-start gap-4 mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono uppercase">
                 <span className="font-bold">{'>'}</span>
                 <p>Warning: Deleting broadcast <strong>"{selectedItem?.title}"</strong> is permanent. Confirm purge.</p>
             </div>
             <div className="flex justify-end gap-4 border-t border-border pt-6 mt-6">
                 <button onClick={() => setModals({ ...modals, deleteAnnounce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                <button onClick={() => handleDelete('announcements')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">PURGE_DATA</button>
+                <button onClick={() => handleDelete('announcements')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">Delete</button>
             </div>
         </Modal>
       )}

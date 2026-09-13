@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { PiBell, PiBellRinging } from 'react-icons/pi';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
 export default function NotificationsDropdown() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function NotificationsDropdown() {
     if (!isOpen && unreadCount > 0) {
       // Mark all as read when opening
       const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
-      
+
       // Optimistically update UI
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
@@ -81,7 +81,7 @@ export default function NotificationsDropdown() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button 
+      <button
         onClick={handleOpen}
         className="relative p-2 text-sandstone hover:text-cyan transition-colors"
         aria-label="Notifications"
@@ -99,10 +99,10 @@ export default function NotificationsDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-obsidian border border-border shadow-2xl z-50">
           <div className="p-3 border-b border-border bg-obsidian-soft flex justify-between items-center">
-            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-white">COMM_LINK_LOGS</h3>
+            <TerminalLabel prefix=">">Notifications</TerminalLabel>
             {unreadCount > 0 && <span className="text-[10px] text-cyan font-mono">{unreadCount} UNREAD</span>}
           </div>
-          
+
           <div className="max-h-[360px] overflow-y-auto scrollbar-thin scrollbar-thumb-cyan/30 scrollbar-track-obsidian-soft">
             {notifications.length === 0 ? (
               <div className="p-6 text-center text-sandstone-dim text-xs font-mono uppercase tracking-widest">

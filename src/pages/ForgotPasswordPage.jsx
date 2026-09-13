@@ -54,7 +54,7 @@ function ForgotPasswordPage() {
 
         {/* Back Button */}
         <Link to="/login" className="absolute top-6 left-6 z-20 flex items-center text-cyan hover:text-cyan-soft font-mono text-sm tracking-widest uppercase transition-colors group">
-            <span className="mr-2 opacity-50">{'<'}</span> Abort Sequence
+            <span className="mr-2 opacity-50">{'<'}</span> Cancel
         </Link>
 
         {/* Logo */}
@@ -69,7 +69,7 @@ function ForgotPasswordPage() {
             <AxisFrame variant="cyan" className="!p-8 bg-obsidian-soft/80 backdrop-blur-md">
                 
                 <div className="text-center mb-8">
-                    <TerminalLabel prefix=">" className="justify-center mb-4 text-cyan">SYS_RECOVERY // AUTH_KEY</TerminalLabel>
+                    <TerminalLabel prefix=">" className="justify-center mb-4 text-cyan">Reset Password</TerminalLabel>
                     <h1 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Key Recovery</h1>
                     <p className="mt-2 text-xs font-mono text-sandstone-dim">Enter your COMM_ADDRESS (Email) to receive a recovery link.</p>
                 </div>
@@ -103,7 +103,7 @@ function ForgotPasswordPage() {
                         disabled={loading}
                         className="w-full font-mono font-bold tracking-widest uppercase px-6 py-4 bg-transparent border border-cyan hover:bg-cyan/10 text-cyan transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        {loading ? 'TRANSMITTING...' : 'SEND_LINK'}
+                        {loading ? 'TRANSMITTING...' : 'Send Reset Link'}
                         {!loading && <Crosshair size={12} className="text-cyan opacity-50" />}
                     </button>
                 </form>

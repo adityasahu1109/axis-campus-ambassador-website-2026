@@ -73,7 +73,7 @@ function UpdatePasswordPage() {
             <AxisFrame variant="cyan" className="!p-8 bg-obsidian-soft/80 backdrop-blur-md">
                 
                 <div className="text-center mb-8">
-                    <TerminalLabel prefix=">" className="justify-center mb-4 text-cyan">SYS_RECOVERY // SET_NEW_KEY</TerminalLabel>
+                    <TerminalLabel prefix=">" className="justify-center mb-4 text-cyan">Set New Password</TerminalLabel>
                     <h1 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Update Key</h1>
                     <p className="mt-2 text-xs font-mono text-sandstone-dim">Enter your new ACCESS_KEY to secure your node.</p>
                 </div>
@@ -92,8 +92,7 @@ function UpdatePasswordPage() {
                 )}
 
                 <form className="space-y-6" onSubmit={handleUpdatePassword}>
-                    <InputField 
-                        label="NEW_ACCESS_KEY" 
+                        <InputField label="New Password" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
                         id="password" 
                         type="password" 
                         value={password} 
@@ -102,9 +101,7 @@ function UpdatePasswordPage() {
                         required={true} 
                     />
                     
-                    <InputField 
-                        label="CONFIRM_NEW_KEY" 
-                        id="confirmPassword" 
+                        <InputField label="Confirm New Password" id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" required={true} />
                         type="password" 
                         value={confirmPassword} 
                         onChange={(e) => setConfirmPassword(e.target.value)} 
@@ -117,7 +114,7 @@ function UpdatePasswordPage() {
                         disabled={loading}
                         className="w-full font-mono font-bold tracking-widest uppercase px-6 py-4 bg-transparent border border-cyan hover:bg-cyan/10 text-cyan transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        {loading ? 'PROCESSING...' : 'UPDATE_KEY'}
+                        {loading ? 'PROCESSING...' : 'Update Password'}
                         {!loading && <Crosshair size={12} className="text-cyan opacity-50" />}
                     </button>
                 </form>

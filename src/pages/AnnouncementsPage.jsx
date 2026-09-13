@@ -21,7 +21,7 @@ function AnnouncementsPage() {
             {/* Header */}
             <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
                 <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up">
-                    <TerminalLabel className="justify-center mb-4">GLOBAL_GRID // BROADCASTS</TerminalLabel>
+                    <TerminalLabel className="justify-center mb-4">Announcements</TerminalLabel>
                     <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-widest uppercase">Communications</h1>
                     <p className="mt-4 text-sandstone-dim font-mono text-sm max-w-xl mx-auto">Incoming directives, task updates, and system broadcasts from Aethel command.</p>
                 </div>
@@ -68,8 +68,8 @@ function AnnouncementsPage() {
                     <div className="mt-12">
                         <AxisFrame variant="cyan" className="!p-12 text-center flex flex-col items-center">
                             <TerminalLabel prefix=">">STATUS_REPORT</TerminalLabel>
-                            <h3 className="text-xl font-display font-bold text-white mt-4 mb-2">NO_ACTIVE_BROADCASTS</h3>
-                            <p className="text-sm font-mono text-sandstone-dim">Stand by for incoming directives from command.</p>
+                            <h3 className="text-xl font-display font-bold text-white mt-4 mb-2">No announcements yet</h3>
+                            <p className="text-sm font-mono text-sandstone-dim">Check back later for updates.</p>
                             <Crosshair size={24} className="mt-8 text-cyan opacity-20 animate-spin-slow" />
                         </AxisFrame>
                     </div>

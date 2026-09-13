@@ -113,7 +113,7 @@ function ProfilePage() {
   };
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_NODE_DATA..." /></div>;
-  if (!user) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">NO_ACTIVE_SESSION</div>;
+  if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">Not logged in</div>;
   
   const Toast = ({ msg }) => {
       if (!msg) return null;
@@ -139,7 +139,7 @@ function ProfilePage() {
                 {(profile.full_name || user.email).charAt(0).toUpperCase()}
             </div>
             <div>
-                <TerminalLabel prefix=">">NODE_ID // {profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
+                <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
                 <h1 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2">
                     System Profile
                 </h1>
@@ -153,7 +153,7 @@ function ProfilePage() {
         <AxisFrame variant="cyan" hover={true} className="!p-8 sm:!p-10">
             <div className="flex items-center mb-8 border-b border-border pb-6">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Node Identity</h2>
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Your Details</h2>
                     <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Public ambassador parameters.</p>
                 </div>
             </div>
@@ -162,30 +162,30 @@ function ProfilePage() {
 
             <form onSubmit={handleUpdateProfile}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="NODE_ALIAS (Full Name)" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
-                    <InputField label="COMM_ADDRESS (Email)" id="email" type="email" value={user?.email || ''} disabled />
+                    <InputField label="Full Name" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
+                    <InputField label="Email" id="email" type="email" value={user?.email || ''} disabled />
                 </div>
                 
-                <InputField label="YOUR_REFERRAL_CODE" id="referral_code" type="text" value={profile.referral_code || 'UNASSIGNED'} disabled />
-                <InputField label="BIOGRAPHY_LOG" id="bio" type="textarea" value={profile.bio || ''} onChange={handleProfileChange} placeholder="Input background data..." />
+                <InputField label="Referral Code" id="referral_code" type="text" value={profile.referral_code || 'UNASSIGNED'} disabled />
+                <InputField label="Bio" id="bio" type="textarea" value={profile.bio || ''} onChange={handleProfileChange} placeholder="Input background data..." />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="INSTITUTION_NAME" id="college_name" value={profile.college_name || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
-                    <InputField label="SECTOR (Branch)" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
+                    <InputField label="Institution Name" id="college_name" value={profile.college_name || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
+                    <InputField label="Branch" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="YEAR_OF_DEPLOYMENT" id="year" value={profile.year || ''} onChange={handleProfileChange} required options={['1st Year', '2nd Year', '3rd Year', '4th Year', '5th+ Year']} />
+                    <InputField label="Year of Study" id="year" value={profile.year || ''} onChange={handleProfileChange} required options={['1st Year', '2nd Year', '3rd Year', '4th Year', '5th+ Year']} />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="PRIMARY_COMMS (Phone)" id="primary_phone" type="tel" value={profile.primary_phone || ''} onChange={handleProfileChange} required placeholder="+91 0000000000" />
-                    <InputField label="SECONDARY_COMMS" id="additional_phone" type="tel" value={profile.additional_phone || ''} onChange={handleProfileChange} placeholder="+91 0000000000" />
+                    <InputField label="Phone Number" id="primary_phone" type="tel" value={profile.primary_phone || ''} onChange={handleProfileChange} required placeholder="+91 0000000000" />
+                    <InputField label="Alternate Phone" id="additional_phone" type="tel" value={profile.additional_phone || ''} onChange={handleProfileChange} placeholder="+91 0000000000" />
                 </div>
 
                 <div className="flex justify-end mt-8">
-                    <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-cyan hover:bg-cyan-soft text-void transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                        OVERWRITE_PARAMETERS
+                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 flex items-center gap-2">
+                        Save Changes
                         <Crosshair size={12} className="opacity-50 text-void" />
                     </button>
                 </div>
@@ -196,7 +196,7 @@ function ProfilePage() {
         <AxisFrame variant="amber" hover={true} className="!p-8 sm:!p-10">
             <div className="flex items-center mb-8 border-b border-border pb-6">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide">Security Protocols</h2>
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Password & Security</h2>
                     <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Modify access key.</p>
                 </div>
             </div>
@@ -211,7 +211,7 @@ function ProfilePage() {
 
                 <div className="flex justify-end mt-4">
                     <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center gap-2">
-                        UPDATE_SECURITY
+                        Update Password
                         <Crosshair size={12} className="opacity-50 text-amber" />
                     </button>
                 </div>

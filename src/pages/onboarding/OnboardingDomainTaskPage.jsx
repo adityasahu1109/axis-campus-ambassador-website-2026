@@ -104,7 +104,7 @@ export default function OnboardingDomainTaskPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="font-mono text-3xl font-bold uppercase tracking-widest text-cyan mb-2">DOMAIN_SELECTION</h1>
+      <h1 className="font-mono text-3xl font-bold uppercase tracking-widest text-cyan mb-2">Choose Your Domain</h1>
       <p className="text-sandstone mb-8">Select your operational domain and complete the initial directive to proceed.</p>
 
       {error && (
@@ -140,7 +140,7 @@ export default function OnboardingDomainTaskPage() {
       {selectedDomain && (
         <div className="animate-fade-in">
           <h2 className="font-mono text-xl font-bold uppercase tracking-widest text-amber mb-6">
-            // INITIAL_DIRECTIVE
+            First Task
           </h2>
           
           {fetchingTask ? (
@@ -157,7 +157,7 @@ export default function OnboardingDomainTaskPage() {
               <form onSubmit={handleSubmit} className="border-t border-amber/20 pt-8 mt-8">
                 <div className="mb-6">
                   <label className="block mb-2 text-xs font-mono font-bold tracking-widest uppercase text-amber">
-                    SUBMISSION_PAYLOAD (Google Drive Link)
+                    Google Drive Link
                   </label>
                   <p className="text-xs text-sandstone/70 mb-3">Ensure link access is set to "Anyone with the link".</p>
                   <input 
@@ -176,7 +176,7 @@ export default function OnboardingDomainTaskPage() {
                     disabled={submitting || !driveLink.trim()}
                     className="px-8 py-4 text-sm font-mono font-bold uppercase tracking-[0.2em] text-void bg-amber hover:bg-amber-bright transition-colors shadow-[0_0_15px_rgba(255,158,0,0.4)] disabled:opacity-50"
                   >
-                    {submitting ? 'UPLOADING...' : 'SUBMIT_DIRECTIVE'}
+                    {submitting ? 'UPLOADING...' : 'Submit'}
                   </button>
                 </div>
               </form>

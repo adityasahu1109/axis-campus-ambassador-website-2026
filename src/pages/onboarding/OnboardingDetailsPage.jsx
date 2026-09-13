@@ -60,7 +60,7 @@ export default function OnboardingDetailsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="font-mono text-3xl font-bold uppercase tracking-widest text-cyan mb-2">System_Profile</h1>
+      <h1 className="font-mono text-3xl font-bold uppercase tracking-widest text-cyan mb-2">Complete Your Profile</h1>
       <p className="text-sandstone mb-8">Enter required auxiliary details to initialize your ambassador instance.</p>
       
       {error && (
@@ -72,7 +72,7 @@ export default function OnboardingDetailsPage() {
       <form onSubmit={handleSubmit}>
         <AxisFrame variant="cyan" hover={false} className="p-8 mb-8">
             <InputField 
-                label="CONTACT_UPLINK (Phone Number)" 
+                label="Phone Number" 
                 type="tel"
                 placeholder="+91..."
                 value={formData.phone_number} 
@@ -80,21 +80,21 @@ export default function OnboardingDetailsPage() {
                 required 
             />
             <InputField 
-                label="INSTITUTION_NODE (College/University)" 
+                label="College / University" 
                 placeholder="National Institute of Technology..."
                 value={formData.college} 
                 onChange={(e) => setFormData({...formData, college: e.target.value})} 
                 required 
             />
             <InputField 
-                label="CYCLE_INDEX (Year of Study)" 
+                label="Year of Study" 
                 placeholder="e.g. 1st Year, 2nd Year..."
                 value={formData.year_of_study} 
                 onChange={(e) => setFormData({...formData, year_of_study: e.target.value})} 
                 required 
             />
             <InputField 
-                label="SECTOR (City)" 
+                label="City" 
                 placeholder="City Name"
                 value={formData.city} 
                 onChange={(e) => setFormData({...formData, city: e.target.value})} 
@@ -108,7 +108,7 @@ export default function OnboardingDetailsPage() {
               disabled={loading}
               className="px-8 py-4 text-sm font-mono font-bold uppercase tracking-[0.2em] text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50"
             >
-              {loading ? 'TRANSMITTING...' : 'INITIALIZE_PROFILE'}
+              {loading ? 'TRANSMITTING...' : 'Continue'}
             </button>
         </div>
       </form>

@@ -104,7 +104,7 @@ function LoginPage() {
 
       {/* Back Button */}
       <Link to="/" className="absolute top-6 left-6 z-20 flex items-center text-cyan hover:text-cyan-soft font-mono text-sm tracking-widest uppercase transition-colors group">
-        <span className="mr-2 opacity-50">{'<'}</span> Back to Grid
+        <span className="mr-2 opacity-50">{'<'}</span> Back to Home
       </Link>
 
       {/* Left Panel - Brand (Hidden on Mobile) */}
@@ -135,7 +135,7 @@ function LoginPage() {
           <div className="text-center mb-10">
             <div className="mb-8 block md:hidden"><span className="font-logo text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
             <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
-              {isRegister ? 'New Node Reg' : 'Session Init'}
+              {isRegister ? 'Sign Up' : 'Log In'}
             </h2>
             <p className="text-sandstone-dim font-mono text-xs tracking-widest uppercase">
               {isRegister ? 'Enter parameters to generate ID' : 'Provide credentials for access'}
@@ -174,17 +174,17 @@ function LoginPage() {
 
               {/* Animated Tab Switch content */}
               <div className={`space-y-5 overflow-hidden transition-all duration-500 ease-in-out ${isRegister ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0 hidden'}`}>
-                <InputField label="NODE_ALIAS (Name)" id="name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" required={isRegister} />
+                <InputField label="Full Name" id="name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" required={isRegister} />
                 <InputField label="REFERRAL_CODE (Optional)" id="referral" type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="AXIS-XXXX" required={false} />
               </div>
 
-              <InputField label="COMM_ADDRESS (Email)" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@college.edu" required={true} />
+              <InputField label="Email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@college.edu" required={true} />
 
               <div>
-                <InputField label="ACCESS_KEY (Password)" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
+                <InputField label="Password" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
                 {!isRegister && (
                   <div className="flex items-center justify-end mt-2">
-                    <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Key Recovery?</Link>
+                    <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Forgot Password?</Link>
                   </div>
                 )}
               </div>
@@ -194,7 +194,7 @@ function LoginPage() {
                 disabled={isLoading}
                 className="w-full mt-4 font-mono font-bold tracking-widest uppercase px-6 py-4 bg-amber hover:bg-amber-bright text-void transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isLoading ? 'PROCESSING...' : (isRegister ? 'GENERATE_ID' : 'EXECUTE')}
+                {isLoading ? 'PROCESSING...' : (isRegister ? 'Sign Up' : 'Continue')}
                 {!isLoading && <Crosshair size={12} className="text-void opacity-50" />}
               </button>
             </form>
@@ -204,7 +204,7 @@ function LoginPage() {
               <p className="text-xs font-mono text-sandstone-dim uppercase">
                 {isRegister ? 'Node already registered? ' : 'Unregistered node? '}
                 <button type="button" onClick={() => { setIsRegister(!isRegister); setError(''); setMessage(''); }} className="text-amber hover:text-amber-bright transition-colors ml-2">
-                  {isRegister ? 'Init Session' : 'Reg Node'}
+                  {isRegister ? 'Log In' : 'Sign Up'}
                 </button>
               </p>
             </div>
@@ -213,7 +213,7 @@ function LoginPage() {
           {/* Organizer Login Link */}
           <div className="mt-8 text-center">
             <Link to="/login/organizer" className="inline-flex items-center text-xs font-mono text-sandstone-dim hover:text-cyan transition-colors uppercase group">
-              Aethel Administration
+              Organizer Login
               <span className="ml-2 text-cyan opacity-50 group-hover:opacity-100 transition-opacity">{'->'}</span>
             </Link>
           </div>

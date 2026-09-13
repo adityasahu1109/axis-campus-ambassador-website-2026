@@ -144,7 +144,7 @@ function LeaderboardPage() {
       {/* Header */}
       <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
         <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up">
-            <TerminalLabel className="justify-center mb-4">GLOBAL_GRID // RANKING_SYSTEM</TerminalLabel>
+            <TerminalLabel className="justify-center mb-4">Leaderboard</TerminalLabel>
             <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-widest uppercase">Leaderboard</h1>
             <p className="mt-4 text-sandstone-dim font-mono text-sm max-w-xl mx-auto">Track top 10 nodes across the network. Performers receive elevated permissions and hardware rewards based on tier.</p>
         </div>
@@ -178,7 +178,7 @@ function LeaderboardPage() {
                     <tbody className="divide-y divide-border">
                         {rest.length > 0 ? rest.map(p => renderTableRow(p)) : (
                             <tr>
-                                <td colSpan="4" className="text-center py-12 text-sandstone-dim text-sm uppercase tracking-widest">NO_ADDITIONAL_NODES</td>
+                                <td colSpan="4" className="text-center py-12 text-sandstone-dim text-sm uppercase tracking-widest">No more students to show</td>
                             </tr>
                         )}
                         
@@ -203,7 +203,7 @@ function LeaderboardPage() {
                     <span className="text-xs font-mono font-bold text-sandstone uppercase tracking-widest">GLOBAL_READOUT</span>
                 </div>
                 {rest.length > 0 ? rest.map(p => renderMobileRow(p)) : (
-                    <div className="text-center py-12 font-mono text-sandstone-dim text-sm uppercase tracking-widest">NO_ADDITIONAL_NODES</div>
+                    <div className="text-center py-12 font-mono text-sandstone-dim text-sm uppercase tracking-widest">No more students to show</div>
                 )}
 
                 {myRankData && myRankData.rank > 10 && (

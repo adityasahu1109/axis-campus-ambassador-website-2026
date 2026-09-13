@@ -66,7 +66,7 @@ function OrganizerLoginPage() {
 
       {/* Back Button */}
       <Link to="/" className="absolute top-6 left-6 z-20 flex items-center text-cyan hover:text-cyan-soft font-mono text-sm tracking-widest uppercase transition-colors group">
-        <span className="mr-2 opacity-50">{'<'}</span> Back to Grid
+        <span className="mr-2 opacity-50">{'<'}</span> Back to Home
       </Link>
 
       {/* Left Panel - Brand (Hidden on Mobile) */}
@@ -97,7 +97,7 @@ function OrganizerLoginPage() {
           <div className="text-center mb-10">
             <div className="mb-8 block md:hidden"><span className="font-logo text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS</span></div>
             <h2 className="text-3xl font-display font-bold text-white mb-2 uppercase tracking-wide">
-              Admin Auth
+              Organizer Login
             </h2>
             <p className="text-sandstone-dim font-mono text-xs tracking-widest uppercase">
               Provide credentials for terminal access
@@ -117,12 +117,12 @@ function OrganizerLoginPage() {
 
             <form className="space-y-5" onSubmit={handleSignIn}>
 
-              <InputField label="ADMIN_ID (Email)" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="organizer@axisvnit.in" required={true} />
+              <InputField label="Email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="organizer@axisvnit.in" required={true} />
 
               <div>
-                <InputField label="COMMAND_KEY (Password)" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
+                <InputField label="Password" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required={true} />
                 <div className="flex items-center justify-end mt-2">
-                  <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Key Recovery?</Link>
+                  <Link to="/forgot-password" className="text-xs font-mono text-cyan hover:text-cyan-soft transition-colors">Forgot Password?</Link>
                 </div>
               </div>
 
@@ -131,7 +131,7 @@ function OrganizerLoginPage() {
                 disabled={isLoading}
                 className="w-full mt-4 font-mono font-bold tracking-widest uppercase px-6 py-4 bg-transparent border border-cyan hover:bg-cyan/10 text-cyan transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isLoading ? 'PROCESSING...' : 'AUTHORIZE'}
+                {isLoading ? 'PROCESSING...' : 'Log In'}
                 {!isLoading && <Crosshair size={12} className="text-cyan opacity-50" />}
               </button>
             </form>
