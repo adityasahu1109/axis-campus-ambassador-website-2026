@@ -9,6 +9,7 @@ import { PaginationControls } from '../components/PaginationControls';
 import { Crosshair } from '../components/motifs/Crosshair';
 import { clsx } from 'clsx';
 import { SubmissionReviewModal } from '../components/SubmissionReviewModal';
+import { PiUsers, PiClockClockwise, PiClipboardText, PiChartLineUp, PiCheckCircle } from 'react-icons/pi';
 
 export const Modal = ({ children, onClose, title, variant = "cyan" }) => (
     <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={onClose}>
@@ -65,7 +66,7 @@ function AdminDashboard() {
   const [taskView, setTaskView] = useState('regular');
   const [reviewView, setReviewView] = useState('regular');
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ tasksCount: 0, students: 0, pendingSubs: 0, pendingOnboarding: 0, thisWeekSubs: 0 });
+  const [stats, setStats] = useState({ tasksCount: 0, students: 0, pendingSubs: 0, pendingOnboarding: 0, thisWeekSubs: 0, totalSubs: 0 });
   const [modals, setModals] = useState({ create: false, edit: false, delete: false, review: false, announce: false, deleteAnnounce: false });
   const [selectedItem, setSelectedItem] = useState(null);
   const [formData, setFormData] = useState({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
@@ -73,12 +74,13 @@ function AdminDashboard() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [tasksRes, studentsRes, pendingSubsRes, pendingOnboardingRes, thisWeekSubsRes] = await Promise.all([
+      const [tasksRes, studentsRes, pendingSubsRes, pendingOnboardingRes, thisWeekSubsRes, totalSubsRes] = await Promise.all([
         supabase.from('tasks').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student').in('status', ['incomplete_profile', 'domain_pending', 'pending_review']),
-        supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('submitted_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('submitted_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('submissions').select('id', { count: 'exact', head: true })
       ]);
       setStats({
           tasksCount: tasksRes.count || 0,
@@ -86,6 +88,7 @@ function AdminDashboard() {
           pendingSubs: pendingSubsRes.count || 0,
           pendingOnboarding: pendingOnboardingRes.count || 0,
           thisWeekSubs: thisWeekSubsRes.count || 0,
+          totalSubs: totalSubsRes.count || 0,
       });
     } catch (error) { console.error('Error fetching data:', error.message); }
     finally { setLoading(false); }
@@ -249,26 +252,42 @@ function AdminDashboard() {
         <div className="animate-fade-in">
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active Students</span>
-                        <span className="text-4xl font-display font-black text-white">{stats.students}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('students')}>
+                        <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
+                            <PiUsers size={16} /> Active Students
+                        </span>
+                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.students}</span>
                     </AxisFrame>
-                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('submissions')}>
-                        <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">Pending_Reviews</span>
-                        <span className="text-4xl font-display font-black text-white">{stats.pendingSubs}</span>
+                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-amber/5 transition-all" onClick={() => setActiveTab('submissions')}>
+                        <span className="flex items-center gap-2 text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">
+                            <PiClockClockwise size={16} /> Pending Reviews
+                        </span>
+                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.pendingSubs}</span>
                     </AxisFrame>
-                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('tasks')}>
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active Tasks</span>
-                        <span className="text-4xl font-display font-black text-white">{stats.tasksCount}</span>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('tasks')}>
+                        <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
+                            <PiClipboardText size={16} /> Active Tasks
+                        </span>
+                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.tasksCount}</span>
                     </AxisFrame>
-                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
-                        <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">Pending_Onboarding</span>
-                        <span className="text-4xl font-display font-black text-white">{stats.pendingOnboarding}</span>
+                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-amber/5 transition-all" onClick={() => setActiveTab('submissions')}>
+                        <span className="flex items-center gap-2 text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">
+                            <PiClockClockwise size={16} /> Pending Onboarding
+                        </span>
+                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.pendingOnboarding}</span>
                     </AxisFrame>
-                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('submissions')}>
-                        <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">This_Week_Subs</span>
-                        <span className="text-4xl font-display font-black text-white">{stats.thisWeekSubs}</span>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('submissions')}>
+                        <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
+                            <PiChartLineUp size={16} /> This Week Subs
+                        </span>
+                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.thisWeekSubs}</span>
+                    </AxisFrame>
+                    <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('submissions')}>
+                        <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
+                            <PiCheckCircle size={16} /> Total Submissions
+                        </span>
+                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.totalSubs}</span>
                     </AxisFrame>
                 </div>
             )}
