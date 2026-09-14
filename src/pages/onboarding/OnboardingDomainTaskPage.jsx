@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AxisFrame } from '../../components/motifs/AxisFrame';
@@ -40,7 +39,6 @@ const DOMAINS = [
 
 export default function OnboardingDomainTaskPage() {
   const { profile, refetchProfile } = useAuth();
-  const navigate = useNavigate();
   
   const [selectedDomain, setSelectedDomain] = useState(profile?.domain || null);
   const [initialTask, setInitialTask] = useState(null);
@@ -92,8 +90,9 @@ export default function OnboardingDomainTaskPage() {
 
       if (submissionError) throw submissionError;
 
+      // Don't navigate manually — OnboardingGate handles routing
+      // based on profile.status once the context re-renders.
       await refetchProfile();
-      navigate('/onboarding/pending', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AxisFrame } from '../../components/motifs/AxisFrame';
@@ -19,8 +18,7 @@ const InputField = ({ label, type = "text", value, onChange, required, placehold
 );
 
 export default function OnboardingDetailsPage() {
-  const { user, profile, refetchProfile } = useAuth();
-  const navigate = useNavigate();
+  const { profile, refetchProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -36,21 +34,19 @@ export default function OnboardingDetailsPage() {
     setError(null);
 
     try {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          phone_number: formData.phone_number,
-          college: formData.college,
-          year_of_study: formData.year_of_study,
-          city: formData.city,
-          status: 'domain_pending'
-        })
-        .eq('id', user.id);
+      const { error: rpcError } = await supabase.rpc('complete_onboarding_details', {
+        p_phone_number: formData.phone_number,
+        p_college: formData.college,
+        p_year_of_study: formData.year_of_study,
+        p_city: formData.city,
+      });
 
-      if (updateError) throw updateError;
+      if (rpcError) throw rpcError;
       
+      // Don't navigate manually — OnboardingGate's state machine handles
+      // routing based on profile.status. The explicit navigate() was racing
+      // with React's state propagation, causing a redirect loop back here.
       await refetchProfile();
-      navigate('/onboarding/domain-task', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
