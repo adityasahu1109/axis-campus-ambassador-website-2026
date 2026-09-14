@@ -8,8 +8,9 @@ import { TerminalLoader } from '../components/motifs/TerminalLoader';
 import { PaginationControls } from '../components/PaginationControls';
 import { Crosshair } from '../components/motifs/Crosshair';
 import { clsx } from 'clsx';
+import { SubmissionReviewModal } from '../components/SubmissionReviewModal';
 
-const Modal = ({ children, onClose, title, variant = "cyan" }) => (
+export const Modal = ({ children, onClose, title, variant = "cyan" }) => (
     <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={onClose}>
         <AxisFrame variant={variant} className="!p-0 w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className={clsx("px-6 py-4 flex justify-between items-center border-b", variant === "cyan" ? "border-cyan/30 bg-cyan/10" : "border-danger/30 bg-danger/10")}>
@@ -34,7 +35,7 @@ const StatusBadge = ({ status }) => {
     return <span className={clsx("font-mono text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
 
-const InputField = ({ label, type = "text", value, onChange, required, multiline = false }) => (
+export const InputField = ({ label, type = "text", value, onChange, required, multiline = false }) => (
     <div className="mb-6 group">
         <label className="block mb-2 text-xs font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-cyan transition-colors">{label}</label>
         {multiline ? (
@@ -61,27 +62,26 @@ const InputField = ({ label, type = "text", value, onChange, required, multiline
 function AdminDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [taskView, setTaskView] = useState('regular');
+  const [reviewView, setReviewView] = useState('regular');
   const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState([]);
-  const [stats, setStats] = useState({ students: 0, pendingSubs: 0, pendingOnboarding: 0, thisWeekSubs: 0 });
+  const [stats, setStats] = useState({ tasksCount: 0, students: 0, pendingSubs: 0, pendingOnboarding: 0, thisWeekSubs: 0 });
   const [modals, setModals] = useState({ create: false, edit: false, delete: false, review: false, announce: false, deleteAnnounce: false });
   const [selectedItem, setSelectedItem] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [awardedPoints, setAwardedPoints] = useState(0);
   const [formData, setFormData] = useState({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [tasksRes, studentsRes, pendingSubsRes, pendingOnboardingRes, thisWeekSubsRes] = await Promise.all([
-        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student').eq('status', 'pending'),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student').in('status', ['incomplete_profile', 'domain_pending', 'pending_review']),
         supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('submitted_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       ]);
-      setTasks(tasksRes.data || []);
       setStats({
+          tasksCount: tasksRes.count || 0,
           students: studentsRes.count || 0,
           pendingSubs: pendingSubsRes.count || 0,
           pendingOnboarding: pendingOnboardingRes.count || 0,
@@ -94,7 +94,27 @@ function AdminDashboard() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const studentsQuery = usePaginatedQuery('profiles', '*', 25, { filters: { role: 'student' } });
-  const submissionsQuery = usePaginatedQuery('submissions', '*, profiles!submissions_student_id_fkey(full_name, id), tasks(title, description, points)', 25, { orderBy: { column: 'submitted_at', ascending: false } });
+  
+  const submissionsQuery = usePaginatedQuery(
+      'submissions', 
+      '*, profiles!submissions_student_id_fkey(full_name, id, college), tasks!inner(id, title, description, points, is_initial_task)', 
+      25, 
+      { 
+          orderBy: { column: 'submitted_at', ascending: false },
+          filters: { 'tasks.is_initial_task': reviewView === 'initiation' }
+      }
+  );
+
+  const tasksQuery = usePaginatedQuery(
+      'tasks', 
+      '*', 
+      50, 
+      { 
+          orderBy: taskView === 'regular' ? { column: 'created_at', ascending: false } : { column: 'domain', ascending: true },
+          filters: { is_initial_task: taskView === 'initiation' }
+      }
+  );
+
   const announcementsQuery = usePaginatedQuery('announcements', '*', 25, { orderBy: { column: 'created_at', ascending: false } });
 
   const handleCreate = async (e, type) => {
@@ -119,6 +139,7 @@ function AdminDashboard() {
         if (error) throw error;
       }
       fetchData(); 
+      tasksQuery.refresh();
       announcementsQuery.refresh();
       setModals({ ...modals, create: false, announce: false });
       setFormData({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
@@ -140,6 +161,7 @@ function AdminDashboard() {
       }).eq('id', selectedItem.id);
       if (error) throw error;
       fetchData();
+      tasksQuery.refresh();
       setModals({ ...modals, edit: false });
     } catch (error) { console.error('Error updating task:', error.message); }
   };
@@ -150,28 +172,28 @@ function AdminDashboard() {
       if (error) throw error;
       fetchData();
       if (type === 'announcements') announcementsQuery.refresh();
+      if (type === 'tasks') tasksQuery.refresh();
       setModals({ ...modals, delete: false, deleteAnnounce: false });
     } catch (error) { console.error(`Error deleting ${type}:`, error.message); }
   };
 
-  const handleReviewSubmit = async (decision) => {
-    if ((decision === 'needs_revision' || decision === 'rejected') && !rejectionReason) {
+  const handleReviewSubmit = async (decision, notes, pointsAwarded) => {
+    if ((decision === 'needs_revision' || decision === 'rejected') && !notes) {
       alert("Feedback notes are required for this decision.");
       return;
     }
     try {
-      const finalPoints = decision === 'approved' ? awardedPoints : 0;
+      const finalPoints = decision === 'approved' ? pointsAwarded : 0;
       const { error } = await supabase.rpc('submit_review', {
         p_submission_id: selectedItem.id,
         p_decision: decision,
-        p_notes: rejectionReason || (decision === 'approved' ? 'Approved' : ''),
+        p_notes: notes || (decision === 'approved' ? 'Approved' : ''),
         p_points_awarded: finalPoints,
         p_reviewed_by: user.id
       });
       if (error) throw error;
       fetchData();
       submissionsQuery.refresh();
-      setRejectionReason('');
       setModals({ ...modals, review: false });
     } catch (error) { 
       console.error(`Error with review decision ${decision}:`, error.message);
@@ -219,7 +241,7 @@ function AdminDashboard() {
         <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up border-b border-border pb-4">
           <TabButton name="overview" label="Overview" />
           <TabButton name="submissions" label="Review Queue" count={stats.pendingSubs} />
-          <TabButton name="tasks" label="Tasks" count={tasks.length} />
+          <TabButton name="tasks" label="Tasks" count={stats.tasksCount} />
           <TabButton name="students" label="Students" count={stats.students} />
           <TabButton name="announcements" label="Announcements" />
         </div>
@@ -238,7 +260,7 @@ function AdminDashboard() {
                     </AxisFrame>
                     <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('tasks')}>
                         <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">Active Tasks</span>
-                        <span className="text-4xl font-display font-black text-white">{tasks.length}</span>
+                        <span className="text-4xl font-display font-black text-white">{stats.tasksCount}</span>
                     </AxisFrame>
                     <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer" onClick={() => setActiveTab('students')}>
                         <span className="text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">Pending_Onboarding</span>
@@ -252,7 +274,16 @@ function AdminDashboard() {
             )}
             {/* Submissions Tab */}
             {activeTab === 'submissions' && (
-                <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
+                <div>
+                    <div className="flex gap-2 mb-6">
+                        <button onClick={() => setReviewView('regular')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', reviewView === 'regular' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
+                            [ Regular ]
+                        </button>
+                        <button onClick={() => setReviewView('initiation')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', reviewView === 'initiation' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
+                            [ Initiation ]
+                        </button>
+                    </div>
+                    <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left font-mono">
                             <thead className="bg-obsidian border-b border-border">
@@ -289,13 +320,22 @@ function AdminDashboard() {
                         <PaginationControls query={submissionsQuery} />
                     </div>
                 </AxisFrame>
+                </div>
             )}
 
             {/* Tasks Tab */}
             {activeTab === 'tasks' && (
                 <div>
-                    <div className="flex justify-end mb-6">
-                        <button onClick={() => { setFormData({ title: '', description: '', points: 0 }); setModals({ ...modals, create: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    <div className="flex justify-between mb-6">
+                        <div className="flex gap-2">
+                            <button onClick={() => setTaskView('regular')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', taskView === 'regular' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
+                                [ Regular ]
+                            </button>
+                            <button onClick={() => setTaskView('initiation')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', taskView === 'initiation' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
+                                [ Initiation ]
+                            </button>
+                        </div>
+                        <button onClick={() => { setFormData({ title: '', description: '', points: 0, is_initial_task: taskView === 'initiation', domain: '' }); setModals({ ...modals, create: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
                             + Add Task
                         </button>
                     </div>
@@ -304,30 +344,67 @@ function AdminDashboard() {
                             <table className="w-full text-left font-mono">
                                 <thead className="bg-obsidian border-b border-border">
                                     <tr>
-                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TITLE</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">METRICS</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">{taskView === 'initiation' ? 'DOMAIN' : 'TITLE'}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">{taskView === 'initiation' ? 'TASK' : 'METRICS'}</th>
                                         <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border bg-obsidian-soft">
-                                    {tasks.length === 0 ? (
-                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No tasks yet</td></tr>
+                                    {tasksQuery.loading ? (
+                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
                                     ) : (
-                                        tasks.map(task => (
-                                        <tr key={task.id} className="hover:bg-obsidian transition-colors">
-                                            <td className="px-6 py-4 text-sm font-bold text-white uppercase">{task.title}</td>
-                                            <td className="px-6 py-4 text-sm font-bold text-cyan">+{task.points}</td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-3">
-                                                    <button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
-                                                    <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        ))
+                                        taskView === 'initiation' ? (
+                                            [
+                                                { id: 'design', label: 'Design' },
+                                                { id: 'digital_marketing', label: 'Digital Marketing' },
+                                                { id: 'social_media_marketing', label: 'Social Media Marketing' },
+                                                { id: 'event_management', label: 'Event Management' },
+                                                { id: 'web_development', label: 'Web Development' }
+                                            ].map(domain => {
+                                                const domainTasks = tasksQuery.data.filter(t => t.domain === domain.id);
+                                                if (domainTasks.length === 0) {
+                                                    return (
+                                                        <tr key={domain.id} className="hover:bg-obsidian transition-colors bg-danger/5">
+                                                            <td className="px-6 py-4 text-sm font-bold text-white uppercase">{domain.label}</td>
+                                                            <td colSpan="2" className="px-6 py-4 text-sm font-bold text-danger">No initiation task set for this domain — new signups will be blocked</td>
+                                                        </tr>
+                                                    );
+                                                }
+                                                return domainTasks.map(task => (
+                                                    <tr key={task.id} className="hover:bg-obsidian transition-colors">
+                                                        <td className="px-6 py-4 text-sm font-bold text-white uppercase">{domain.label}</td>
+                                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{task.title} (+{task.points})</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex justify-end gap-3">
+                                                                <button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
+                                                                <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ));
+                                            })
+                                        ) : (
+                                            tasksQuery.data.length === 0 ? (
+                                                <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No tasks yet</td></tr>
+                                            ) : (
+                                                tasksQuery.data.map(task => (
+                                                <tr key={task.id} className="hover:bg-obsidian transition-colors">
+                                                    <td className="px-6 py-4 text-sm font-bold text-white uppercase">{task.title}</td>
+                                                    <td className="px-6 py-4 text-sm font-bold text-cyan">+{task.points}</td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex justify-end gap-3">
+                                                            <button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
+                                                            <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                ))
+                                            )
+                                        )
                                     )}
                                 </tbody>
                             </table>
+                            <PaginationControls query={tasksQuery} />
                         </div>
                     </AxisFrame>
                 </div>
@@ -508,60 +585,12 @@ function AdminDashboard() {
         </Modal>
       )}
 
-      {modals.review && (
-        <Modal onClose={() => setModals({ ...modals, review: false })} title="REVIEW_SUBMISSION">
-            <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4 border border-border bg-obsidian-soft p-4">
-                    <div>
-                        <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-1">NODE_ID</span>
-                        <span className="font-mono font-bold text-white uppercase">{selectedItem?.profiles.full_name}</span>
-                    </div>
-                    <div>
-                        <span className="text-[10px] font-mono font-bold text-cyan uppercase tracking-widest block mb-1">MAX_REWARD</span>
-                        <span className="font-mono font-bold text-cyan">{selectedItem?.tasks.points} METRICS</span>
-                    </div>
-                </div>
-
-                <div>
-                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">DIRECTIVE_PARAMETERS</span>
-                    <div className="border border-border bg-obsidian-soft p-4">
-                        <h4 className="font-display font-bold text-white uppercase mb-2">{selectedItem?.tasks.title}</h4>
-                        <p className="text-sm font-mono text-sandstone">{selectedItem?.tasks.description}</p>
-                    </div>
-                </div>
-
-                <div>
-                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">Submission Link</span>
-                    <div className="border border-border bg-void p-4 text-sm font-mono text-cyan truncate">
-                        <a href={selectedItem?.drive_link} target="_blank" rel="noreferrer" className="hover:underline">
-                            {selectedItem?.drive_link}
-                        </a>
-                    </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <InputField label="Points Awarded" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-sandstone mt-6 opacity-70">If rejected or requires revision, awarded metrics will automatically be 0. Ensure it does not exceed {selectedItem?.tasks.points}.</p>
-                    </div>
-                </div>
-
-                <div>
-                    <InputField label="Feedback / Notes" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                </div>
-
-                <div className="flex justify-between gap-4 pt-6 border-t border-border">
-                    <button onClick={() => handleReviewSubmit('needs_revision')} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
-                    <div className="flex gap-4">
-                        <button onClick={() => handleReviewSubmit('rejected')} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
-                        <button onClick={() => handleReviewSubmit('approved')} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Approve</button>
-                    </div>
-                </div>
-            </div>
-        </Modal>
-      )}
+      <SubmissionReviewModal
+        isOpen={modals.review}
+        onClose={() => setModals({ ...modals, review: false })}
+        submission={selectedItem}
+        onSubmitReview={handleReviewSubmit}
+      />
 
       {modals.announce && (
         <Modal onClose={() => setModals({ ...modals, announce: false })} title="New Announcement">
