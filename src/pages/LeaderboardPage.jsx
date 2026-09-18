@@ -10,7 +10,6 @@ import { clsx } from 'clsx';
 function LeaderboardPage() {
   const { user, profile } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
-  const [myRankData, setMyRankData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,19 +17,25 @@ function LeaderboardPage() {
       try {
         setLoading(true);
         
-        // 1. Fetch top 10
-        const { data: top10Data, error: top10Error } = await supabase.rpc('get_top_10');
-        if (top10Error) throw top10Error;
-        setLeaderboard(top10Data || []);
-
-        if (user) {
-          if (profile?.role === 'student') {
-            const { data: rankData, error: rankError } = await supabase.rpc('get_my_rank', { p_user_id: user.id }).maybeSingle();
-            if (!rankError && rankData) setMyRankData(rankData);
-          }
+        let data = [];
+        if (user && profile?.role === 'student') {
+            // Local leaderboard returns top 10 + current user (if outside top 10)
+            const { data: localData, error } = await supabase.rpc('get_local_leaderboard');
+            if (error) throw error;
+            data = localData || [];
         } else {
-          setMyRankData(null);
+            // Public leaderboard
+            const { data: publicData, error } = await supabase.rpc('get_public_leaderboard', { p_offset: 0, p_limit: 10 });
+            if (error) throw error;
+            data = publicData || [];
         }
+        
+        // Sort by rank, but ensure the current user (if rank > 10) is always at the bottom
+        // Wait, get_local_leaderboard already returns them as a UNION ALL, so they are likely at the bottom.
+        // Let's just ensure they are sorted by rank, and if it's the current user outside top 10, keep them at end.
+        data.sort((a, b) => a.rank - b.rank);
+        
+        setLeaderboard(data);
       } catch (error) {
         console.error('Error fetching leaderboard data:', error.message);
       } finally {
@@ -42,98 +47,118 @@ function LeaderboardPage() {
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_GRID_DATA..." /></div>;
 
-  const top3 = leaderboard.slice(0, 3);
-  const rest = leaderboard.slice(3);
+  const top3 = leaderboard.slice(0, 3).filter(p => p.rank <= 3);
+  const rest = leaderboard.filter(p => p.rank > 3);
 
-  const getTierColor = (tier) => {
-    switch (tier) {
-      case 'platinum': return 'text-white border-white shadow-[0_0_15px_rgba(255,255,255,0.8)]';
-      case 'gold': return 'text-amber border-amber shadow-[0_0_15px_rgba(255,191,0,0.5)]';
-      case 'silver': return 'text-gray-300 border-gray-300 shadow-[0_0_10px_rgba(209,213,219,0.3)]';
+  const getRankColor = (rank) => {
+    switch (rank) {
+      case 1: return 'text-amber border-amber shadow-[0_0_15px_rgba(255,191,0,0.5)]'; // Gold
+      case 2: return 'text-white border-white shadow-[0_0_15px_rgba(255,255,255,0.8)]'; // Silver
+      case 3: return 'text-orange-400 border-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.3)]'; // Bronze
       default: return 'text-cyan border-cyan shadow-[0_0_10px_rgba(0,240,255,0.2)]';
     }
   };
+  
+  const getRankColorText = (rank) => getRankColor(rank).split(' ')[0];
 
   const getPointsBarWidth = (total_points) => {
     const maxPoints = leaderboard[0]?.total_points || 1;
     return `${Math.max(5, (total_points / maxPoints) * 100)}%`;
   };
 
-  const PodiumItem = ({ profile, rankIndex }) => {
-    if (!profile) return null;
+  const PodiumItem = ({ profileData, rankIndex }) => {
+    if (!profileData) return null;
     const isFirst = rankIndex === 1;
     const orderClass = isFirst ? 'order-1 md:order-2 z-10' : rankIndex === 2 ? 'order-2 md:order-1' : 'order-3';
     
     return (
         <div className={clsx(`flex flex-col items-center w-1/3 md:w-1/4 animate-fade-in-up`, orderClass)} style={{ animationDelay: `${rankIndex * 150}ms` }}>
             <div className="relative mb-4 flex items-center justify-center">
-                {isFirst && <LensingRing size="w-32 h-32 md:w-40 md:h-40" className="absolute" color={profile.tier === 'gold' ? 'amber' : 'cyan'} />}
-                {!isFirst && <LensingRing size={rankIndex === 2 ? "w-24 h-24 md:w-32 md:h-32" : "w-20 h-20 md:w-24 md:h-24"} className="absolute opacity-50" color="cyan" />}
-                <div className={clsx("relative z-10 font-display font-black text-3xl md:text-5xl", getTierColor(profile.tier).split(' ')[0])}>
-                    {profile.rank}
+                {isFirst && <LensingRing size="w-32 h-32 md:w-40 md:h-40" className="absolute" color="amber" />}
+                {!isFirst && <LensingRing size={rankIndex === 2 ? "w-24 h-24 md:w-32 md:h-32" : "w-20 h-20 md:w-24 md:h-24"} className="absolute opacity-50" color={rankIndex === 2 ? "white" : "orange"} />}
+                <div className={clsx("relative z-10 font-display font-black text-3xl md:text-5xl", getRankColorText(profileData.rank))}>
+                    {profileData.rank}
                 </div>
             </div>
             
-            <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-4 flex flex-col items-center", isFirst ? 'h-32 md:h-40 border-t-2' : rankIndex === 2 ? 'h-24 md:h-32' : 'h-20 md:h-24', getTierColor(profile.tier).split(' ')[1])}>
-                <span className="font-mono font-bold text-white text-xs md:text-sm text-center px-1 truncate w-full uppercase tracking-wider">{profile.full_name?.split(' ')[0]}</span>
-                <span className="font-mono text-cyan text-lg md:text-xl mt-2">{profile.total_points}</span>
-                <span className={clsx("text-[9px] uppercase tracking-widest mt-1", getTierColor(profile.tier).split(' ')[0])}>[{profile.tier}]</span>
+            <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-4 flex flex-col items-center", isFirst ? 'h-32 md:h-40 border-t-2' : rankIndex === 2 ? 'h-24 md:h-32' : 'h-20 md:h-24', getRankColor(profileData.rank).split(' ')[1])}>
+                <span className="font-mono font-bold text-white text-xs md:text-sm text-center px-1 truncate w-full uppercase tracking-wider">{profileData.full_name?.split(' ')[0]}</span>
+                <span className="font-mono text-cyan text-lg md:text-xl mt-2">{profileData.total_points}</span>
+                <span className={clsx("text-[9px] uppercase tracking-widest mt-1", getRankColorText(profileData.rank))}>{profileData.college?.substring(0, 15)}</span>
             </div>
         </div>
     );
   };
 
-  const renderTableRow = (profileRow, isMyRankRow = false) => {
-    const isMe = profileRow.id === user?.id;
+  const renderTableRow = (profileRow, isSeparator = false) => {
+    const isMe = profileRow.is_current_user;
     return (
-      <tr key={profileRow.id + (isMyRankRow ? '-me' : '')} className={clsx('transition-colors', isMe ? 'bg-amber/10 border-l-2 border-l-amber' : 'hover:bg-obsidian')}>
-          <td className="px-6 py-4 whitespace-nowrap text-center">
-              <div className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>
-                  {profileRow.rank < 10 ? `0${profileRow.rank}` : profileRow.rank}
-              </div>
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap">
-              <span className={clsx("text-sm uppercase tracking-wider", isMe ? "text-white font-bold" : "text-sandstone")}>
-                  {profileRow.full_name} {isMe && <span className="text-amber ml-2 text-xs">[YOU]</span>}
-              </span>
-              <span className={clsx("ml-3 text-[10px] px-2 py-0.5 uppercase tracking-widest border", getTierColor(profileRow.tier))}>
-                  {profileRow.tier}
-              </span>
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap w-1/3">
-              <div className="w-full h-1 bg-obsidian-soft border border-border">
-                  <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
-              </div>
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap text-right">
-              <span className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.total_points}</span>
-          </td>
-      </tr>
+      <React.Fragment key={profileRow.rank + '-' + profileRow.full_name}>
+          {isSeparator && (
+              <tr>
+                  <td colSpan="4" className="bg-obsidian py-2 text-center text-xs font-bold text-sandstone uppercase tracking-widest border-t-2 border-border border-dashed">
+                    --- YOUR RANK ---
+                  </td>
+              </tr>
+          )}
+          <tr className={clsx('transition-colors', isMe ? 'bg-amber/10 border-l-2 border-l-amber' : 'hover:bg-obsidian')}>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className={clsx("text-sm font-bold", isMe ? "text-amber" : getRankColorText(profileRow.rank))}>
+                      {profileRow.rank < 10 ? `0${profileRow.rank}` : profileRow.rank}
+                  </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={clsx("text-sm uppercase tracking-wider block", isMe ? "text-white font-bold" : "text-sandstone")}>
+                      {profileRow.full_name} {isMe && <span className="text-amber ml-2 text-xs">[YOU]</span>}
+                  </span>
+                  <span className="text-[10px] text-sandstone-dim uppercase tracking-widest mt-1 block">
+                      {profileRow.college} (Yr {profileRow.year_of_study})
+                  </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap w-1/3">
+                  <div className="w-full h-1 bg-obsidian-soft border border-border">
+                      <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
+                  </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <span className={clsx("text-sm font-bold", isMe ? "text-amber" : "text-cyan")}>{profileRow.total_points}</span>
+              </td>
+          </tr>
+      </React.Fragment>
     );
   };
 
-  const renderMobileRow = (profileRow, isMyRankRow = false) => {
-    const isMe = profileRow.id === user?.id;
+  const renderMobileRow = (profileRow, isSeparator = false) => {
+    const isMe = profileRow.is_current_user;
     return (
-        <div key={profileRow.id + (isMyRankRow ? '-me' : '')} className={clsx('p-4 flex flex-col gap-3 font-mono', isMe ? 'bg-amber/10 border-l-2 border-l-amber' : '')}>
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <span className={clsx("text-xs w-6 text-right", isMe ? "text-amber font-bold" : "text-cyan")}>
-                        #{profileRow.rank}
-                    </span>
-                    <span className={clsx("text-sm uppercase tracking-wider truncate", isMe ? "text-white font-bold" : "text-sandstone")}>
-                        {profileRow.full_name} {isMe && <span className="text-amber ml-1 text-xs">[YOU]</span>}
-                    </span>
-                    <span className={clsx("text-[9px] px-1.5 py-0.5 uppercase tracking-widest border", getTierColor(profileRow.tier))}>
-                        {profileRow.tier}
-                    </span>
+        <React.Fragment key={profileRow.rank + '-' + profileRow.full_name}>
+            {isSeparator && (
+                <div className="bg-obsidian py-2 text-center text-xs font-bold text-sandstone uppercase tracking-widest border-t-2 border-border border-dashed">
+                  --- YOUR RANK ---
                 </div>
-                <span className={clsx("text-sm", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.total_points}</span>
+            )}
+            <div className={clsx('p-4 flex flex-col gap-3 font-mono', isMe ? 'bg-amber/10 border-l-2 border-l-amber' : '')}>
+                <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-3 w-3/4">
+                        <span className={clsx("text-xs w-6 text-right mt-0.5", isMe ? "text-amber font-bold" : getRankColorText(profileRow.rank))}>
+                            #{profileRow.rank}
+                        </span>
+                        <div className="flex flex-col">
+                            <span className={clsx("text-sm uppercase tracking-wider truncate", isMe ? "text-white font-bold" : "text-sandstone")}>
+                                {profileRow.full_name} {isMe && <span className="text-amber ml-1 text-xs">[YOU]</span>}
+                            </span>
+                            <span className="text-[9px] text-sandstone-dim uppercase tracking-widest mt-1 truncate">
+                                {profileRow.college} (Yr {profileRow.year_of_study})
+                            </span>
+                        </div>
+                    </div>
+                    <span className={clsx("text-sm mt-0.5", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.total_points}</span>
+                </div>
+                <div className="w-full h-1 bg-obsidian border border-border mt-1">
+                    <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
+                </div>
             </div>
-            <div className="w-full h-1 bg-obsidian border border-border mt-1">
-                <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
-            </div>
-        </div>
+        </React.Fragment>
     );
   };
 
@@ -146,7 +171,7 @@ function LeaderboardPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up">
             <TerminalLabel className="justify-center mb-4">Leaderboard</TerminalLabel>
             <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-widest uppercase">Leaderboard</h1>
-            <p className="mt-4 text-sandstone-dim font-mono text-sm max-w-xl mx-auto">Track top 10 nodes across the network. Performers receive elevated permissions and hardware rewards based on tier.</p>
+            <p className="mt-4 text-sandstone-dim font-mono text-sm max-w-xl mx-auto">Track top 10 nodes across the network. Performers receive elevated permissions and rewards.</p>
         </div>
       </div>
 
@@ -155,9 +180,9 @@ function LeaderboardPage() {
         {/* Podium */}
         {leaderboard.length > 0 && (
             <div className="flex justify-center items-end gap-2 md:gap-4 mb-20 max-w-2xl mx-auto">
-                {top3[1] && <PodiumItem profile={top3[1]} rankIndex={2} />}
-                {top3[0] && <PodiumItem profile={top3[0]} rankIndex={1} />}
-                {top3[2] && <PodiumItem profile={top3[2]} rankIndex={3} />}
+                {top3.find(p => p.rank === 2) && <PodiumItem profileData={top3.find(p => p.rank === 2)} rankIndex={2} />}
+                {top3.find(p => p.rank === 1) && <PodiumItem profileData={top3.find(p => p.rank === 1)} rankIndex={1} />}
+                {top3.find(p => p.rank === 3) && <PodiumItem profileData={top3.find(p => p.rank === 3)} rankIndex={3} />}
             </div>
         )}
 
@@ -176,22 +201,14 @@ function LeaderboardPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                        {rest.length > 0 ? rest.map(p => renderTableRow(p)) : (
+                        {rest.length > 0 ? rest.map((p, index) => {
+                            // If this row is the current user and their rank is > 10, add a separator
+                            const isSeparator = p.is_current_user && p.rank > 10;
+                            return renderTableRow(p, isSeparator);
+                        }) : (
                             <tr>
                                 <td colSpan="4" className="text-center py-12 text-sandstone-dim text-sm uppercase tracking-widest">No more students to show</td>
                             </tr>
-                        )}
-                        
-                        {/* If user is student, and not in top 10, show them at bottom */}
-                        {myRankData && myRankData.rank > 10 && (
-                          <>
-                            <tr>
-                              <td colSpan="4" className="bg-obsidian py-2 text-center text-xs font-bold text-sandstone uppercase tracking-widest border-t-2 border-border border-dashed">
-                                --- YOUR RANK ---
-                              </td>
-                            </tr>
-                            {renderTableRow(myRankData, true)}
-                          </>
                         )}
                     </tbody>
                 </table>
@@ -202,17 +219,11 @@ function LeaderboardPage() {
                 <div className="bg-obsidian px-4 py-3 border-b border-border">
                     <span className="text-xs font-mono font-bold text-sandstone uppercase tracking-widest">GLOBAL_READOUT</span>
                 </div>
-                {rest.length > 0 ? rest.map(p => renderMobileRow(p)) : (
+                {rest.length > 0 ? rest.map((p, index) => {
+                    const isSeparator = p.is_current_user && p.rank > 10;
+                    return renderMobileRow(p, isSeparator);
+                }) : (
                     <div className="text-center py-12 font-mono text-sandstone-dim text-sm uppercase tracking-widest">No more students to show</div>
-                )}
-
-                {myRankData && myRankData.rank > 10 && (
-                  <>
-                    <div className="bg-obsidian py-2 text-center text-xs font-bold text-sandstone uppercase tracking-widest border-t-2 border-border border-dashed">
-                      --- YOUR RANK ---
-                    </div>
-                    {renderMobileRow(myRankData, true)}
-                  </>
                 )}
             </div>
 

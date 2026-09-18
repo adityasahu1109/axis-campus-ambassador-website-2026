@@ -5,8 +5,6 @@ import Footer from './components/Footer';
 import OnboardingGate from './components/OnboardingGate';
 import HomePage from './pages/HomePage';
 import OnboardingDetailsPage from './pages/onboarding/OnboardingDetailsPage';
-import OnboardingDomainTaskPage from './pages/onboarding/OnboardingDomainTaskPage';
-import OnboardingPendingPage from './pages/onboarding/OnboardingPendingPage';
 import NotificationsPage from './pages/NotificationsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import LoginPage from './pages/LoginPage';
@@ -40,9 +38,6 @@ function App() {
           <Route path="/notifications" element={<OnboardingGate><NotificationsPage /></OnboardingGate>} />
           {/* Onboarding Routes */}
           <Route path="/onboarding/details" element={<OnboardingGate requiredRole="student"><OnboardingDetailsPage /></OnboardingGate>} />
-          <Route path="/onboarding/domain-task" element={<OnboardingGate requiredRole="student"><OnboardingDomainTaskPage /></OnboardingGate>} />
-          <Route path="/onboarding/pending" element={<OnboardingGate requiredRole="student"><OnboardingPendingPage /></OnboardingGate>} />
-          
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

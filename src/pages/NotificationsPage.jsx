@@ -17,18 +17,18 @@ export default function NotificationsPage() {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('profile_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
         
       if (error) throw error;
       setNotifications(data || []);
       
       // Mark as read after fetching
-      const unreadIds = data.filter(n => !n.read).map(n => n.id);
+      const unreadIds = data.filter(n => !n.is_read).map(n => n.id);
       if (unreadIds.length > 0) {
         await supabase
           .from('notifications')
-          .update({ read: true })
+          .update({ is_read: true })
           .in('id', unreadIds);
       }
     } catch (err) {
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
                 key={notif.id} 
                 variant={notif.type === 'referral_bonus' ? 'amber' : 'cyan'} 
                 hover={true} 
-                className={`p-6 transition-all duration-300 ${notif.read ? 'opacity-70' : 'opacity-100 shadow-[0_0_15px_rgba(0,240,255,0.2)]'}`}
+                className={`p-6 transition-all duration-300 ${notif.is_read ? 'opacity-70' : 'opacity-100 shadow-[0_0_15px_rgba(0,240,255,0.2)]'}`}
               >
                 <div className="flex justify-between items-start">
                   <div>

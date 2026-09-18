@@ -19,7 +19,7 @@ export default function NotificationsDropdown() {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('profile_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -27,7 +27,7 @@ export default function NotificationsDropdown() {
         console.error('Error fetching notifications:', error.message);
       } else {
         setNotifications(data || []);
-        setUnreadCount((data || []).filter(n => !n.read).length);
+        setUnreadCount((data || []).filter(n => !n.is_read).length);
       }
     };
 
@@ -35,7 +35,7 @@ export default function NotificationsDropdown() {
 
     const subscription = supabase
       .channel('public:notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `profile_id=eq.${user.id}` }, payload => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, payload => {
         setNotifications(prev => [payload.new, ...prev].slice(0, 10));
         setUnreadCount(prev => prev + 1);
       })
@@ -60,15 +60,15 @@ export default function NotificationsDropdown() {
     setIsOpen(!isOpen);
     if (!isOpen && unreadCount > 0) {
       // Mark all as read when opening
-      const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+      const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
 
       // Optimistically update UI
       setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
 
       const { error } = await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ is_read: true })
         .in('id', unreadIds);
 
       if (error) {
@@ -111,7 +111,7 @@ export default function NotificationsDropdown() {
             ) : (
               <ul className="divide-y divide-border">
                 {notifications.map((notif) => (
-                  <li key={notif.id} className={clsx("p-4 transition-colors hover:bg-obsidian-light", !notif.read ? "bg-cyan/5" : "")}>
+                  <li key={notif.id} className={clsx("p-4 transition-colors hover:bg-obsidian-light", !notif.is_read ? "bg-cyan/5" : "")}>
                     {notif.link ? (
                       <Link to={notif.link} onClick={() => setIsOpen(false)} className="block">
                         <NotificationContent notif={notif} />
@@ -133,9 +133,9 @@ export default function NotificationsDropdown() {
 function NotificationContent({ notif }) {
   return (
     <div className="flex items-start gap-3">
-      <div className={clsx("w-2 h-2 rounded-full mt-1.5 shrink-0", !notif.read ? "bg-cyan shadow-[0_0_8px_rgba(0,240,255,0.6)]" : "bg-border")}></div>
+      <div className={clsx("w-2 h-2 rounded-full mt-1.5 shrink-0", !notif.is_read ? "bg-cyan shadow-[0_0_8px_rgba(0,240,255,0.6)]" : "bg-border")}></div>
       <div>
-        <p className={clsx("text-sm font-mono leading-snug mb-1", !notif.read ? "text-white" : "text-sandstone")}>{notif.message}</p>
+        <p className={clsx("text-sm font-mono leading-snug mb-1", !notif.is_read ? "text-white" : "text-sandstone")}>{notif.message}</p>
         <span className="text-[10px] text-sandstone-dim font-mono block">
           {new Date(notif.created_at).toLocaleDateString()} {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>

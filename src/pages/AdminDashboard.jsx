@@ -36,7 +36,7 @@ const StatusBadge = ({ status }) => {
     return <span className={clsx("font-mono text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
 
-export const InputField = ({ label, type = "text", value, onChange, required, multiline = false }) => (
+export const InputField = ({ label, type = "text", value, onChange, required, multiline = false, step }) => (
     <div className="mb-6 group">
         <label className="block mb-2 text-xs font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-cyan transition-colors">{label}</label>
         {multiline ? (
@@ -53,43 +53,55 @@ export const InputField = ({ label, type = "text", value, onChange, required, mu
                 value={value} 
                 onChange={onChange} 
                 required={required} 
+                step={step}
                 className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
             />
         )}
     </div>
 );
 
-
 function AdminDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [taskView, setTaskView] = useState('regular');
-  const [reviewView, setReviewView] = useState('regular');
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ tasksCount: 0, students: 0, pendingSubs: 0, pendingOnboarding: 0, thisWeekSubs: 0, totalSubs: 0 });
+  const [stats, setStats] = useState({ tasksCount: 0, students: 0, pendingSubs: 0, thisWeekSubs: 0, totalSubs: 0 });
+  const [domainsList, setDomainsList] = useState([]);
+  const [programSettings, setProgramSettings] = useState({ campus_ambassador_threshold: 1000, referral_reward_points: 100 });
   const [modals, setModals] = useState({ create: false, edit: false, delete: false, review: false, announce: false, deleteAnnounce: false });
   const [selectedItem, setSelectedItem] = useState(null);
-  const [formData, setFormData] = useState({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
+  
+  // Adjusted for new schema
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    description: '', 
+    instructions: '',
+    points: 0, 
+    domain_id: '',
+    deadline: '',
+    content: '' // for announcements
+  });
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [tasksRes, studentsRes, pendingSubsRes, pendingOnboardingRes, thisWeekSubsRes, totalSubsRes] = await Promise.all([
+      const [tasksRes, studentsRes, pendingSubsRes, thisWeekSubsRes, totalSubsRes, domainsRes, settingsRes] = await Promise.all([
         supabase.from('tasks').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student').in('status', ['incomplete_profile', 'domain_pending', 'pending_review']),
         supabase.from('submissions').select('id', { count: 'exact', head: true }).gte('submitted_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        supabase.from('submissions').select('id', { count: 'exact', head: true })
+        supabase.from('submissions').select('id', { count: 'exact', head: true }),
+        supabase.from('domains').select('id, name'),
+        supabase.from('program_settings').select('*').single()
       ]);
       setStats({
           tasksCount: tasksRes.count || 0,
           students: studentsRes.count || 0,
           pendingSubs: pendingSubsRes.count || 0,
-          pendingOnboarding: pendingOnboardingRes.count || 0,
           thisWeekSubs: thisWeekSubsRes.count || 0,
           totalSubs: totalSubsRes.count || 0,
       });
+      if (domainsRes.data) setDomainsList(domainsRes.data);
+      if (settingsRes.data) setProgramSettings(settingsRes.data);
     } catch (error) { console.error('Error fetching data:', error.message); }
     finally { setLoading(false); }
   }, []);
@@ -98,13 +110,13 @@ function AdminDashboard() {
 
   const studentsQuery = usePaginatedQuery('profiles', '*', 25, { filters: { role: 'student' } });
   
+  // Note: submission needs tasks(id, title, description, instructions, points, deadline)
   const submissionsQuery = usePaginatedQuery(
       'submissions', 
-      '*, profiles!submissions_student_id_fkey(full_name, id, college), tasks!inner(id, title, description, points, is_initial_task)', 
+      '*, profiles!submissions_student_id_fkey(full_name, id, college), tasks!inner(id, title, description, instructions, points, deadline)', 
       25, 
       { 
-          orderBy: { column: 'submitted_at', ascending: false },
-          filters: { 'tasks.is_initial_task': reviewView === 'initiation' }
+          orderBy: { column: 'submitted_at', ascending: false }
       }
   );
 
@@ -113,12 +125,17 @@ function AdminDashboard() {
       '*', 
       50, 
       { 
-          orderBy: taskView === 'regular' ? { column: 'created_at', ascending: false } : { column: 'domain', ascending: true },
-          filters: { is_initial_task: taskView === 'initiation' }
+          orderBy: { column: 'created_at', ascending: false }
       }
   );
 
   const announcementsQuery = usePaginatedQuery('announcements', '*', 25, { orderBy: { column: 'created_at', ascending: false } });
+
+  const getDomainName = (id) => {
+      if (!id) return 'Global (No Domain)';
+      const d = domainsList.find(d => d.id === id);
+      return d ? d.name : id;
+  };
 
   const handleCreate = async (e, type) => {
     e.preventDefault();
@@ -127,9 +144,10 @@ function AdminDashboard() {
         const { error } = await supabase.from('tasks').insert({ 
             title: formData.title, 
             description: formData.description, 
+            instructions: formData.instructions || null,
             points: formData.points,
-            domain: formData.domain || null,
-            is_initial_task: formData.is_initial_task
+            domain_id: formData.domain_id ? parseInt(formData.domain_id) : null,
+            deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null
         });
         if (error) throw error;
         
@@ -145,7 +163,7 @@ function AdminDashboard() {
       tasksQuery.refresh();
       announcementsQuery.refresh();
       setModals({ ...modals, create: false, announce: false });
-      setFormData({ title: '', description: '', content: '', points: 0, domain: '', is_initial_task: false });
+      setFormData({ title: '', description: '', instructions: '', points: 0, domain_id: '', deadline: '', content: '' });
     } catch (error) { 
       console.error(`Error creating ${type}:`, error.message); 
       alert(`Error creating ${type}: ${error.message}`);
@@ -158,9 +176,10 @@ function AdminDashboard() {
       const { error } = await supabase.from('tasks').update({ 
           title: formData.title, 
           description: formData.description, 
+          instructions: formData.instructions || null,
           points: formData.points,
-          domain: formData.domain || null,
-          is_initial_task: formData.is_initial_task 
+          domain_id: formData.domain_id ? parseInt(formData.domain_id) : null,
+          deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null
       }).eq('id', selectedItem.id);
       if (error) throw error;
       fetchData();
@@ -186,13 +205,37 @@ function AdminDashboard() {
       return;
     }
     try {
-      const finalPoints = decision === 'approved' ? pointsAwarded : 0;
-      const { error } = await supabase.rpc('submit_review', {
-        p_submission_id: selectedItem.id,
-        p_decision: decision,
-        p_notes: notes || (decision === 'approved' ? 'Approved' : ''),
-        p_points_awarded: finalPoints,
-        p_reviewed_by: user.id
+      const taskMaxPoints = selectedItem?.tasks?.points || 0;
+
+      // Determine the review status and awarded_percentage for the DB RPC.
+      // The DB is authoritative for calculating points_awarded from the percentage.
+      let reviewStatus = decision;
+      let percentage = null;
+
+      if (decision === 'approved') {
+        // DB overrides percentage to 1 for approved, but we pass it anyway.
+        percentage = 1;
+      } else if (decision === 'rejected' || decision === 'needs_revision') {
+        // DB overrides percentage to 0 for these statuses.
+        percentage = 0;
+      } else {
+        // Partial: compute percentage from the awarded points vs task max.
+        percentage = taskMaxPoints > 0 ? pointsAwarded / taskMaxPoints : 0;
+      }
+
+      // If organizer chose 'approved' but awarded less than full points,
+      // treat it as partially_accepted so the DB can store the correct percentage.
+      if (decision === 'approved' && taskMaxPoints > 0 && pointsAwarded < taskMaxPoints) {
+        reviewStatus = 'partially_accepted';
+        percentage = pointsAwarded / taskMaxPoints;
+      }
+
+      const { error } = await supabase.rpc('review_submission', {
+        target_submission_id: selectedItem.id,
+        new_status: reviewStatus,
+        review_notes: notes || null,
+        awarded_percentage: percentage,
+        rejection_reason_text: (reviewStatus === 'rejected' || reviewStatus === 'needs_revision') ? notes : null
       });
       if (error) throw error;
       fetchData();
@@ -202,6 +245,21 @@ function AdminDashboard() {
       console.error(`Error with review decision ${decision}:`, error.message);
       alert(`Error: ${error.message}`);
     }
+  };
+
+  const handleSettingsUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('program_settings').upsert({
+        id: 1,
+        campus_ambassador_threshold: programSettings.campus_ambassador_threshold,
+        referral_reward_points: programSettings.referral_reward_points,
+        updated_by: user.id
+      });
+      if (error) throw error;
+      alert("Settings updated successfully");
+      fetchData();
+    } catch (error) { console.error('Error updating settings:', error.message); alert(`Error: ${error.message}`); }
   };
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="AETHEL_CORE_INITIALIZING..." /></div>;
@@ -247,6 +305,7 @@ function AdminDashboard() {
           <TabButton name="tasks" label="Tasks" count={stats.tasksCount} />
           <TabButton name="students" label="Students" count={stats.students} />
           <TabButton name="announcements" label="Announcements" />
+          <TabButton name="settings" label="Settings" />
         </div>
 
         <div className="animate-fade-in">
@@ -271,12 +330,6 @@ function AdminDashboard() {
                         </span>
                         <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.tasksCount}</span>
                     </AxisFrame>
-                    <AxisFrame variant="amber" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-amber/5 transition-all" onClick={() => setActiveTab('submissions')}>
-                        <span className="flex items-center gap-2 text-xs font-mono text-amber uppercase tracking-widest mb-2 text-center">
-                            <PiClockClockwise size={16} /> Pending Onboarding
-                        </span>
-                        <span className="text-4xl font-display font-black text-white group-hover:scale-105 transition-transform">{stats.pendingOnboarding}</span>
-                    </AxisFrame>
                     <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('submissions')}>
                         <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
                             <PiChartLineUp size={16} /> This Week Subs
@@ -294,14 +347,6 @@ function AdminDashboard() {
             {/* Submissions Tab */}
             {activeTab === 'submissions' && (
                 <div>
-                    <div className="flex gap-2 mb-6">
-                        <button onClick={() => setReviewView('regular')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', reviewView === 'regular' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
-                            [ Regular ]
-                        </button>
-                        <button onClick={() => setReviewView('initiation')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', reviewView === 'initiation' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
-                            [ Initiation ]
-                        </button>
-                    </div>
                     <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left font-mono">
@@ -345,16 +390,11 @@ function AdminDashboard() {
             {/* Tasks Tab */}
             {activeTab === 'tasks' && (
                 <div>
-                    <div className="flex justify-between mb-6">
-                        <div className="flex gap-2">
-                            <button onClick={() => setTaskView('regular')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', taskView === 'regular' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
-                                [ Regular ]
-                            </button>
-                            <button onClick={() => setTaskView('initiation')} className={clsx('px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors border', taskView === 'initiation' ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}>
-                                [ Initiation ]
-                            </button>
-                        </div>
-                        <button onClick={() => { setFormData({ title: '', description: '', points: 0, is_initial_task: taskView === 'initiation', domain: '' }); setModals({ ...modals, create: true }) }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    <div className="flex justify-end mb-6">
+                        <button onClick={() => { 
+                          setFormData({ title: '', description: '', instructions: '', points: 0, domain_id: '', deadline: '' }); 
+                          setModals({ ...modals, create: true }) 
+                        }} className="inline-flex items-center gap-2 text-xs font-mono font-bold text-void bg-cyan hover:bg-cyan-soft px-6 py-3 uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">
                             + Add Task
                         </button>
                     </div>
@@ -363,62 +403,45 @@ function AdminDashboard() {
                             <table className="w-full text-left font-mono">
                                 <thead className="bg-obsidian border-b border-border">
                                     <tr>
-                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">{taskView === 'initiation' ? 'DOMAIN' : 'TITLE'}</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">{taskView === 'initiation' ? 'TASK' : 'METRICS'}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TITLE</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">DOMAIN</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">METRICS</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">DEADLINE</th>
                                         <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border bg-obsidian-soft">
                                     {tasksQuery.loading ? (
-                                        <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
+                                        <tr><td colSpan="5" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
                                     ) : (
-                                        taskView === 'initiation' ? (
-                                            [
-                                                { id: 'design', label: 'Design' },
-                                                { id: 'digital_marketing', label: 'Digital Marketing' },
-                                                { id: 'social_media_marketing', label: 'Social Media Marketing' },
-                                                { id: 'event_management', label: 'Event Management' },
-                                                { id: 'web_development', label: 'Web Development' }
-                                            ].map(domain => {
-                                                const domainTasks = tasksQuery.data.filter(t => t.domain === domain.id);
-                                                if (domainTasks.length === 0) {
-                                                    return (
-                                                        <tr key={domain.id} className="hover:bg-obsidian transition-colors bg-danger/5">
-                                                            <td className="px-6 py-4 text-sm font-bold text-white uppercase">{domain.label}</td>
-                                                            <td colSpan="2" className="px-6 py-4 text-sm font-bold text-danger">No initiation task set for this domain — new signups will be blocked</td>
-                                                        </tr>
-                                                    );
-                                                }
-                                                return domainTasks.map(task => (
-                                                    <tr key={task.id} className="hover:bg-obsidian transition-colors">
-                                                        <td className="px-6 py-4 text-sm font-bold text-white uppercase">{domain.label}</td>
-                                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{task.title} (+{task.points})</td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <div className="flex justify-end gap-3">
-                                                                <button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
-                                                                <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ));
-                                            })
+                                        tasksQuery.data.length === 0 ? (
+                                            <tr><td colSpan="5" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No tasks yet</td></tr>
                                         ) : (
-                                            tasksQuery.data.length === 0 ? (
-                                                <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No tasks yet</td></tr>
-                                            ) : (
-                                                tasksQuery.data.map(task => (
-                                                <tr key={task.id} className="hover:bg-obsidian transition-colors">
-                                                    <td className="px-6 py-4 text-sm font-bold text-white uppercase">{task.title}</td>
-                                                    <td className="px-6 py-4 text-sm font-bold text-cyan">+{task.points}</td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <div className="flex justify-end gap-3">
-                                                            <button onClick={() => { setSelectedItem(task); setFormData(task); setModals({ ...modals, edit: true }) }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
-                                                            <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                ))
-                                            )
+                                            tasksQuery.data.map(task => (
+                                            <tr key={task.id} className="hover:bg-obsidian transition-colors">
+                                                <td className="px-6 py-4 text-sm font-bold text-white uppercase">{task.title}</td>
+                                                <td className="px-6 py-4 text-sm text-sandstone">{getDomainName(task.domain_id)}</td>
+                                                <td className="px-6 py-4 text-sm font-bold text-cyan">+{task.points}</td>
+                                                <td className="px-6 py-4 text-sm text-sandstone-dim">{task.deadline ? new Date(task.deadline).toLocaleDateString() : 'None'}</td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-3">
+                                                        <button onClick={() => { 
+                                                          setSelectedItem(task); 
+                                                          setFormData({
+                                                            title: task.title,
+                                                            description: task.description,
+                                                            instructions: task.instructions || '',
+                                                            points: task.points,
+                                                            domain_id: task.domain_id || '',
+                                                            deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : ''
+                                                          }); 
+                                                          setModals({ ...modals, edit: true }) 
+                                                        }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
+                                                        <button onClick={() => { setSelectedItem(task); setModals({ ...modals, delete: true }) }} className="text-xs font-mono text-danger hover:text-white transition-colors uppercase tracking-widest">[ DELETE ]</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            ))
                                         )
                                     )}
                                 </tbody>
@@ -438,7 +461,7 @@ function AdminDashboard() {
                                 <tr>
                                     <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID</th>
                                     <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TOTAL_METRICS</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">VERIFIED_DIRECTIVES</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">DOMAIN</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-obsidian-soft">
@@ -452,7 +475,7 @@ function AdminDashboard() {
                                         <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
                                         <td className="px-6 py-4 text-sm font-bold text-cyan">{student.total_points}</td>
                                         <td className="px-6 py-4 text-sm text-sandstone">
-                                            {student.domain || 'Unassigned'}
+                                            {getDomainName(student.domain_id)}
                                         </td>
                                     </tr>
                                     ))
@@ -505,6 +528,37 @@ function AdminDashboard() {
                     </AxisFrame>
                 </div>
             )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+                <div className="max-w-2xl">
+                    <AxisFrame variant="cyan" className="!p-8">
+                        <div className="border-b border-border pb-4 mb-6">
+                            <TerminalLabel prefix=">">Program Settings</TerminalLabel>
+                            <p className="text-sandstone-dim font-mono text-xs mt-2 uppercase tracking-widest">Global configuration parameters for the platform.</p>
+                        </div>
+                        <form onSubmit={handleSettingsUpdate} className="space-y-6">
+                            <InputField 
+                                label="Campus Ambassador Threshold (Points)" 
+                                type="number" 
+                                value={programSettings.campus_ambassador_threshold} 
+                                onChange={(e) => setProgramSettings({...programSettings, campus_ambassador_threshold: parseInt(e.target.value) || 0})} 
+                                required 
+                            />
+                            <InputField 
+                                label="Referral Reward (Points)" 
+                                type="number" 
+                                value={programSettings.referral_reward_points} 
+                                onChange={(e) => setProgramSettings({...programSettings, referral_reward_points: parseInt(e.target.value) || 0})} 
+                                required 
+                            />
+                            <div className="flex justify-end pt-4 border-t border-border">
+                                <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Save Settings</button>
+                            </div>
+                        </form>
+                    </AxisFrame>
+                </div>
+            )}
         </div>
       </div>
       
@@ -514,34 +568,26 @@ function AdminDashboard() {
             <form onSubmit={(e) => handleCreate(e, 'task')} className="space-y-4">
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
-                <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
+                <div className="grid grid-cols-2 gap-4">
+                    <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                    <InputField label="DEADLINE (Optional)" type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({...formData, deadline: e.target.value})} />
+                </div>
                 
                 <div className="relative group">
                     <label className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-amber">DOMAIN</label>
                     <select 
-                        value={formData.domain} 
-                        onChange={(e) => setFormData({...formData, domain: e.target.value})} 
+                        value={formData.domain_id} 
+                        onChange={(e) => setFormData({...formData, domain_id: e.target.value})} 
                         className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white"
                     >
                         <option value="">Global (No Domain)</option>
-                        <option value="design">Design</option>
-                        <option value="digital_marketing">Digital Marketing</option>
-                        <option value="social_media_marketing">Social Media Marketing</option>
-                        <option value="event_management">Event Management</option>
-                        <option value="web_development">Web Development</option>
+                        {domainsList.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
                     </select>
                 </div>
                 
-                <div className="flex items-center gap-3 mt-4">
-                    <input 
-                        type="checkbox" 
-                        id="is_initial_task" 
-                        checked={formData.is_initial_task} 
-                        onChange={(e) => setFormData({...formData, is_initial_task: e.target.checked})} 
-                        className="w-4 h-4 bg-void border-border text-cyan focus:ring-cyan"
-                    />
-                    <label htmlFor="is_initial_task" className="text-xs font-mono tracking-widest text-sandstone uppercase">INITIAL_TASK (ONBOARDING)</label>
-                </div>
                 <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                     <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Create</button>
@@ -555,34 +601,27 @@ function AdminDashboard() {
             <form onSubmit={handleUpdate} className="space-y-4">
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
-                <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
+                
+                <div className="grid grid-cols-2 gap-4">
+                    <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
+                    <InputField label="DEADLINE (Optional)" type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({...formData, deadline: e.target.value})} />
+                </div>
 
                 <div className="relative group">
                     <label className="block mb-2 text-xs font-mono tracking-widest text-sandstone uppercase transition-colors group-focus-within:text-amber">DOMAIN</label>
                     <select 
-                        value={formData.domain} 
-                        onChange={(e) => setFormData({...formData, domain: e.target.value})} 
+                        value={formData.domain_id} 
+                        onChange={(e) => setFormData({...formData, domain_id: e.target.value})} 
                         className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white"
                     >
                         <option value="">Global (No Domain)</option>
-                        <option value="design">Design</option>
-                        <option value="digital_marketing">Digital Marketing</option>
-                        <option value="social_media_marketing">Social Media Marketing</option>
-                        <option value="event_management">Event Management</option>
-                        <option value="web_development">Web Development</option>
+                        {domainsList.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
                     </select>
                 </div>
                 
-                <div className="flex items-center gap-3 mt-4">
-                    <input 
-                        type="checkbox" 
-                        id="is_initial_task_edit" 
-                        checked={formData.is_initial_task} 
-                        onChange={(e) => setFormData({...formData, is_initial_task: e.target.checked})} 
-                        className="w-4 h-4 bg-void border-border text-cyan focus:ring-cyan"
-                    />
-                    <label htmlFor="is_initial_task_edit" className="text-xs font-mono tracking-widest text-sandstone uppercase">INITIAL_TASK (ONBOARDING)</label>
-                </div>
                 <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
                     <button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                     <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Save Changes</button>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
 import axisLogo from '../assets/logo.png';
 
 import { AxisFrame } from '../components/motifs/AxisFrame';
@@ -35,7 +34,6 @@ function LoginPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,13 +58,6 @@ function LoginPage() {
       try {
         const { error } = await signUp({ email, password, options: { data: { full_name: fullName, role: 'student' } } });
         if (error) throw error;
-
-        if (referralCode.trim()) {
-          const { error: rpcError } = await supabase.rpc('set_referral', { p_referral_code: referralCode.trim() });
-          if (rpcError) {
-            console.warn("Could not set referral code:", rpcError.message);
-          }
-        }
 
         setMessage('Registration successful! Please sign in.');
         setIsRegister(false);
@@ -175,7 +166,6 @@ function LoginPage() {
               {/* Animated Tab Switch content */}
               <div className={`space-y-5 overflow-hidden transition-all duration-500 ease-in-out ${isRegister ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0 hidden'}`}>
                 <InputField label="Full Name" id="name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" required={isRegister} />
-                <InputField label="REFERRAL_CODE (Optional)" id="referral" type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="AXIS-XXXX" required={false} />
               </div>
 
               <InputField label="Email" id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@college.edu" required={true} />

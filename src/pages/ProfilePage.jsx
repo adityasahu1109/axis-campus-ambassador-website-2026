@@ -45,7 +45,10 @@ const InputField = ({ label, id, type = "text", value, onChange, placeholder, re
                 placeholder={placeholder}
                 required={required} 
                 disabled={disabled}
-                className="w-full bg-void border border-border p-3.5 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim disabled:opacity-50 disabled:cursor-not-allowed focus:shadow-[0_0_15px_rgba(255,158,0,0.2)]" 
+                className={clsx(
+                  "w-full border border-border p-3.5 outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim disabled:opacity-50 disabled:cursor-not-allowed",
+                  disabled ? "bg-obsidian" : "bg-void focus:border-amber focus:shadow-[0_0_15px_rgba(255,158,0,0.2)]"
+                )} 
             />
         )}
     </div>
@@ -54,10 +57,12 @@ const InputField = ({ label, id, type = "text", value, onChange, placeholder, re
 function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState({
-    full_name: '', bio: '', college_name: '', year: '', branch: '', primary_phone: '', additional_phone: '', referral_code: ''
+    full_name: '', college: '', branch: '', degree_type: '', year_of_study: '', city: '', phone_number: '', referral_code: '', referred_by: null
   });
+  const [referrerCode, setReferrerCode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  
   const [password, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
@@ -69,10 +74,19 @@ function ProfilePage() {
           setLoading(true);
           const { data, error } = await supabase
             .from('profiles')
-            .select('full_name, bio, college_name, year, branch, primary_phone, additional_phone, referral_code')
+            .select('*')
             .eq('id', user.id).single();
           if (error) throw error;
-          if (data) setProfile(data);
+          if (data) {
+            setProfile(data);
+            if (data.referred_by) {
+              const { data: refData } = await supabase
+                .from('profiles')
+                .select('referral_code')
+                .eq('id', data.referred_by).single();
+              if (refData) setReferrerCode(refData.referral_code);
+            }
+          }
         } catch (error) { console.error("Error fetching profile:", error.message); }
         finally { setLoading(false); }
       } else setLoading(false);
@@ -87,7 +101,17 @@ function ProfilePage() {
     if (!user) return;
     setMessage('');
     try {
-      const { error } = await supabase.from('profiles').update(profile).eq('id', user.id);
+      const updates = {
+        full_name: profile.full_name,
+        college: profile.college,
+        branch: profile.branch,
+        degree_type: profile.degree_type,
+        year_of_study: parseInt(profile.year_of_study, 10),
+        city: profile.city,
+        phone_number: profile.phone_number,
+      };
+
+      const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
       if (error) throw error;
       setMessage('PROFILE_UPDATED successfully!');
       setTimeout(() => setMessage(''), 3000);
@@ -136,7 +160,7 @@ function ProfilePage() {
       <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
         <div className="max-w-4xl mx-auto flex items-center gap-x-6 relative z-10 animate-fade-in">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-obsidian border border-amber flex items-center justify-center text-3xl font-display font-bold text-amber shadow-[0_0_15px_rgba(255,158,0,0.2)]">
-                {(profile.full_name || user.email).charAt(0).toUpperCase()}
+                {(profile.full_name || user.email || 'A').charAt(0).toUpperCase()}
             </div>
             <div>
                 <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
@@ -166,21 +190,50 @@ function ProfilePage() {
                     <InputField label="Email" id="email" type="email" value={user?.email || ''} disabled />
                 </div>
                 
-                <InputField label="Referral Code" id="referral_code" type="text" value={profile.referral_code || 'UNASSIGNED'} disabled />
-                <InputField label="Bio" id="bio" type="textarea" value={profile.bio || ''} onChange={handleProfileChange} placeholder="Input background data..." />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 border-b border-border/50 pb-2 mb-8">
+                    <InputField 
+                        label="Your Referral Code" 
+                        id="referral_code" 
+                        type="text" 
+                        value={profile.referral_code || 'UNASSIGNED'} 
+                        disabled 
+                    />
+                    <InputField 
+                        label="Referral Used" 
+                        id="referred_by" 
+                        type="text" 
+                        value={profile.referred_by ? (referrerCode || 'Loading...') : 'No referral code used'} 
+                        disabled 
+                    />
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="Institution Name" id="college_name" value={profile.college_name || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
-                    <InputField label="Branch" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
+                    <InputField label="Phone Number" id="phone_number" type="tel" value={profile.phone_number || ''} onChange={handleProfileChange} required placeholder="10 digit mobile number" />
+                    <InputField label="City" id="city" value={profile.city || ''} onChange={handleProfileChange} placeholder="City Name" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="Year of Study" id="year" value={profile.year || ''} onChange={handleProfileChange} required options={['1st Year', '2nd Year', '3rd Year', '4th Year', '5th+ Year']} />
+                    <InputField label="Institution Name" id="college" value={profile.college || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
+                    <InputField label="Degree Type" id="degree_type" value={profile.degree_type || ''} onChange={handleProfileChange} required placeholder="e.g. B.Tech" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                    <InputField label="Phone Number" id="primary_phone" type="tel" value={profile.primary_phone || ''} onChange={handleProfileChange} required placeholder="+91 0000000000" />
-                    <InputField label="Alternate Phone" id="additional_phone" type="tel" value={profile.additional_phone || ''} onChange={handleProfileChange} placeholder="+91 0000000000" />
+                    <InputField label="Branch / Major" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
+                    <InputField 
+                        label="Year of Study" 
+                        id="year_of_study" 
+                        value={profile.year_of_study?.toString() || ''} 
+                        onChange={handleProfileChange} 
+                        required 
+                        options={[
+                          { value: '1', label: '1st Year' },
+                          { value: '2', label: '2nd Year' },
+                          { value: '3', label: '3rd Year' },
+                          { value: '4', label: '4th Year' },
+                          { value: '5', label: '5th Year' },
+                          { value: '6', label: '6th+ Year' }
+                        ]}
+                    />
                 </div>
 
                 <div className="flex justify-end mt-8">

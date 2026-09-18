@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, InputField } from '../pages/AdminDashboard';
+import { clsx } from 'clsx';
 
 export function SubmissionReviewModal({
   submission,
@@ -14,7 +15,7 @@ export function SubmissionReviewModal({
   useEffect(() => {
     if (isOpen) {
       setRejectionReason('');
-      setAwardedPoints(0);
+      setAwardedPoints(submission?.tasks?.points || 0);
     }
   }, [isOpen, submission]);
 
@@ -45,19 +46,51 @@ export function SubmissionReviewModal({
             <div>
                 <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">Submission Link</span>
                 <div className="border border-border bg-void p-4 text-sm font-mono text-cyan truncate">
-                    <a href={submission?.drive_link} target="_blank" rel="noreferrer" className="hover:underline">
-                        {submission?.drive_link}
-                    </a>
+                    {submission?.drive_link ? (
+                        <a href={submission?.drive_link} target="_blank" rel="noreferrer" className="hover:underline">
+                            {submission?.drive_link}
+                        </a>
+                    ) : (
+                        <span className="text-sandstone-dim">No link provided</span>
+                    )}
                 </div>
             </div>
+
+            {submission?.submission_context && (
+                <div>
+                    <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-2">Submission Context</span>
+                    <div className="border border-border bg-void p-4 text-sm font-mono text-white whitespace-pre-wrap leading-relaxed">
+                        {submission.submission_context}
+                    </div>
+                </div>
+            )}
             
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <InputField label="Points Awarded" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
+            <div className="border-t border-border/50 pt-4 mt-2">
+                <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-4">Verification Settings</span>
+                
+                <div className="flex gap-4 items-end">
+                    <div className="w-1/3">
+                        <InputField label="Metrics Awarded" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="w-2/3 flex gap-2 mb-6">
+                        {[25, 50, 75, 100].map(pct => (
+                            <button
+                                key={pct}
+                                type="button"
+                                onClick={() => setAwardedPoints(Math.floor((submission?.tasks?.points || 0) * (pct / 100)))}
+                                className={clsx(
+                                    "flex-1 py-3 text-xs font-mono font-bold border transition-colors",
+                                    awardedPoints === Math.floor((submission?.tasks?.points || 0) * (pct / 100))
+                                        ? "bg-cyan border-cyan text-void" 
+                                        : "bg-void border-border text-sandstone hover:border-cyan/50 hover:text-cyan"
+                                )}
+                            >
+                                {pct}%
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                <div>
-                    <p className="text-[10px] text-sandstone mt-6 opacity-70">If rejected or requires revision, awarded metrics will automatically be 0. Ensure it does not exceed {submission?.tasks?.points}.</p>
-                </div>
+                <p className="text-[10px] text-sandstone opacity-70 mt-[-10px]">If rejected or requires revision, awarded metrics will automatically be 0. Ensure it does not exceed {submission?.tasks?.points}.</p>
             </div>
 
             <div>
