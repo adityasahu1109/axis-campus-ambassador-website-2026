@@ -68,11 +68,11 @@ export function SubmissionReviewModal({
             <div className="border-t border-border/50 pt-4 mt-2">
                 <span className="text-[10px] font-mono font-bold text-sandstone uppercase tracking-widest block mb-4">Verification Settings</span>
                 
-                <div className="flex gap-4 items-end">
-                    <div className="w-1/3">
+                <div className="flex flex-col sm:flex-row gap-0 sm:gap-4 items-start sm:items-end">
+                    <div className="w-full sm:w-1/3">
                         <InputField label="Metrics Awarded" type="number" value={awardedPoints} onChange={(e) => setAwardedPoints(parseInt(e.target.value) || 0)} />
                     </div>
-                    <div className="w-2/3 flex gap-2 mb-6">
+                    <div className="w-full sm:w-2/3 flex gap-2 mb-6">
                         {[25, 50, 75, 100].map(pct => (
                             <button
                                 key={pct}
@@ -97,11 +97,11 @@ export function SubmissionReviewModal({
                 <InputField label="Feedback / Notes" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
             </div>
 
-            <div className="flex justify-between gap-4 pt-6 border-t border-border">
-                <button onClick={() => onSubmitReview('needs_revision', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
-                <div className="flex gap-4">
-                    <button onClick={() => onSubmitReview('rejected', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
-                    <button onClick={() => onSubmitReview('approved', rejectionReason, awardedPoints)} className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Approve</button>
+            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-border">
+                <button onClick={() => onSubmitReview('needs_revision', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <button onClick={() => onSubmitReview('rejected', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
+                    <button onClick={() => onSubmitReview('approved', rejectionReason, awardedPoints)} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Approve</button>
                 </div>
             </div>
         </div>

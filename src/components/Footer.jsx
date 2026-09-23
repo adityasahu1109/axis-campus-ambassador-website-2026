@@ -17,28 +17,28 @@ function Footer() {
           
           {/* Logo / System ID Column */}
           <div className="flex flex-col items-center md:items-start space-y-4">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+              <div className="flex items-center gap-3">
                 <picture className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
                   <source srcSet={logoIconWebp} type="image/webp" />
                   <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                 </picture>
-                <span className="font-logo text-3xl sm:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
-                <span className="text-xl text-sandstone-dim font-mono">x</span>
-                <div className="flex items-center gap-3">
-                  <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-14 md:h-16 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
-                  <span 
-                    className="text-3xl sm:text-4xl font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
-                    style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-                  >
-                    SyntaX
-                  </span>
-                </div>
+                <span className="font-logo text-2xl sm:text-3xl md:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
               </div>
-              <p className="text-sm text-sandstone-dim font-mono text-center">
-                Made in collaboration with<br/>SyntaX, VNIT
-              </p>
+              <span className="text-xl text-sandstone-dim font-mono">×</span>
+              <div className="flex items-center gap-3">
+                <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-10 sm:h-14 md:h-16 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                <span 
+                  className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+                >
+                  SyntaX
+                </span>
+              </div>
             </div>
+            <p className="text-sm text-sandstone-dim font-mono text-center md:text-left">
+              Made in collaboration with<br className="md:hidden" /> SyntaX, VNIT
+            </p>
           </div>
 
           {/* Quick Links Column */}

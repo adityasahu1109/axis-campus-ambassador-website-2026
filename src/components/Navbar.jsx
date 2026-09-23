@@ -22,18 +22,18 @@ const CloseIcon = () => (
 );
 
 const Logo = () => (
-  <div className="flex items-center space-x-3 group relative">
+  <div className="flex items-center space-x-3 group relative flex-shrink min-w-0">
     <div className="absolute inset-0 bg-cyan blur-[20px] opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none"></div>
     <picture className="relative z-10 w-8 h-8 flex-shrink-0 animate-spin-slow">
       <source srcSet={logoIconWebp} type="image/webp" />
       <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain" />
     </picture>
-    <span className="font-logo text-3xl text-white tracking-widest relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-105">AXIS'27</span>
-    <div className="flex flex-col justify-center h-full">
-      <span className="text-xs font-display font-bold tracking-widest text-cyan transition-colors leading-[1.1] uppercase">
+    <span className="font-logo text-xl sm:text-3xl text-white tracking-widest relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-105 truncate">AXIS'27</span>
+    <div className="hidden sm:flex flex-col justify-center h-full truncate">
+      <span className="text-xs font-display font-bold tracking-widest text-cyan transition-colors leading-[1.1] uppercase truncate">
         Campus
       </span>
-      <span className="text-xs font-display font-bold tracking-widest text-white transition-colors leading-[1.1] uppercase">
+      <span className="text-xs font-display font-bold tracking-widest text-white transition-colors leading-[1.1] uppercase truncate">
         Ambassador
       </span>
     </div>
@@ -68,11 +68,11 @@ function Navbar() {
   const handleScrollToContact = (e) => {
     e.preventDefault();
     if (location.pathname !== '/') {
-      navigate('/');
-      setTimeout(() => { document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
+      navigate('/', { state: { scrollTo: 'contact' } });
     } else {
       document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
     }
+    setIsMobileMenuOpen(false);
   };
 
   const getStartedClass = "ml-4 font-mono uppercase tracking-widest text-xs px-5 py-2.5 bg-amber hover:bg-amber-bright text-void font-bold transition-all duration-300 shadow-[0_0_15px_rgba(255,158,0,0.3)] hover:shadow-[0_0_25px_rgba(255,158,0,0.5)]";
@@ -170,7 +170,6 @@ function Navbar() {
         <>
           <NavItem to="/admin" isMobile>Dashboard</NavItem>
           <NavItem to="/leaderboard" isMobile>Leaderboard</NavItem>
-          <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile/organizer" isMobile>Profile</NavItem>
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger hover:!bg-red-600 !text-white`}>Log Out</button>
         </>
@@ -182,7 +181,6 @@ function Navbar() {
           <NavItem to="/dashboard" isMobile>Dashboard</NavItem>
           <NavItem to="/announcements" isMobile>Announcements</NavItem>
           <NavItem to="/leaderboard" isMobile>Rank</NavItem>
-          <NavItem to="/notifications" isMobile>Alerts</NavItem>
           <NavItem to="/profile" isMobile>Profile</NavItem>
           <button onClick={handleSignOut} className={`${mobileGetStartedClass} !bg-danger !text-white`}>End_Session</button>
         </>
@@ -230,20 +228,30 @@ function Navbar() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
 
-            <div className="flex justify-start items-center">
+            <div className="flex justify-start items-center flex-shrink min-w-0">
               <Link to="/">
                 <Logo />
               </Link>
             </div>
 
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end flex-shrink-0 gap-2">
+              {user && (
+                <div className="md:hidden">
+                  <NotificationsDropdown onOpenChange={(isOpen) => { if (isOpen) setIsMobileMenuOpen(false); setIsDropdownOpen(isOpen); }} isOpen={isDropdownOpen} />
+                </div>
+              )}
+              
               <div className="hidden md:flex items-center space-x-2">
                 {renderDesktopLinks()}
               </div>
 
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-cyan md:hidden hover:bg-obsidian-soft transition-colors ml-4"
+                onClick={() => {
+                  const willOpen = !isMobileMenuOpen;
+                  setIsMobileMenuOpen(willOpen);
+                  if (willOpen) setIsDropdownOpen(false);
+                }}
+                className="p-2 text-cyan md:hidden hover:bg-obsidian-soft transition-colors w-11 h-11 flex-shrink-0 flex items-center justify-center relative z-10"
                 aria-label="Toggle mobile menu"
               >
                 {isMobileMenuOpen ? <CloseIcon /> : <HamburgerIcon />}

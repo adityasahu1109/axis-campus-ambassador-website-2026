@@ -310,7 +310,7 @@ export default function OnboardingDetailsPage() {
             <button 
               type="submit" 
               disabled={loading || (formData.referral_code && referralStatus && !referralStatus.valid)}
-              className="px-8 py-4 text-sm font-mono font-bold uppercase tracking-[0.2em] text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 disabled:shadow-none"
+              className="w-full sm:w-auto px-8 py-4 text-sm font-mono font-bold uppercase tracking-[0.2em] text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 disabled:shadow-none"
             >
               {loading ? 'TRANSMITTING...' : 'Complete Profile'}
             </button>

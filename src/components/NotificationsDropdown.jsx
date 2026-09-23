@@ -83,13 +83,13 @@ export default function NotificationsDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleOpen}
-        className="relative p-2 text-sandstone hover:text-cyan transition-colors"
+        className="relative p-2 text-sandstone hover:text-cyan transition-colors w-11 h-11 flex items-center justify-center flex-shrink-0"
         aria-label="Notifications"
       >
         {unreadCount > 0 ? (
           <>
             <PiBellRinging className="text-2xl animate-pulse text-amber" />
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-danger rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-danger rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
           </>
         ) : (
           <PiBell className="text-2xl" />
@@ -97,7 +97,7 @@ export default function NotificationsDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-obsidian border border-border shadow-2xl z-50">
+        <div className="fixed top-20 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 mt-2 sm:w-80 bg-obsidian border border-border shadow-2xl z-50">
           <div className="p-3 border-b border-border bg-obsidian-soft flex justify-between items-center">
             <TerminalLabel prefix=">">Notifications</TerminalLabel>
             {unreadCount > 0 && <span className="text-[10px] text-cyan font-mono">{unreadCount} UNREAD</span>}
@@ -134,8 +134,8 @@ function NotificationContent({ notif }) {
   return (
     <div className="flex items-start gap-3">
       <div className={clsx("w-2 h-2 rounded-full mt-1.5 shrink-0", !notif.is_read ? "bg-cyan shadow-[0_0_8px_rgba(0,240,255,0.6)]" : "bg-border")}></div>
-      <div>
-        <p className={clsx("text-sm font-mono leading-snug mb-1", !notif.is_read ? "text-white" : "text-sandstone")}>{notif.message}</p>
+      <div className="min-w-0">
+        <p className={clsx("text-sm font-mono leading-snug mb-1 break-words", !notif.is_read ? "text-white" : "text-sandstone")}>{notif.message}</p>
         <span className="text-[10px] text-sandstone-dim font-mono block">
           {new Date(notif.created_at).toLocaleDateString()} {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>

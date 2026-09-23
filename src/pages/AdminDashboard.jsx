@@ -267,7 +267,7 @@ function AdminDashboard() {
   const TabButton = ({ name, label, count }) => (
     <button 
         onClick={() => setActiveTab(name)} 
-        className={clsx('px-6 py-3 font-mono text-xs uppercase tracking-widest transition-colors border', activeTab === name ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}
+        className={clsx('px-4 sm:px-6 py-2 sm:py-3 font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors border whitespace-nowrap', activeTab === name ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}
     >
         [ {label} {count !== undefined ? `(${count})` : ''} ]
     </button>
@@ -348,8 +348,8 @@ function AdminDashboard() {
             {activeTab === 'submissions' && (
                 <div>
                     <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left font-mono">
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left font-mono min-w-[800px]">
                             <thead className="bg-obsidian border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID</th>
@@ -399,8 +399,8 @@ function AdminDashboard() {
                         </button>
                     </div>
                     <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left font-mono">
+                        <div className="overflow-x-auto w-full">
+                            <table className="w-full text-left font-mono min-w-[900px]">
                                 <thead className="bg-obsidian border-b border-border">
                                     <tr>
                                         <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TITLE</th>
@@ -455,8 +455,8 @@ function AdminDashboard() {
             {/* Students Tab */}
             {activeTab === 'students' && (
                 <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left font-mono">
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left font-mono min-w-[600px]">
                             <thead className="bg-obsidian border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID</th>
@@ -496,8 +496,8 @@ function AdminDashboard() {
                         </button>
                     </div>
                     <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left font-mono">
+                        <div className="overflow-x-auto w-full">
+                            <table className="w-full text-left font-mono min-w-[600px]">
                                 <thead className="bg-obsidian border-b border-border">
                                     <tr>
                                         <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TITLE</th>

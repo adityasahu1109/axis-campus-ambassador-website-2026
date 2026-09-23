@@ -131,7 +131,7 @@ function OrganizerProfilePage() {
                 <InputField label="Full Name" id="full_name" value={profile.full_name || ''} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} required />
 
                 <div className="flex justify-end mt-8">
-                    <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-cyan hover:bg-cyan-soft text-void transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                    <button type="submit" className="w-full sm:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-cyan hover:bg-cyan-soft text-void transition-colors flex items-center justify-center sm:justify-start gap-2 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                         Save Changes
                         <Crosshair size={12} className="opacity-50 text-void" />
                     </button>
@@ -157,7 +157,7 @@ function OrganizerProfilePage() {
                 </div>
 
                 <div className="flex justify-end mt-4">
-                    <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-danger text-danger hover:bg-danger/10 transition-colors flex items-center gap-2">
+                    <button type="submit" className="w-full sm:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-danger text-danger hover:bg-danger/10 transition-colors flex items-center justify-center sm:justify-start gap-2">
                         Update Password
                         <Crosshair size={12} className="opacity-50 text-danger" />
                     </button>

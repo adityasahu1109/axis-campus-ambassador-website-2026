@@ -181,16 +181,16 @@ function MyDashboardPage() {
 
             {/* Welcome Banner */}
             <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
-                <div className="max-w-6xl mx-auto flex items-center gap-x-6 relative z-10 animate-fade-in">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-obsidian border border-cyan flex items-center justify-center text-3xl font-display font-bold text-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                <div className="max-w-6xl mx-auto flex items-center gap-3 sm:gap-6 relative z-10 animate-fade-in">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-obsidian border border-cyan flex items-center justify-center text-2xl sm:text-3xl font-display font-bold text-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] shrink-0">
                         {(profile.full_name || user.email).charAt(0).toUpperCase()}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                         <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
-                        <h1 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2 flex items-center gap-3">
+                        <h1 className="text-2xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
                             Dashboard
                             {profile.campus_ambassador && (
-                                <span className="text-xs bg-amber text-void px-2 py-1 font-mono tracking-widest translate-y-1">CAMPUS AMBASSADOR</span>
+                                <span className="text-[10px] sm:text-xs bg-amber text-void px-2 py-1 font-mono tracking-widest translate-y-0 sm:translate-y-1 shrink-0">CAMPUS AMBASSADOR</span>
                             )}
                         </h1>
                     </div>
@@ -239,16 +239,16 @@ function MyDashboardPage() {
                 
                 {/* Referral Display */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12 animate-slide-in-up" style={{ animationDelay: '100ms' }}>
-                    <AxisFrame variant="cyan" className="!p-6">
+                    <AxisFrame variant="cyan" className="!p-6 flex flex-col justify-center">
                         <TerminalLabel className="mb-3">YOUR REFERRAL CODE</TerminalLabel>
-                        <div className="bg-void border border-border p-4 text-center">
-                            <span className="text-2xl font-mono font-bold text-white tracking-widest">{profile.referral_code || 'UNASSIGNED'}</span>
+                        <div className="bg-void border border-border p-4 text-center flex-grow flex items-center justify-center overflow-hidden">
+                            <span className="text-lg sm:text-2xl font-mono font-bold text-white tracking-widest break-all">{profile.referral_code || 'UNASSIGNED'}</span>
                         </div>
                     </AxisFrame>
-                    <AxisFrame variant={profile.referred_by ? "cyan" : "default"} className="!p-6">
+                    <AxisFrame variant={profile.referred_by ? "cyan" : "default"} className="!p-6 flex flex-col justify-center">
                         <TerminalLabel className="mb-3">REFERRAL USED</TerminalLabel>
-                        <div className={clsx("border p-4 text-center", profile.referred_by ? "bg-void border-border" : "bg-obsidian border-transparent opacity-50")}>
-                            <span className={clsx("text-xl font-mono tracking-widest", profile.referred_by ? "text-white font-bold" : "text-sandstone-dim")}>
+                        <div className={clsx("border p-4 text-center flex-grow flex items-center justify-center overflow-hidden", profile.referred_by ? "bg-void border-border" : "bg-obsidian border-transparent opacity-50")}>
+                            <span className={clsx("text-base sm:text-xl font-mono tracking-widest break-all", profile.referred_by ? "text-white font-bold" : "text-sandstone-dim")}>
                                 {profile.referred_by ? (referrerCode || 'Loading...') : 'No referral code used'}
                             </span>
                         </div>
@@ -288,12 +288,12 @@ function MyDashboardPage() {
                                             <div className="flex justify-between items-start mb-2 gap-4">
                                                 <div className="flex items-center gap-3">
                                                     {isNew && <span className="inline-block w-2 h-2 rounded-full bg-amber animate-pulse"></span>}
-                                                    <h3 className={clsx("text-base font-display font-bold uppercase tracking-wide line-clamp-1 transition-colors", isVerified ? "text-cyan" : isPending ? "text-amber" : "text-white group-hover:text-cyan")}>{task.title}</h3>
+                                                    <h3 className={clsx("text-base font-display font-bold uppercase tracking-wide line-clamp-1 transition-colors break-words", isVerified ? "text-cyan" : isPending ? "text-amber" : "text-white group-hover:text-cyan")}>{task.title}</h3>
                                                 </div>
                                                 <span className={clsx("font-mono font-bold text-sm shrink-0", isPending ? "text-amber" : "text-cyan")}>+{task.points}</span>
                                             </div>
 
-                                            <p className="text-sm font-mono text-sandstone-dim line-clamp-2 mb-6 group-hover:text-sandstone transition-colors flex-grow">{task.description}</p>
+                                            <p className="text-sm font-mono text-sandstone-dim line-clamp-2 mb-6 group-hover:text-sandstone transition-colors flex-grow break-words">{task.description}</p>
 
                                             <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/50 shrink-0">
                                                 <StatusBadge status={status} />
@@ -382,12 +382,12 @@ function MyDashboardPage() {
                                         disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
                                     />
                                 </div>
-                                <div className="mt-6 flex justify-end gap-x-4">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                                <div className="mt-6 flex flex-wrap sm:flex-nowrap justify-end gap-2 sm:gap-4">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                                     <button
                                         type="submit"
                                         disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
-                                        className={clsx("px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                        className={clsx("w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                     >
                                         {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'Resubmit' : 'Submit'}
                                         {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}

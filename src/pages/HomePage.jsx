@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 import { AxisFrame } from '../components/motifs/AxisFrame';
@@ -45,21 +45,21 @@ const FaqItem = ({ question, answer, isOpen, onClick, index }) => (
 );
 
 const ContactTerminal = ({ name, phone, email, role }) => ( 
-    <div className="bg-obsidian border border-border p-6 flex flex-col font-mono text-sm relative group"> 
+    <div className="bg-obsidian border border-border p-6 flex flex-col font-mono text-sm relative group overflow-hidden break-words"> 
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <TerminalLabel className="mb-4">{role}</TerminalLabel>
         <div className="space-y-2 text-sandstone">
             <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="opacity-50">NAME:</span>
-                <span className="text-white">{name}</span>
+                <span className="opacity-50 shrink-0">NAME:</span>
+                <span className="text-white text-right">{name}</span>
             </div>
-            <div className="flex justify-between border-b border-border/50 py-2">
-                <span className="opacity-50">COMMS:</span>
-                <a href={`tel:${phone}`} className="text-cyan hover:text-cyan-soft transition-colors">{phone}</a>
+            <div className="flex justify-between border-b border-border/50 py-2 gap-4">
+                <span className="opacity-50 shrink-0">COMMS:</span>
+                <a href={`tel:${phone}`} className="text-cyan hover:text-cyan-soft transition-colors text-right break-all">{phone}</a>
             </div>
-            <div className="flex justify-between pt-2">
-                <span className="opacity-50">NODE:</span>
-                <a href={`mailto:${email}`} className="text-amber hover:text-amber-bright transition-colors truncate ml-4">{email}</a>
+            <div className="flex justify-between pt-2 gap-4">
+                <span className="opacity-50 shrink-0">NODE:</span>
+                <a href={`mailto:${email}`} className="text-amber hover:text-amber-bright transition-colors text-right break-all">{email}</a>
             </div>
         </div>
     </div> 
@@ -128,9 +128,21 @@ function HomePage() {
   const handleFaqClick = (index) => setOpenFaq(openFaq === index ? null : index);
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const statsRef = useRef(null);
   const [isStatsVisible, setIsStatsVisible] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.scrollTo === 'contact') {
+      const element = document.getElementById('contact');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        const { scrollTo, ...remainingState } = location.state || {};
+        navigate('.', { replace: true, state: remainingState });
+      }
+    }
+  }, [location, navigate]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -178,7 +190,7 @@ function HomePage() {
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
               <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" />
             </div>
-            <span className="font-logo text-7xl sm:text-8xl md:text-9xl text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+            <span className="font-logo text-[clamp(3rem,12vw,4.5rem)] sm:text-8xl md:text-9xl text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
           </div>
           
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
@@ -187,7 +199,7 @@ function HomePage() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-cyan pb-2 pr-2">Network</span>
           </h1>
           
-          <div className="mt-8 mb-12 font-mono text-cyan-soft tracking-[0.3em] uppercase text-sm sm:text-base">
+          <div className="mt-8 mb-12 font-mono text-cyan-soft tracking-[0.15em] sm:tracking-[0.3em] uppercase text-sm sm:text-base">
             <span className="opacity-50">{'//'}</span> Illuminate the Infinite <span className="opacity-50">{'//'}</span>
           </div>
           

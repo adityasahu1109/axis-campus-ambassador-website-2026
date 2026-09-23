@@ -237,7 +237,7 @@ function ProfilePage() {
                 </div>
 
                 <div className="flex justify-end mt-8">
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 flex items-center gap-2">
+                    <button type="submit" className="w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 flex items-center justify-center sm:justify-start gap-2">
                         Save Changes
                         <Crosshair size={12} className="opacity-50 text-void" />
                     </button>
@@ -263,7 +263,7 @@ function ProfilePage() {
                 </div>
 
                 <div className="flex justify-end mt-4">
-                    <button type="submit" className="px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center gap-2">
+                    <button type="submit" className="w-full sm:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center justify-center sm:justify-start gap-2">
                         Update Password
                         <Crosshair size={12} className="opacity-50 text-amber" />
                     </button>

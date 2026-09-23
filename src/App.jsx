@@ -17,11 +17,13 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import OrganizerProfilePage from './pages/OrganizerProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <div className="min-h-screen flex flex-col relative selection:bg-amber-deep/30">
       <Navbar />
+      <ScrollToTop />
       <main className="pt-20 flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />

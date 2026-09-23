@@ -45,19 +45,19 @@ function AnnouncementsPage() {
                                     
                                     <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-6 gap-4 relative z-10">
                                         <div>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                {isLatest && <span className="inline-block px-2 py-0.5 text-[10px] font-mono font-bold bg-amber text-void uppercase tracking-widest animate-pulse">NEW_BROADCAST</span>}
+                                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                                                {isLatest && <span className="inline-block px-2 py-0.5 text-[10px] font-mono font-bold bg-amber text-void uppercase tracking-widest animate-pulse shrink-0">NEW_BROADCAST</span>}
                                                 <TerminalLabel prefix={isLatest ? "!" : ">"} className={isLatest ? "text-amber" : "text-cyan"}>
                                                     {date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toUpperCase()} // {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                 </TerminalLabel>
                                             </div>
-                                            <h2 className="text-xl md:text-2xl font-display font-bold text-white uppercase tracking-wide">{item.title}</h2>
+                                            <h2 className="text-xl md:text-2xl font-display font-bold text-white uppercase tracking-wide break-words">{item.title}</h2>
                                         </div>
                                         <Crosshair size={16} className={isLatest ? "text-amber opacity-30" : "text-cyan opacity-30"} />
                                     </div>
                                     
                                     <div className="relative z-10">
-                                        <p className="text-sm font-mono text-sandstone leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                                        <p className="text-sm font-mono text-sandstone leading-relaxed whitespace-pre-wrap break-words">{item.content}</p>
                                     </div>
                                 </AxisFrame>
                             );
