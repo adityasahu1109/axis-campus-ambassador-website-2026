@@ -50,6 +50,7 @@ export default function OnboardingDetailsPage() {
     branch: profile?.branch || '',
     degree_type: profile?.degree_type || '',
     year_of_study: profile?.year_of_study || '',
+    city: profile?.city || '',
     domain_id: profile?.domain_id || '',
     referral_code: '',
   });
@@ -147,6 +148,7 @@ export default function OnboardingDetailsPage() {
           branch: formData.branch,
           degree_type: formData.degree_type,
           year_of_study: parseInt(formData.year_of_study, 10),
+          city: formData.city,
           domain_id: parseInt(formData.domain_id, 10)
         })
         .eq('id', user.id);
@@ -225,6 +227,14 @@ export default function OnboardingDetailsPage() {
                 name="branch"
                 placeholder="e.g. Computer Science..."
                 value={formData.branch} 
+                onChange={handleChange} 
+                required 
+            />
+            <InputField 
+                label="City" 
+                name="city"
+                placeholder="City Name"
+                value={formData.city} 
                 onChange={handleChange} 
                 required 
             />

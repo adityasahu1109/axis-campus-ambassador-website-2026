@@ -76,15 +76,15 @@ function MyDashboardPage() {
             }
 
             // Fetch tasks filtered by domain_id and deadline
-            const now = new Date().toISOString();
+            const today = new Date().toISOString().split('T')[0];
             
             // Try PostgREST OR approach first
             let fetchedTasks = [];
             const { data: tasksData, error: tasksError } = await supabase
                 .from('tasks')
                 .select('*')
-                .eq('domain_id', profileData.domain_id)
-                .or(`deadline.is.null,deadline.gt.${now}`)
+                .or(`domain_id.eq.${profileData.domain_id},domain_id.is.null`)
+                .or(`deadline.is.null,deadline.gt.${today}`)
                 .order('id', { ascending: false });
                 
             if (!tasksError && tasksData) {
@@ -95,11 +95,11 @@ function MyDashboardPage() {
                 const { data: fallbackTasks } = await supabase
                     .from('tasks')
                     .select('*')
-                    .eq('domain_id', profileData.domain_id)
+                    .or(`domain_id.eq.${profileData.domain_id},domain_id.is.null`)
                     .order('id', { ascending: false });
                     
                 if (fallbackTasks) {
-                    fetchedTasks = fallbackTasks.filter(t => !t.deadline || new Date(t.deadline) > new Date());
+                    fetchedTasks = fallbackTasks.filter(t => !t.deadline || t.deadline > today);
                 }
             }
             
@@ -139,7 +139,8 @@ function MyDashboardPage() {
     // UX-only deadline check. This does NOT provide database-level security.
     const isTaskExpired = (task) => {
         if (!task?.deadline) return false;
-        return new Date(task.deadline) <= new Date();
+        const today = new Date().toISOString().split('T')[0];
+        return task.deadline <= today;
     };
 
     const handleSubmitForReview = async (e) => {
@@ -211,16 +212,16 @@ function MyDashboardPage() {
                     <AxisFrame variant="amber" hover={true} className="!p-6 flex flex-col items-center text-center relative overflow-hidden">
                         <TerminalLabel className="mb-2 text-amber">Total Points</TerminalLabel>
                         <p className="text-4xl font-mono font-bold text-amber relative z-10">
-                            <AnimatedCounter value={profile.total_points} />
+                            <AnimatedCounter value={Number(profile.total_points)} />
                         </p>
                         {!profile.campus_ambassador && (
                             <div className="mt-4 w-full max-w-[200px] z-10">
                                 <div className="flex justify-between text-[10px] font-mono text-amber mb-1">
                                     <span>CA Progress</span>
-                                    <span>{Math.floor((profile.total_points / caThreshold) * 100)}%</span>
+                                    <span>{Math.floor((Number(profile.total_points) / caThreshold) * 100)}%</span>
                                 </div>
                                 <div className="h-1 bg-void border border-amber/30 w-full overflow-hidden">
-                                    <div className="h-full bg-amber transition-all duration-1000" style={{ width: `${Math.min(100, (profile.total_points / caThreshold) * 100)}%` }}></div>
+                                    <div className="h-full bg-amber transition-all duration-1000" style={{ width: `${Math.min(100, (Number(profile.total_points) / caThreshold) * 100)}%` }}></div>
                                 </div>
                             </div>
                         )}
@@ -290,7 +291,7 @@ function MyDashboardPage() {
                                                     {isNew && <span className="inline-block w-2 h-2 rounded-full bg-amber animate-pulse"></span>}
                                                     <h3 className={clsx("text-base font-display font-bold uppercase tracking-wide line-clamp-1 transition-colors break-words", isVerified ? "text-cyan" : isPending ? "text-amber" : "text-white group-hover:text-cyan")}>{task.title}</h3>
                                                 </div>
-                                                <span className={clsx("font-mono font-bold text-sm shrink-0", isPending ? "text-amber" : "text-cyan")}>+{task.points}</span>
+                                                <span className={clsx("font-mono font-bold text-sm shrink-0", isPending ? "text-amber" : "text-cyan")}>+{Number(task.points)}</span>
                                             </div>
 
                                             <p className="text-sm font-mono text-sandstone-dim line-clamp-2 mb-6 group-hover:text-sandstone transition-colors flex-grow break-words">{task.description}</p>
@@ -321,13 +322,15 @@ function MyDashboardPage() {
                         <div className="p-6 overflow-y-auto bg-obsidian">
                             <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
                                 <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
-                                <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{selectedTask?.points}</span>
+                                <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{Number(selectedTask?.points)}</span>
                             </div>
                             
                             {selectedTask?.deadline && (
                                 <div className="mb-4">
                                     <span className="text-xs font-mono font-bold tracking-widest uppercase text-sandstone">Deadline: </span>
-                                    <span className={clsx("text-xs font-mono", isTaskExpired(selectedTask) ? 'text-danger' : 'text-white')}>{new Date(selectedTask.deadline).toLocaleString()}</span>
+                                    <span className={clsx("text-xs font-mono", isTaskExpired(selectedTask) ? 'text-danger' : 'text-white')}>
+                                        {new Date(selectedTask.deadline + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
                                     {isTaskExpired(selectedTask) && (
                                         <span className="ml-2 text-[10px] font-mono font-bold text-danger uppercase tracking-widest">[ EXPIRED ]</span>
                                     )}

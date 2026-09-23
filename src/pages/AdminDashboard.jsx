@@ -36,8 +36,8 @@ const StatusBadge = ({ status }) => {
     return <span className={clsx("font-mono text-xs font-bold uppercase tracking-widest", color)}>{text}</span>;
 };
 
-export const InputField = ({ label, type = "text", value, onChange, required, multiline = false, step }) => (
-    <div className="mb-6 group">
+export const InputField = ({ label, type = "text", value, onChange, required, multiline = false, step, error }) => (
+    <div className="mb-6 group relative">
         <label className="block mb-2 text-xs font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-cyan transition-colors">{label}</label>
         {multiline ? (
             <textarea 
@@ -45,7 +45,7 @@ export const InputField = ({ label, type = "text", value, onChange, required, mu
                 onChange={onChange} 
                 required={required} 
                 rows="4" 
-                className="w-full bg-void border border-border p-4 focus:border-cyan outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                className={clsx("w-full bg-void border p-4 outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim", error ? "border-danger focus:border-danger focus:shadow-[0_0_15px_rgba(255,0,0,0.2)]" : "border-border focus:border-cyan focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]")}
             />
         ) : (
             <input 
@@ -54,9 +54,10 @@ export const InputField = ({ label, type = "text", value, onChange, required, mu
                 onChange={onChange} 
                 required={required} 
                 step={step}
-                className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                className={clsx("w-full bg-void border p-3 outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim", error ? "border-danger focus:border-danger focus:shadow-[0_0_15px_rgba(255,0,0,0.2)]" : "border-border focus:border-cyan focus:shadow-[0_0_15px_rgba(0,240,255,0.2)]", type === 'date' && "[color-scheme:dark]")}
             />
         )}
+        {error && <span className="absolute -bottom-5 left-0 text-[10px] text-danger font-mono uppercase tracking-widest">{error}</span>}
     </div>
 );
 
@@ -69,6 +70,7 @@ function AdminDashboard() {
   const [programSettings, setProgramSettings] = useState({ campus_ambassador_threshold: 1000, referral_reward_points: 100 });
   const [modals, setModals] = useState({ create: false, edit: false, delete: false, review: false, announce: false, deleteAnnounce: false });
   const [selectedItem, setSelectedItem] = useState(null);
+  const [metricsError, setMetricsError] = useState("");
   
   // Adjusted for new schema
   const [formData, setFormData] = useState({ 
@@ -132,27 +134,39 @@ function AdminDashboard() {
   const announcementsQuery = usePaginatedQuery('announcements', '*', 25, { orderBy: { column: 'created_at', ascending: false } });
 
   const getDomainName = (id) => {
-      if (!id) return 'Global (No Domain)';
+      if (!id) return 'Global';
       const d = domainsList.find(d => d.id === id);
       return d ? d.name : id;
   };
 
   const handleCreate = async (e, type) => {
     e.preventDefault();
+    if (!user) {
+        alert("Authentication error: You must be logged in to perform this action.");
+        return;
+    }
     try {
       if (type === 'task') {
+        const pointsStr = String(formData.points).trim();
+        if (!/^\d+$/.test(pointsStr)) {
+            setMetricsError("Reward Metrics must be a whole number.");
+            return;
+        }
+        const parsedPoints = Number(pointsStr);
+
         const { error } = await supabase.from('tasks').insert({ 
             title: formData.title, 
             description: formData.description, 
             instructions: formData.instructions || null,
-            points: formData.points,
-            domain_id: formData.domain_id ? parseInt(formData.domain_id) : null,
-            deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null
+            points: parsedPoints,
+            domain_id: formData.domain_id === "global" ? null : (formData.domain_id ? parseInt(formData.domain_id) : null),
+            deadline: formData.deadline || null,
+            created_by: user.id
         });
         if (error) throw error;
         
         const announcementTitle = "New Directive Active!";
-        const announcementContent = `A new directive "${formData.title}" is available. Execute to earn ${formData.points} metrics.`;
+        const announcementContent = `A new directive "${formData.title}" is available. Execute to earn ${parsedPoints} metrics.`;
         const { error: announceError } = await supabase.from('announcements').insert({ title: announcementTitle, content: announcementContent, author_id: user.id });
         if (announceError) console.error('Error auto-creating announcement:', announceError.message);
       } else if (type === 'announcement') {
@@ -172,14 +186,22 @@ function AdminDashboard() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    
+    const pointsStr = String(formData.points).trim();
+    if (!/^\d+$/.test(pointsStr)) {
+        setMetricsError("Reward Metrics must be a whole number.");
+        return;
+    }
+    const parsedPoints = Number(pointsStr);
+
     try {
       const { error } = await supabase.from('tasks').update({ 
           title: formData.title, 
           description: formData.description, 
           instructions: formData.instructions || null,
-          points: formData.points,
-          domain_id: formData.domain_id ? parseInt(formData.domain_id) : null,
-          deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null
+          points: parsedPoints,
+          domain_id: formData.domain_id === "global" ? null : (formData.domain_id ? parseInt(formData.domain_id) : null),
+          deadline: formData.deadline || null
       }).eq('id', selectedItem.id);
       if (error) throw error;
       fetchData();
@@ -421,8 +443,12 @@ function AdminDashboard() {
                                             <tr key={task.id} className="hover:bg-obsidian transition-colors">
                                                 <td className="px-6 py-4 text-sm font-bold text-white uppercase">{task.title}</td>
                                                 <td className="px-6 py-4 text-sm text-sandstone">{getDomainName(task.domain_id)}</td>
-                                                <td className="px-6 py-4 text-sm font-bold text-cyan">+{task.points}</td>
-                                                <td className="px-6 py-4 text-sm text-sandstone-dim">{task.deadline ? new Date(task.deadline).toLocaleDateString() : 'None'}</td>
+                                                <td className="px-6 py-4 text-sm font-bold text-cyan">+{Number(task.points)}</td>
+                                                <td className="px-6 py-4 text-sm text-sandstone-dim">
+                                                    {task.deadline ? (
+                                                        new Date(task.deadline + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+                                                    ) : 'Forever'}
+                                                </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-3">
                                                         <button onClick={() => { 
@@ -431,9 +457,9 @@ function AdminDashboard() {
                                                             title: task.title,
                                                             description: task.description,
                                                             instructions: task.instructions || '',
-                                                            points: task.points,
-                                                            domain_id: task.domain_id || '',
-                                                            deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : ''
+                                                            points: String(task.points),
+                                                            domain_id: task.domain_id || 'global',
+                                                            deadline: task.deadline || ''
                                                           }); 
                                                           setModals({ ...modals, edit: true }) 
                                                         }} className="text-xs font-mono text-cyan hover:text-white transition-colors uppercase tracking-widest">[ EDIT ]</button>
@@ -473,7 +499,7 @@ function AdminDashboard() {
                                     studentsQuery.data.map(student => (
                                     <tr key={student.id} className="hover:bg-obsidian transition-colors">
                                         <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
-                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{student.total_points}</td>
+                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{Number(student.total_points)}</td>
                                         <td className="px-6 py-4 text-sm text-sandstone">
                                             {getDomainName(student.domain_id)}
                                         </td>
@@ -570,8 +596,23 @@ function AdminDashboard() {
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
                 <div className="grid grid-cols-2 gap-4">
-                    <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
-                    <InputField label="DEADLINE (Optional)" type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({...formData, deadline: e.target.value})} />
+                    <InputField 
+                        label="REWARD_METRICS" 
+                        type="text" 
+                        value={formData.points} 
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData({...formData, points: val});
+                            if (!val.trim() || !/^\d+$/.test(val.trim())) {
+                                setMetricsError("Reward Metrics must be a whole number.");
+                            } else {
+                                setMetricsError("");
+                            }
+                        }}
+                        error={metricsError}
+                        required 
+                    />
+                    <InputField label="DEADLINE (Optional)" type="date" value={formData.deadline || ''} onChange={(e) => setFormData({...formData, deadline: e.target.value})} />
                 </div>
                 
                 <div className="relative group">
@@ -581,7 +622,7 @@ function AdminDashboard() {
                         onChange={(e) => setFormData({...formData, domain_id: e.target.value})} 
                         className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white"
                     >
-                        <option value="">Global (No Domain)</option>
+                        <option value="global">Global (No Domain)</option>
                         {domainsList.map(d => (
                             <option key={d.id} value={d.id}>{d.name}</option>
                         ))}
@@ -604,8 +645,23 @@ function AdminDashboard() {
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
                 
                 <div className="grid grid-cols-2 gap-4">
-                    <InputField label="REWARD_METRICS" type="number" value={formData.points} onChange={(e) => setFormData({...formData, points: parseInt(e.target.value) || 0})} required />
-                    <InputField label="DEADLINE (Optional)" type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({...formData, deadline: e.target.value})} />
+                    <InputField 
+                        label="REWARD_METRICS" 
+                        type="text" 
+                        value={formData.points} 
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData({...formData, points: val});
+                            if (!val.trim() || !/^\d+$/.test(val.trim())) {
+                                setMetricsError("Reward Metrics must be a whole number.");
+                            } else {
+                                setMetricsError("");
+                            }
+                        }}
+                        error={metricsError}
+                        required 
+                    />
+                    <InputField label="DEADLINE (Optional)" type="date" value={formData.deadline || ''} onChange={(e) => setFormData({...formData, deadline: e.target.value})} />
                 </div>
 
                 <div className="relative group">
@@ -615,7 +671,7 @@ function AdminDashboard() {
                         onChange={(e) => setFormData({...formData, domain_id: e.target.value})} 
                         className="w-full bg-void border border-border p-3 focus:border-cyan outline-none transition-all text-sm font-mono text-white"
                     >
-                        <option value="">Global (No Domain)</option>
+                        <option value="global">Global (No Domain)</option>
                         {domainsList.map(d => (
                             <option key={d.id} value={d.id}>{d.name}</option>
                         ))}

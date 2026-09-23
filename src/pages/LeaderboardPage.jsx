@@ -62,8 +62,8 @@ function LeaderboardPage() {
   const getRankColorText = (rank) => getRankColor(rank).split(' ')[0];
 
   const getPointsBarWidth = (total_points) => {
-    const maxPoints = leaderboard[0]?.total_points || 1;
-    return `${Math.max(5, (total_points / maxPoints) * 100)}%`;
+    const maxPoints = Number(leaderboard[0]?.total_points) || 1;
+    return `${Math.max(5, (Number(total_points) / maxPoints) * 100)}%`;
   };
 
   const PodiumItem = ({ profileData, rankIndex }) => {
@@ -83,7 +83,7 @@ function LeaderboardPage() {
             
             <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-3 sm:pt-4 flex flex-col items-center min-w-0", isFirst ? 'h-28 sm:h-32 md:h-40 border-t-2' : rankIndex === 2 ? 'h-24 sm:h-24 md:h-32' : 'h-20 sm:h-20 md:h-24', getRankColor(profileData.rank).split(' ')[1])}>
                 <span className="font-mono font-bold text-white text-[10px] sm:text-xs md:text-sm text-center px-1 truncate w-full uppercase tracking-wider">{profileData.full_name?.split(' ')[0]}</span>
-                <span className="font-mono text-cyan text-sm sm:text-lg md:text-xl mt-1 sm:mt-2">{profileData.total_points}</span>
+                <span className="font-mono text-cyan text-sm sm:text-lg md:text-xl mt-1 sm:mt-2">{Number(profileData.total_points)}</span>
                 <span className={clsx("text-[8px] sm:text-[9px] uppercase tracking-widest mt-1 truncate w-full text-center px-1", getRankColorText(profileData.rank))}>{profileData.college?.substring(0, 15)}</span>
             </div>
         </div>
@@ -121,7 +121,7 @@ function LeaderboardPage() {
                   </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span className={clsx("text-sm font-bold", isMe ? "text-amber" : "text-cyan")}>{profileRow.total_points}</span>
+                  <span className={clsx("text-sm font-bold", isMe ? "text-amber" : "text-cyan")}>{Number(profileRow.total_points)}</span>
               </td>
           </tr>
       </React.Fragment>
@@ -152,7 +152,7 @@ function LeaderboardPage() {
                             </span>
                         </div>
                     </div>
-                    <span className={clsx("text-sm mt-0.5 shrink-0", isMe ? "text-amber font-bold" : "text-cyan")}>{profileRow.total_points}</span>
+                    <span className={clsx("text-sm mt-0.5 shrink-0", isMe ? "text-amber font-bold" : "text-cyan")}>{Number(profileRow.total_points)}</span>
                 </div>
                 <div className="w-full h-1 bg-obsidian border border-border mt-1">
                     <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>

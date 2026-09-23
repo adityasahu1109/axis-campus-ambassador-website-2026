@@ -44,7 +44,7 @@ const FaqItem = ({ question, answer, isOpen, onClick, index }) => (
     </div> 
 );
 
-const ContactTerminal = ({ name, phone, email, role }) => ( 
+const ContactTerminal = ({ name, email, role }) => ( 
     <div className="bg-obsidian border border-border p-6 flex flex-col font-mono text-sm relative group overflow-hidden break-words"> 
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <TerminalLabel className="mb-4">{role}</TerminalLabel>
@@ -52,10 +52,6 @@ const ContactTerminal = ({ name, phone, email, role }) => (
             <div className="flex justify-between border-b border-border/50 pb-2">
                 <span className="opacity-50 shrink-0">NAME:</span>
                 <span className="text-white text-right">{name}</span>
-            </div>
-            <div className="flex justify-between border-b border-border/50 py-2 gap-4">
-                <span className="opacity-50 shrink-0">COMMS:</span>
-                <a href={`tel:${phone}`} className="text-cyan hover:text-cyan-soft transition-colors text-right break-all">{phone}</a>
             </div>
             <div className="flex justify-between pt-2 gap-4">
                 <span className="opacity-50 shrink-0">NODE:</span>
@@ -260,8 +256,8 @@ function HomePage() {
              <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Establish Connection</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
-            <ContactTerminal role="PRIMARY_NODE_LEAD" name="Arya Mali" phone="+91 70588 08402" email="arya@axisvnit.in" />
-            <ContactTerminal role="SECONDARY_NODE_LEAD" name="Arnav Garg" phone="+91 72196 53464" email="arnav@axisvnit.in" />
+            <ContactTerminal role="PRIMARY_NODE_LEAD" name="Krati Verma" email="krati@axisvnit.in" />
+            <ContactTerminal role="SECONDARY_NODE_LEAD" name="Shreyas Rane" email="shreyas@axisvnit.in" />
           </div>
         </div>
       </section>

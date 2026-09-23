@@ -45,8 +45,8 @@ function OnboardingGate({ children, requiredRole }) {
   const currentPath = location.pathname;
   const isTargetingOnboarding = currentPath.startsWith('/onboarding');
   
-  const { full_name, phone_number, college, branch, degree_type, year_of_study, domain_id } = profile || {};
-  const hasIncompleteProfile = !full_name || !phone_number || !college || !branch || !degree_type || !year_of_study || !domain_id;
+  const { full_name, phone_number, college, branch, degree_type, year_of_study, domain_id, city } = profile || {};
+  const hasIncompleteProfile = !full_name || !phone_number || !college || !branch || !degree_type || !year_of_study || !domain_id || !city;
 
   if (hasIncompleteProfile) {
     if (currentPath !== '/onboarding/details') {
