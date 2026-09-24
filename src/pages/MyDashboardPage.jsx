@@ -128,6 +128,17 @@ function MyDashboardPage() {
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
+    useEffect(() => {
+        if (isModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isModalOpen]);
+
     const handleTaskClick = (task) => {
         setSelectedTask(task);
         const existingSubmission = submissions.find(s => s.task_id === task.id);
@@ -319,46 +330,46 @@ function MyDashboardPage() {
                             <button onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>×</button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto bg-obsidian">
-                            <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
-                                <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
-                                <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{Number(selectedTask?.points)}</span>
-                            </div>
-                            
-                            {selectedTask?.deadline && (
-                                <div className="mb-4">
-                                    <span className="text-xs font-mono font-bold tracking-widest uppercase text-sandstone">Deadline: </span>
-                                    <span className={clsx("text-xs font-mono", isTaskExpired(selectedTask) ? 'text-danger' : 'text-white')}>
-                                        {new Date(selectedTask.deadline + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </span>
-                                    {isTaskExpired(selectedTask) && (
-                                        <span className="ml-2 text-[10px] font-mono font-bold text-danger uppercase tracking-widest">[ EXPIRED ]</span>
-                                    )}
+                        <form onSubmit={handleSubmitForReview} className="flex flex-col flex-1 min-h-0 bg-obsidian">
+                            <div className="p-6 overflow-y-auto overscroll-contain flex-1 min-h-0">
+                                <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+                                    <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
+                                    <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{Number(selectedTask?.points)}</span>
                                 </div>
-                            )}
-
-                            <p className="text-sm font-mono text-sandstone bg-obsidian-soft border border-border p-4 leading-relaxed mb-6 whitespace-pre-wrap">
-                                {selectedTask?.description || "No description provided."}
-                            </p>
-                            
-                            {selectedTask?.instructions && (
-                                <div className="mb-6">
-                                    <h4 className="text-xs font-mono font-bold tracking-widest uppercase text-cyan mb-2">Instructions</h4>
-                                    <p className="text-sm font-mono text-sandstone whitespace-pre-wrap">{selectedTask.instructions}</p>
-                                </div>
-                            )}
-
-                            {['rejected', 'needs_revision'].includes(getSubmissionForTask(selectedTask?.id)?.status) && (
-                                <div className="mb-6 p-4 border border-danger/50 bg-danger/10 flex items-start">
-                                    <span className="text-danger font-mono font-bold mr-3">{'>'}</span>
-                                    <div>
-                                        <h4 className="font-mono font-bold text-danger text-sm uppercase">ADMIN_FEEDBACK</h4>
-                                        <p className="text-xs mt-1 text-danger/80 font-mono">REASON: {getSubmissionForTask(selectedTask?.id)?.reviewer_notes || getSubmissionForTask(selectedTask?.id)?.rejection_reason}</p>
+                                
+                                {selectedTask?.deadline && (
+                                    <div className="mb-4">
+                                        <span className="text-xs font-mono font-bold tracking-widest uppercase text-sandstone">Deadline: </span>
+                                        <span className={clsx("text-xs font-mono", isTaskExpired(selectedTask) ? 'text-danger' : 'text-white')}>
+                                            {new Date(selectedTask.deadline + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </span>
+                                        {isTaskExpired(selectedTask) && (
+                                            <span className="ml-2 text-[10px] font-mono font-bold text-danger uppercase tracking-widest">[ EXPIRED ]</span>
+                                        )}
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            <form onSubmit={handleSubmitForReview}>
+                                <p className="text-sm font-mono text-sandstone bg-obsidian-soft border border-border p-4 leading-relaxed mb-6 whitespace-pre-wrap">
+                                    {selectedTask?.description || "No description provided."}
+                                </p>
+                                
+                                {selectedTask?.instructions && (
+                                    <div className="mb-6">
+                                        <h4 className="text-xs font-mono font-bold tracking-widest uppercase text-cyan mb-2">Instructions</h4>
+                                        <p className="text-sm font-mono text-sandstone whitespace-pre-wrap">{selectedTask.instructions}</p>
+                                    </div>
+                                )}
+
+                                {['rejected', 'needs_revision'].includes(getSubmissionForTask(selectedTask?.id)?.status) && (
+                                    <div className="mb-6 p-4 border border-danger/50 bg-danger/10 flex items-start">
+                                        <span className="text-danger font-mono font-bold mr-3">{'>'}</span>
+                                        <div>
+                                            <h4 className="font-mono font-bold text-danger text-sm uppercase">ADMIN_FEEDBACK</h4>
+                                            <p className="text-xs mt-1 text-danger/80 font-mono">REASON: {getSubmissionForTask(selectedTask?.id)?.reviewer_notes || getSubmissionForTask(selectedTask?.id)?.rejection_reason}</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="mb-4">
                                     <label htmlFor="driveLink" className="block text-xs font-mono font-bold tracking-widest uppercase text-sandstone mb-2">Submission Link</label>
                                     <p className="text-[10px] font-mono text-sandstone-dim uppercase mb-3">Provide HTTP link to your work if required.</p>
@@ -385,19 +396,19 @@ function MyDashboardPage() {
                                         disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
                                     />
                                 </div>
-                                <div className="mt-6 flex flex-wrap sm:flex-nowrap justify-end gap-2 sm:gap-4">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                                    <button
-                                        type="submit"
-                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
-                                        className={clsx("w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
-                                    >
-                                        {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'Resubmit' : 'Submit'}
-                                        {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                            </div>
+                            <div className="p-6 pt-4 border-t border-border bg-obsidian shrink-0 flex flex-wrap sm:flex-nowrap justify-end gap-2 sm:gap-4">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                                <button
+                                    type="submit"
+                                    disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
+                                    className={clsx("w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                >
+                                    {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'Resubmit' : 'Submit'}
+                                    {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
+                                </button>
+                            </div>
+                        </form>
                     </AxisFrame>
                 </div>
             )}

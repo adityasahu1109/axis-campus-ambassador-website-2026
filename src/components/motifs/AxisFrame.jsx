@@ -2,7 +2,7 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { CornerMarkers } from './CornerMarkers';
 
-export const AxisFrame = ({ children, variant = 'default', className = '', onClick, hover = false, ...props }) => {
+export const AxisFrame = ({ children, variant = 'default', className = '', innerClassName = '', onClick, hover = false, ...props }) => {
   return (
     <div
       className={clsx(
@@ -15,7 +15,7 @@ export const AxisFrame = ({ children, variant = 'default', className = '', onCli
       {...props}
     >
       <CornerMarkers />
-      <div className="relative z-10">
+      <div className={clsx("relative z-10", innerClassName)}>
         {children}
       </div>
     </div>

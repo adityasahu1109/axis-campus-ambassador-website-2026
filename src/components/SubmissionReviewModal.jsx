@@ -22,7 +22,19 @@ export function SubmissionReviewModal({
   if (!isOpen || !submission) return null;
 
   return (
-    <Modal onClose={onClose} title="REVIEW_SUBMISSION">
+    <Modal 
+        onClose={onClose} 
+        title="REVIEW_SUBMISSION"
+        footer={
+            <div className="flex flex-col sm:flex-row justify-between gap-4 w-full">
+                <button onClick={() => onSubmitReview('needs_revision', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-end">
+                    <button onClick={() => onSubmitReview('rejected', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
+                    <button onClick={() => onSubmitReview('approved', rejectionReason, awardedPoints)} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Approve</button>
+                </div>
+            </div>
+        }
+    >
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 border border-border bg-obsidian-soft p-4">
                 <div>
@@ -97,13 +109,6 @@ export function SubmissionReviewModal({
                 <InputField label="Feedback / Notes" multiline value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-border">
-                <button onClick={() => onSubmitReview('needs_revision', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-amber border border-amber hover:bg-amber hover:text-void transition-colors disabled:opacity-50">REQ_REVISION</button>
-                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                    <button onClick={() => onSubmitReview('rejected', rejectionReason, awardedPoints)} disabled={!rejectionReason} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors disabled:opacity-50">REJECT</button>
-                    <button onClick={() => onSubmitReview('approved', rejectionReason, awardedPoints)} className="w-full sm:w-auto px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Approve</button>
-                </div>
-            </div>
         </div>
     </Modal>
   );

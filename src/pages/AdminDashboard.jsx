@@ -11,19 +11,34 @@ import { clsx } from 'clsx';
 import { SubmissionReviewModal } from '../components/SubmissionReviewModal';
 import { PiUsers, PiClockClockwise, PiClipboardText, PiChartLineUp, PiCheckCircle } from 'react-icons/pi';
 
-export const Modal = ({ children, onClose, title, variant = "cyan" }) => (
-    <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={onClose}>
-        <AxisFrame variant={variant} className="!p-0 w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className={clsx("px-6 py-4 flex justify-between items-center border-b", variant === "cyan" ? "border-cyan/30 bg-cyan/10" : "border-danger/30 bg-danger/10")}>
-                <TerminalLabel prefix=">">{title}</TerminalLabel>
-                <button onClick={onClose} className={clsx("text-xl hover:scale-110 transition-transform", variant === "cyan" ? "text-cyan" : "text-danger")}>×</button>
-            </div>
-            <div className="p-6 overflow-y-auto shrink bg-obsidian text-sandstone">
-                {children}
-            </div>
-        </AxisFrame>
-    </div>
-);
+export const Modal = ({ children, onClose, title, variant = "cyan", footer }) => {
+    useEffect(() => {
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = originalOverflow;
+        };
+    }, []);
+
+    return (
+        <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={onClose}>
+            <AxisFrame variant={variant} className="!p-0 w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden" innerClassName="flex flex-col flex-1 min-h-0" onClick={e => e.stopPropagation()}>
+                <div className={clsx("px-6 py-4 flex justify-between items-center border-b shrink-0", variant === "cyan" ? "border-cyan/30 bg-cyan/10" : "border-danger/30 bg-danger/10")}>
+                    <TerminalLabel prefix=">">{title}</TerminalLabel>
+                    <button onClick={onClose} className={clsx("text-xl hover:scale-110 transition-transform", variant === "cyan" ? "text-cyan" : "text-danger")}>×</button>
+                </div>
+                <div className="p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 bg-obsidian text-sandstone terminal-scrollbar">
+                    {children}
+                </div>
+                {footer && (
+                    <div className="p-6 pt-4 border-t border-border bg-obsidian shrink-0 flex flex-wrap justify-end gap-4">
+                        {footer}
+                    </div>
+                )}
+            </AxisFrame>
+        </div>
+    );
+};
 
 const StatusBadge = ({ status }) => {
     const format = {
@@ -590,8 +605,19 @@ function AdminDashboard() {
       
       {/* Modals */}
       {modals.create && (
-        <Modal onClose={() => setModals({ ...modals, create: false })} title="Create Task">
-            <form onSubmit={(e) => handleCreate(e, 'task')} className="space-y-4">
+        <Modal 
+            onClose={() => setModals({ ...modals, create: false })} 
+            title="Create Task"
+            footer={
+                <>
+                    <button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button type="submit" form="create-task-form" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] flex items-center gap-2">
+                        INITIALIZE <Crosshair size={10} className="opacity-50" />
+                    </button>
+                </>
+            }
+        >
+            <form id="create-task-form" onSubmit={(e) => handleCreate(e, 'task')} className="space-y-4">
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
@@ -629,17 +655,22 @@ function AdminDashboard() {
                     </select>
                 </div>
                 
-                <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
-                    <button type="button" onClick={() => setModals({ ...modals, create: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Create</button>
-                </div>
             </form>
         </Modal>
       )}
 
       {modals.edit && (
-        <Modal onClose={() => setModals({ ...modals, edit: false })} title="Edit Task">
-            <form onSubmit={handleUpdate} className="space-y-4">
+        <Modal 
+            onClose={() => setModals({ ...modals, edit: false })} 
+            title="Edit Task"
+            footer={
+                <>
+                    <button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button type="submit" form="edit-task-form" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Update</button>
+                </>
+            }
+        >
+            <form id="edit-task-form" onSubmit={handleUpdate} className="space-y-4">
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
@@ -678,23 +709,25 @@ function AdminDashboard() {
                     </select>
                 </div>
                 
-                <div className="flex justify-end gap-4 pt-4 border-t border-border mt-6">
-                    <button type="button" onClick={() => setModals({ ...modals, edit: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Save Changes</button>
-                </div>
             </form>
         </Modal>
       )}
 
       {modals.delete && (
-        <Modal onClose={() => setModals({ ...modals, delete: false })} title="Confirm Delete" variant="danger">
+        <Modal 
+            onClose={() => setModals({ ...modals, delete: false })} 
+            title="Confirm Delete" 
+            variant="danger"
+            footer={
+                <>
+                    <button onClick={() => setModals({ ...modals, delete: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button onClick={() => handleDelete('tasks')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">Delete</button>
+                </>
+            }
+        >
             <div className="flex items-start gap-4 mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono uppercase">
                 <span className="font-bold">{'>'}</span>
                 <p>Warning: Deleting directive <strong>"{selectedItem?.title}"</strong> is permanent. Confirm purge.</p>
-            </div>
-            <div className="flex justify-end gap-4 border-t border-border pt-6 mt-6">
-                <button onClick={() => setModals({ ...modals, delete: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                <button onClick={() => handleDelete('tasks')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">Delete</button>
             </div>
         </Modal>
       )}
@@ -707,27 +740,40 @@ function AdminDashboard() {
       />
 
       {modals.announce && (
-        <Modal onClose={() => setModals({ ...modals, announce: false })} title="New Announcement">
-            <form onSubmit={(e) => handleCreate(e, 'announcement')} className="space-y-4">
+        <Modal 
+            onClose={() => setModals({ ...modals, announce: false })} 
+            title="New Announcement"
+            footer={
+                <>
+                    <button type="button" onClick={() => setModals({ ...modals, announce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button type="submit" form="announce-form" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] flex items-center gap-2">
+                        BROADCAST <Crosshair size={10} className="opacity-50" />
+                    </button>
+                </>
+            }
+        >
+            <form id="announce-form" onSubmit={(e) => handleCreate(e, 'announcement')} className="space-y-4">
                 <InputField label="BROADCAST_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="PAYLOAD" multiline value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} required />
-                <div className="flex justify-end gap-4 pt-6 border-t border-border mt-6">
-                    <button type="button" onClick={() => setModals({ ...modals, announce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                    <button type="submit" className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)]">Post</button>
-                </div>
             </form>
         </Modal>
       )}
 
       {modals.deleteAnnounce && (
-        <Modal onClose={() => setModals({ ...modals, deleteAnnounce: false })} title="Confirm Delete" variant="danger">
+        <Modal 
+            onClose={() => setModals({ ...modals, deleteAnnounce: false })} 
+            title="Confirm Delete" 
+            variant="danger"
+            footer={
+                <>
+                    <button onClick={() => setModals({ ...modals, deleteAnnounce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                    <button onClick={() => handleDelete('announcements')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">Delete</button>
+                </>
+            }
+        >
             <div className="flex items-start gap-4 mb-6 p-4 border border-danger/50 bg-danger/10 text-danger text-sm font-mono uppercase">
                 <span className="font-bold">{'>'}</span>
                 <p>Warning: Deleting broadcast <strong>"{selectedItem?.title}"</strong> is permanent. Confirm purge.</p>
-            </div>
-            <div className="flex justify-end gap-4 border-t border-border pt-6 mt-6">
-                <button onClick={() => setModals({ ...modals, deleteAnnounce: false })} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
-                <button onClick={() => handleDelete('announcements')} className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-white bg-danger hover:bg-red-700 transition-colors shadow-[0_0_15px_rgba(255,0,0,0.4)]">Delete</button>
             </div>
         </Modal>
       )}
