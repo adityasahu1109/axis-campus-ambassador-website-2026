@@ -118,7 +118,7 @@ export function AuthProvider({ children }) {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/dashboard` },
     }),
-    signOut: () => supabase.auth.signOut(),
+    signOut: () => supabase.auth.signOut({ scope: 'local' }),
     user,
     session,
     profile,
