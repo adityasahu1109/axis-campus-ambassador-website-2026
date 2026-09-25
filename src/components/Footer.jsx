@@ -12,24 +12,24 @@ function Footer() {
   return (
     <footer id="contact-footer" className="relative bg-obsidian-soft border-t border-border mt-auto">
       <div className="max-w-[1500px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <AxisFrame variant="cyan" hover={false} className="!p-8 sm:!p-12 mb-8 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-center md:items-start">
+        <AxisFrame variant="cyan" hover={false} className="!p-[clamp(1.5rem,5vw,3rem)] mb-8 w-full">
+          <div className="flex flex-wrap justify-between gap-8 md:gap-12 items-center md:items-start">
           
           {/* Logo / System ID Column */}
           <div className="flex flex-col items-center md:items-start space-y-4">
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
               <div className="flex items-center gap-3">
-                <picture className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+                <picture className="w-[clamp(2rem,4vw,2.5rem)] h-[clamp(2rem,4vw,2.5rem)] flex-shrink-0">
                   <source srcSet={logoIconWebp} type="image/webp" />
                   <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                 </picture>
-                <span className="font-logo text-2xl sm:text-3xl md:text-4xl text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+                <span className="font-logo text-[clamp(1.5rem,4vw,2.25rem)] text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
               </div>
               <span className="text-xl text-sandstone-dim font-mono">×</span>
               <div className="flex items-center gap-3">
-                <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-10 sm:h-14 md:h-16 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-[clamp(2.5rem,5vw,4rem)] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                 <span 
-                  className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
+                  className="text-[clamp(1.5rem,4vw,2.25rem)] font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
                   style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   SyntaX

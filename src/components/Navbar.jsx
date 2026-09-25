@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NotificationsDropdown from './NotificationsDropdown';
-import clsx from 'clsx';
 import { PiSignOut, PiUser } from 'react-icons/pi';
 import { TerminalLabel } from './motifs/TerminalLabel';
 import { AxisFrame } from './motifs/AxisFrame';
@@ -28,8 +27,8 @@ const Logo = () => (
       <source srcSet={logoIconWebp} type="image/webp" />
       <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain" />
     </picture>
-    <span className="font-logo text-xl sm:text-3xl text-white tracking-widest relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-105 truncate">AXIS'27</span>
-    <div className="hidden sm:flex flex-col justify-center h-full truncate">
+    <span className="font-logo text-[clamp(1.25rem,4vw,1.875rem)] text-white tracking-widest relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-105 truncate">AXIS'27</span>
+    <div className="hidden min-[400px]:flex flex-col justify-center h-full truncate">
       <span className="text-xs font-display font-bold tracking-widest text-cyan transition-colors leading-[1.1] uppercase truncate">
         Campus
       </span>
@@ -66,7 +65,7 @@ function Navbar() {
   const handleSignOut = async () => { setIsDropdownOpen(false); await signOut(); navigate('/'); };
 
   const handleScrollToContact = (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (location.pathname !== '/') {
       navigate('/', { state: { scrollTo: 'contact' } });
     } else {
@@ -80,7 +79,7 @@ function Navbar() {
 
   const NavItem = ({ to, children, isMobile, onClick }) => {
     const content = (
-      <AxisFrame variant="cyan" hover={true} className={`group overflow-hidden cursor-pointer flex items-center justify-center ${isMobile ? 'py-3 w-full' : 'px-4 py-2 mx-1'}`}>
+      <AxisFrame variant="cyan" hover={true} className={`group overflow-hidden cursor-pointer flex items-center justify-center ${isMobile ? 'py-3 w-full' : 'px-3 lg:px-4 py-2 mx-0.5'}`}>
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
         <div className="relative z-10 flex items-center">
           <span className="text-cyan-soft mr-2 opacity-50">{'+'}</span>
@@ -241,7 +240,7 @@ function Navbar() {
                 </div>
               )}
               
-              <div className="hidden md:flex items-center space-x-2">
+              <div className="hidden md:flex items-center gap-1 lg:gap-2">
                 {renderDesktopLinks()}
               </div>
 

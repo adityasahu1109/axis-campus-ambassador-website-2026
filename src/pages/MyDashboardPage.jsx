@@ -194,15 +194,15 @@ function MyDashboardPage() {
             {/* Welcome Banner */}
             <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
                 <div className="max-w-6xl mx-auto flex items-center gap-3 sm:gap-6 relative z-10 animate-fade-in">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-obsidian border border-cyan flex items-center justify-center text-2xl sm:text-3xl font-display font-bold text-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] shrink-0">
+                    <div className="w-[clamp(3rem,8vw,5rem)] h-[clamp(3rem,8vw,5rem)] bg-obsidian border border-cyan flex items-center justify-center text-[clamp(1.5rem,4vw,1.875rem)] font-display font-bold text-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] shrink-0">
                         {(profile.full_name || user.email).charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                         <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
-                        <h1 className="text-2xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                        <h1 className="text-[clamp(1.5rem,5vw,2.25rem)] font-display font-bold text-white uppercase tracking-wide mt-2 flex flex-wrap items-center gap-[clamp(0.5rem,2vw,0.75rem)]">
                             Dashboard
                             {profile.campus_ambassador && (
-                                <span className="text-[10px] sm:text-xs bg-amber text-void px-2 py-1 font-mono tracking-widest translate-y-0 sm:translate-y-1 shrink-0">CAMPUS AMBASSADOR</span>
+                                <span className="text-[clamp(0.625rem,2vw,0.75rem)] bg-amber text-void px-2 py-1 font-mono tracking-widest translate-y-[clamp(0px,1vw,4px)] shrink-0">CAMPUS AMBASSADOR</span>
                             )}
                         </h1>
                     </div>
@@ -212,7 +212,7 @@ function MyDashboardPage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 animate-slide-in-up">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4 mb-8 animate-slide-in-up">
                     <AxisFrame variant="cyan" hover={true} className="!p-6 flex flex-col items-center text-center">
                         <TerminalLabel className="mb-2">GLOBAL_RANK</TerminalLabel>
                         <p className="text-4xl font-mono font-bold text-cyan">
@@ -250,17 +250,17 @@ function MyDashboardPage() {
                 </div>
                 
                 {/* Referral Display */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12 animate-slide-in-up" style={{ animationDelay: '100ms' }}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4 mb-12 animate-slide-in-up" style={{ animationDelay: '100ms' }}>
                     <AxisFrame variant="cyan" className="!p-6 flex flex-col justify-center">
                         <TerminalLabel className="mb-3">YOUR REFERRAL CODE</TerminalLabel>
                         <div className="bg-void border border-border p-4 text-center flex-grow flex items-center justify-center overflow-hidden">
-                            <span className="text-lg sm:text-2xl font-mono font-bold text-white tracking-widest break-all">{profile.referral_code || 'UNASSIGNED'}</span>
+                            <span className="text-[clamp(1.125rem,3vw,1.5rem)] font-mono font-bold text-white tracking-widest break-all">{profile.referral_code || 'UNASSIGNED'}</span>
                         </div>
                     </AxisFrame>
                     <AxisFrame variant={profile.referred_by ? "cyan" : "default"} className="!p-6 flex flex-col justify-center">
                         <TerminalLabel className="mb-3">REFERRAL USED</TerminalLabel>
                         <div className={clsx("border p-4 text-center flex-grow flex items-center justify-center overflow-hidden", profile.referred_by ? "bg-void border-border" : "bg-obsidian border-transparent opacity-50")}>
-                            <span className={clsx("text-base sm:text-xl font-mono tracking-widest break-all", profile.referred_by ? "text-white font-bold" : "text-sandstone-dim")}>
+                            <span className={clsx("text-[clamp(1rem,2.5vw,1.25rem)] font-mono tracking-widest break-all", profile.referred_by ? "text-white font-bold" : "text-sandstone-dim")}>
                                 {profile.referred_by ? (referrerCode || 'Loading...') : 'No referral code used'}
                             </span>
                         </div>
@@ -273,7 +273,7 @@ function MyDashboardPage() {
                         <TerminalLabel prefix=">">Your Tasks</TerminalLabel>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 280px), 1fr))] gap-4">
                         {tasks.length === 0 ? (
                             <div className="col-span-full border border-border bg-obsidian-soft p-12 text-center flex flex-col items-center">
                                 <TerminalLabel prefix=">">STATUS_REPORT</TerminalLabel>
@@ -397,12 +397,12 @@ function MyDashboardPage() {
                                     />
                                 </div>
                             </div>
-                            <div className="p-6 pt-4 border-t border-border bg-obsidian shrink-0 flex flex-wrap sm:flex-nowrap justify-end gap-2 sm:gap-4">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
+                            <div className="p-6 pt-4 border-t border-border bg-obsidian shrink-0 flex flex-wrap justify-end gap-3">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 min-w-[120px] text-center px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                                 <button
                                     type="submit"
                                     disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
-                                    className={clsx("w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                    className={clsx("flex-1 min-w-[120px] text-center px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                 >
                                     {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'Resubmit' : 'Submit'}
                                     {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}

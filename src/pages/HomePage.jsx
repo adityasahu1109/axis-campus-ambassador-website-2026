@@ -106,7 +106,7 @@ const StatCard = ({ endValue, prefix, suffix, label, isVisible }) => {
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
       <div className="relative z-10 flex flex-col items-center">
         <Crosshair className="absolute -top-2 -right-2 opacity-50" size={12} />
-        <span className="text-4xl sm:text-5xl font-mono font-bold text-cyan drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] flex items-center justify-center">
+        <span className="text-[clamp(2.25rem,6vw,3rem)] leading-none font-mono font-bold text-cyan drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] flex items-center justify-center">
           {prefix && <span>{prefix}</span>}
           {digits.map((digit, i) => (
             <RollingDigit key={i} digit={digit} isVisible={isVisible} delay={i * 150} />
@@ -134,6 +134,7 @@ function HomePage() {
       const element = document.getElementById('contact');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
+        // eslint-disable-next-line no-unused-vars
         const { scrollTo, ...remainingState } = location.state || {};
         navigate('.', { replace: true, state: remainingState });
       }
@@ -182,14 +183,14 @@ function HomePage() {
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center w-full">
           
-          <div className="relative flex justify-center items-center mb-8 h-48 sm:h-64">
+          <div className="relative flex justify-center items-center mb-8 h-[clamp(12rem,30vw,16rem)]">
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
-              <LensingRing size="w-64 h-64 sm:w-96 sm:h-96" color="cyan" />
+              <LensingRing size="w-[clamp(16rem,50vw,24rem)] h-[clamp(16rem,50vw,24rem)]" color="cyan" />
             </div>
-            <span className="font-logo text-[clamp(3rem,12vw,4.5rem)] sm:text-8xl md:text-9xl text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+            <span className="font-logo text-[clamp(4rem,15vw,8rem)] text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter mb-4 uppercase leading-none">
+          <h1 className="text-[clamp(1.875rem,5vw,3.75rem)] font-display font-black tracking-tighter mb-4 uppercase leading-none">
             <span className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Ambassador</span>
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-cyan pb-2 pr-2">Network</span>
@@ -222,7 +223,7 @@ function HomePage() {
           <div className="mb-12 flex justify-center">
             <TerminalLabel prefix=">">SYSTEM_METRICS_READOUT</TerminalLabel>
           </div>
-          <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          <div ref={statsRef} className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 130px), 1fr))] gap-[clamp(1rem,3vw,1.5rem)]">
             <StatCard endValue={3} prefix="0" label="Days" isVisible={isStatsVisible} />
             <StatCard endValue={35} suffix="+" label="Events" isVisible={isStatsVisible} />
             <StatCard endValue={170} suffix="+" label="Colleges" isVisible={isStatsVisible} />
@@ -239,7 +240,7 @@ function HomePage() {
              <p className="text-sandstone-dim font-mono text-sm max-w-2xl mx-auto">Analyze the strategic benefits of joining the AXIS'27 grid as a primary node.</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-6">
             <DiagnosticCard index={0} title="Networking">Establish high-bandwidth connections with technical nodes and industry mentors nationwide.</DiagnosticCard>
             <DiagnosticCard index={1} title="Leadership">Execute command protocols by mobilizing and directing your local campus sub-grid.</DiagnosticCard>
             <DiagnosticCard index={2} title="Skill Upgrade">Install new communication, marketing, and strategic planning modules to your skill tree.</DiagnosticCard>
@@ -255,7 +256,7 @@ function HomePage() {
              <TerminalLabel prefix=">">AETHEL_COMMS_SECTOR // SUPPORT</TerminalLabel>
              <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Establish Connection</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 280px), 1fr))] gap-8 max-w-4xl">
             <ContactTerminal role="PRIMARY_NODE_LEAD" name="Krati Verma" email="krati@axisvnit.in" />
             <ContactTerminal role="SECONDARY_NODE_LEAD" name="Shreyas Rane" email="shreyas@axisvnit.in" />
           </div>

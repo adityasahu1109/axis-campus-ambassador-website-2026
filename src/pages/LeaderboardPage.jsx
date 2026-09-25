@@ -74,17 +74,17 @@ function LeaderboardPage() {
     return (
         <div className={clsx(`flex flex-col items-center w-1/3 md:w-1/4 animate-fade-in-up min-w-0`, orderClass)} style={{ animationDelay: `${rankIndex * 150}ms` }}>
             <div className="relative mb-4 flex items-center justify-center w-full">
-                {isFirst && <LensingRing size="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40" className="absolute" color="amber" />}
-                {!isFirst && <LensingRing size={rankIndex === 2 ? "w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32" : "w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24"} className="absolute opacity-50" color={rankIndex === 2 ? "white" : "orange"} />}
-                <div className={clsx("relative z-10 font-display font-black text-2xl sm:text-3xl md:text-5xl", getRankColorText(profileData.rank))}>
+                {isFirst && <LensingRing size="w-[clamp(6rem,15vw,10rem)] h-[clamp(6rem,15vw,10rem)]" className="absolute" color="amber" />}
+                {!isFirst && <LensingRing size={rankIndex === 2 ? "w-[clamp(5rem,12vw,8rem)] h-[clamp(5rem,12vw,8rem)]" : "w-[clamp(4rem,10vw,6rem)] h-[clamp(4rem,10vw,6rem)]"} className="absolute opacity-50" color={rankIndex === 2 ? "white" : "orange"} />}
+                <div className={clsx("relative z-10 font-display font-black text-[clamp(1.5rem,5vw,3rem)]", getRankColorText(profileData.rank))}>
                     {profileData.rank}
                 </div>
             </div>
             
-            <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-3 sm:pt-4 flex flex-col items-center min-w-0", isFirst ? 'h-28 sm:h-32 md:h-40 border-t-2' : rankIndex === 2 ? 'h-24 sm:h-24 md:h-32' : 'h-20 sm:h-20 md:h-24', getRankColor(profileData.rank).split(' ')[1])}>
-                <span className="font-mono font-bold text-white text-[10px] sm:text-xs md:text-sm text-center px-1 truncate w-full uppercase tracking-wider">{profileData.full_name?.split(' ')[0]}</span>
-                <span className="font-mono text-cyan text-sm sm:text-lg md:text-xl mt-1 sm:mt-2">{Number(profileData.total_points)}</span>
-                <span className={clsx("text-[8px] sm:text-[9px] uppercase tracking-widest mt-1 truncate w-full text-center px-1", getRankColorText(profileData.rank))}>{profileData.college?.substring(0, 15)}</span>
+            <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-[clamp(0.75rem,2vw,1rem)] flex flex-col items-center min-w-0", isFirst ? 'h-[clamp(7rem,15vw,10rem)] border-t-2' : rankIndex === 2 ? 'h-[clamp(6rem,12vw,8rem)]' : 'h-[clamp(5rem,10vw,6rem)]', getRankColor(profileData.rank).split(' ')[1])}>
+                <span className="font-mono font-bold text-white text-[clamp(0.625rem,1.5vw,0.875rem)] text-center px-1 truncate w-full uppercase tracking-wider">{profileData.full_name?.split(' ')[0]}</span>
+                <span className="font-mono text-cyan text-[clamp(0.875rem,2.5vw,1.25rem)] mt-[clamp(0.25rem,1vw,0.5rem)]">{Number(profileData.total_points)}</span>
+                <span className={clsx("text-[clamp(0.5rem,1.5vw,0.5625rem)] uppercase tracking-widest mt-1 truncate w-full text-center px-1", getRankColorText(profileData.rank))}>{profileData.college?.substring(0, 15)}</span>
             </div>
         </div>
     );
@@ -170,7 +170,7 @@ function LeaderboardPage() {
       <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
         <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up">
             <TerminalLabel className="justify-center mb-4">Leaderboard</TerminalLabel>
-            <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-widest uppercase">Leaderboard</h1>
+            <h1 className="text-[clamp(2.25rem,5vw,3rem)] font-display font-black text-white tracking-widest uppercase">Leaderboard</h1>
             <p className="mt-4 text-sandstone-dim font-mono text-sm max-w-xl mx-auto">Track top 10 nodes across the network. Performers receive elevated permissions and rewards.</p>
         </div>
       </div>

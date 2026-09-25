@@ -9,7 +9,7 @@ import { clsx } from 'clsx';
 
 const InputField = ({ label, id, type = "text", value, onChange, placeholder, required, disabled = false, options = null }) => (
     <div className="relative group mb-6">
-        <label htmlFor={id} className="block mb-2 text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-amber transition-colors">{label}</label>
+        <label htmlFor={id} className="block mb-2 text-[clamp(0.625rem,2vw,0.75rem)] font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-amber transition-colors">{label}</label>
         {options ? (
             <select 
                 id={id}
@@ -159,12 +159,12 @@ function ProfilePage() {
       {/* Header */}
       <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
         <div className="max-w-4xl mx-auto flex items-center gap-x-6 relative z-10 animate-fade-in">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-obsidian border border-amber flex items-center justify-center text-3xl font-display font-bold text-amber shadow-[0_0_15px_rgba(255,158,0,0.2)]">
+            <div className="w-[clamp(4rem,10vw,5rem)] h-[clamp(4rem,10vw,5rem)] bg-obsidian border border-amber flex items-center justify-center text-[clamp(1.5rem,5vw,1.875rem)] font-display font-bold text-amber shadow-[0_0_15px_rgba(255,158,0,0.2)]">
                 {(profile.full_name || user.email || 'A').charAt(0).toUpperCase()}
             </div>
             <div>
                 <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
-                <h1 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-wide mt-2">
+                <h1 className="text-[clamp(1.875rem,5vw,2.25rem)] font-display font-bold text-white uppercase tracking-wide mt-2">
                     System Profile
                 </h1>
             </div>
@@ -174,7 +174,7 @@ function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-20 space-y-8 animate-slide-in-up">
         
         {/* Profile Card */}
-        <AxisFrame variant="cyan" hover={true} className="!p-8 sm:!p-10">
+        <AxisFrame variant="cyan" hover={true} className="!p-[clamp(1.5rem,5vw,2.5rem)]">
             <div className="flex items-center mb-8 border-b border-border pb-6">
                 <div>
                     <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Your Details</h2>
@@ -185,12 +185,12 @@ function ProfilePage() {
             <Toast msg={message} />
 
             <form onSubmit={handleUpdateProfile}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
                     <InputField label="Full Name" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
                     <InputField label="Email" id="email" type="email" value={user?.email || ''} disabled />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 border-b border-border/50 pb-2 mb-8">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4 border-b border-border/50 pb-2 mb-8">
                     <InputField 
                         label="Your Referral Code" 
                         id="referral_code" 
@@ -207,17 +207,17 @@ function ProfilePage() {
                     />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
                     <InputField label="Phone Number" id="phone_number" type="tel" value={profile.phone_number || ''} onChange={handleProfileChange} required placeholder="10 digit mobile number" />
                     <InputField label="City" id="city" value={profile.city || ''} onChange={handleProfileChange} placeholder="City Name" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
                     <InputField label="Institution Name" id="college" value={profile.college || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
                     <InputField label="Degree Type" id="degree_type" value={profile.degree_type || ''} onChange={handleProfileChange} required placeholder="e.g. B.Tech" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
                     <InputField label="Branch / Major" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
                     <InputField 
                         label="Year of Study" 
@@ -237,7 +237,7 @@ function ProfilePage() {
                 </div>
 
                 <div className="flex justify-end mt-8">
-                    <button type="submit" className="w-full sm:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 flex items-center justify-center sm:justify-start gap-2">
+                    <button type="submit" className="w-full min-[400px]:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 flex items-center justify-center gap-2">
                         Save Changes
                         <Crosshair size={12} className="opacity-50 text-void" />
                     </button>
@@ -246,7 +246,7 @@ function ProfilePage() {
         </AxisFrame>
 
         {/* Password Card */}
-        <AxisFrame variant="amber" hover={true} className="!p-8 sm:!p-10">
+        <AxisFrame variant="amber" hover={true} className="!p-[clamp(1.5rem,5vw,2.5rem)]">
             <div className="flex items-center mb-8 border-b border-border pb-6">
                 <div>
                     <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Password & Security</h2>
@@ -257,13 +257,13 @@ function ProfilePage() {
             <Toast msg={passwordMessage} />
 
             <form onSubmit={handlePasswordUpdate}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
                     <InputField label="NEW_ACCESS_KEY" id="newPassword" type="password" value={password} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" />
                     <InputField label="CONFIRM_KEY" id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="••••••••" />
                 </div>
 
                 <div className="flex justify-end mt-4">
-                    <button type="submit" className="w-full sm:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center justify-center sm:justify-start gap-2">
+                    <button type="submit" className="w-full min-[400px]:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center justify-center gap-2">
                         Update Password
                         <Crosshair size={12} className="opacity-50 text-amber" />
                     </button>

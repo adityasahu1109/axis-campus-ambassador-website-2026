@@ -304,7 +304,7 @@ function AdminDashboard() {
   const TabButton = ({ name, label, count }) => (
     <button 
         onClick={() => setActiveTab(name)} 
-        className={clsx('px-4 sm:px-6 py-2 sm:py-3 font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors border whitespace-nowrap', activeTab === name ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}
+        className={clsx('px-[clamp(0.75rem,2vw,1.5rem)] py-[clamp(0.5rem,1vw,0.75rem)] font-mono text-[clamp(0.625rem,2vw,0.75rem)] uppercase tracking-widest transition-colors border whitespace-nowrap', activeTab === name ? 'bg-cyan/20 text-cyan border-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-obsidian border-border text-sandstone-dim hover:text-sandstone')}
     >
         [ {label} {count !== undefined ? `(${count})` : ''} ]
     </button>
@@ -348,7 +348,7 @@ function AdminDashboard() {
         <div className="animate-fade-in">
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4">
                     <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('students')}>
                         <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
                             <PiUsers size={16} /> Active Students
@@ -621,7 +621,7 @@ function AdminDashboard() {
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4">
                     <InputField 
                         label="REWARD_METRICS" 
                         type="text" 
@@ -675,7 +675,7 @@ function AdminDashboard() {
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4">
                     <InputField 
                         label="REWARD_METRICS" 
                         type="text" 
