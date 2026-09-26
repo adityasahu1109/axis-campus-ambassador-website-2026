@@ -6,6 +6,7 @@ import { TerminalLabel } from '../components/motifs/TerminalLabel';
 import { TerminalLoader } from '../components/motifs/TerminalLoader';
 import { LensingRing } from '../components/motifs/LensingRing';
 import { clsx } from 'clsx';
+import { FaTrophy, FaMedal } from 'react-icons/fa';
 
 function LeaderboardPage() {
   const { user, profile } = useAuth();
@@ -53,8 +54,8 @@ function LeaderboardPage() {
   const getRankColor = (rank) => {
     switch (rank) {
       case 1: return 'text-amber border-amber shadow-[0_0_15px_rgba(255,191,0,0.5)]'; // Gold
-      case 2: return 'text-white border-white shadow-[0_0_15px_rgba(255,255,255,0.8)]'; // Silver
-      case 3: return 'text-orange-400 border-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.3)]'; // Bronze
+      case 2: return 'text-[#c0c0c0] border-[#c0c0c0] shadow-[0_0_15px_rgba(192,192,192,0.6)]'; // Silver
+      case 3: return 'text-[#cd7f32] border-[#cd7f32] shadow-[0_0_10px_rgba(205,127,50,0.3)]'; // Bronze
       default: return 'text-cyan border-cyan shadow-[0_0_10px_rgba(0,240,255,0.2)]';
     }
   };
@@ -73,12 +74,14 @@ function LeaderboardPage() {
     
     return (
         <div className={clsx(`flex flex-col items-center w-1/3 md:w-1/4 animate-fade-in-up min-w-0`, orderClass)} style={{ animationDelay: `${rankIndex * 150}ms` }}>
-            <div className="relative mb-4 flex items-center justify-center w-full">
-                {isFirst && <LensingRing size="w-[clamp(6rem,15vw,10rem)] h-[clamp(6rem,15vw,10rem)]" className="absolute" color="amber" />}
-                {!isFirst && <LensingRing size={rankIndex === 2 ? "w-[clamp(5rem,12vw,8rem)] h-[clamp(5rem,12vw,8rem)]" : "w-[clamp(4rem,10vw,6rem)] h-[clamp(4rem,10vw,6rem)]"} className="absolute opacity-50" color={rankIndex === 2 ? "white" : "orange"} />}
-                <div className={clsx("relative z-10 font-display font-black text-[clamp(1.5rem,5vw,3rem)]", getRankColorText(profileData.rank))}>
-                    {profileData.rank}
-                </div>
+            <div className="relative mb-4 flex items-center justify-center w-full h-[clamp(6rem,15vw,10rem)]">
+                {isFirst ? (
+                    <FaTrophy className="text-amber drop-shadow-[0_0_15px_rgba(255,191,0,0.8)] w-[clamp(4rem,10vw,7rem)] h-[clamp(4rem,10vw,7rem)] animate-pulse" />
+                ) : rankIndex === 2 ? (
+                    <FaMedal className="text-[#c0c0c0] drop-shadow-[0_0_15px_rgba(192,192,192,0.6)] w-[clamp(3rem,8vw,5.5rem)] h-[clamp(3rem,8vw,5.5rem)]" />
+                ) : (
+                    <FaMedal className="text-[#cd7f32] drop-shadow-[0_0_10px_rgba(205,127,50,0.6)] w-[clamp(2.5rem,6vw,4.5rem)] h-[clamp(2.5rem,6vw,4.5rem)]" />
+                )}
             </div>
             
             <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-[clamp(0.75rem,2vw,1rem)] flex flex-col items-center min-w-0", isFirst ? 'h-[clamp(7rem,15vw,10rem)] border-t-2' : rankIndex === 2 ? 'h-[clamp(6rem,12vw,8rem)]' : 'h-[clamp(5rem,10vw,6rem)]', getRankColor(profileData.rank).split(' ')[1])}>
