@@ -1,24 +1,68 @@
-// src/pages/ProfilePage.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../supabaseClient';
+import { AxisFrame } from '../components/motifs/AxisFrame';
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
+import { TerminalLoader } from '../components/motifs/TerminalLoader';
+import { Crosshair } from '../components/motifs/Crosshair';
+import { clsx } from 'clsx';
+
+const InputField = ({ label, id, type = "text", value, onChange, placeholder, required, disabled = false, options = null }) => (
+    <div className="relative group mb-6">
+        <label htmlFor={id} className="block mb-2 text-[clamp(0.625rem,2vw,0.75rem)] font-mono font-bold tracking-widest uppercase text-sandstone group-focus-within:text-amber transition-colors">{label}</label>
+        {options ? (
+            <select 
+                id={id}
+                name={id}
+                value={value}
+                onChange={onChange}
+                required={required}
+                disabled={disabled}
+                className="w-full bg-void border border-border p-3.5 focus:border-amber outline-none transition-all text-sm font-mono text-white appearance-none disabled:opacity-50 disabled:cursor-not-allowed focus:shadow-[0_0_15px_rgba(255,158,0,0.2)]"
+            >
+                <option value="" disabled>Select {label}</option>
+                {options.map(opt => <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>)}
+            </select>
+        ) : type === "textarea" ? (
+            <textarea 
+                id={id}
+                name={id}
+                value={value}
+                onChange={onChange}
+                required={required}
+                disabled={disabled}
+                rows="3"
+                placeholder={placeholder}
+                className="w-full bg-void border border-border p-3.5 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim resize-none disabled:opacity-50 disabled:cursor-not-allowed focus:shadow-[0_0_15px_rgba(255,158,0,0.2)]"
+            />
+        ) : (
+            <input 
+                type={type} 
+                name={id} 
+                id={id} 
+                value={value} 
+                onChange={onChange} 
+                placeholder={placeholder}
+                required={required} 
+                disabled={disabled}
+                className={clsx(
+                  "w-full border border-border p-3.5 outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim disabled:opacity-50 disabled:cursor-not-allowed",
+                  disabled ? "bg-obsidian" : "bg-void focus:border-amber focus:shadow-[0_0_15px_rgba(255,158,0,0.2)]"
+                )} 
+            />
+        )}
+    </div>
+);
 
 function ProfilePage() {
   const { user } = useAuth();
-  
-  // --- MODIFICATION: Expanded state to include all new fields ---
   const [profile, setProfile] = useState({
-    full_name: '',
-    bio: '',
-    college_name: '',
-    year: '',
-    branch: '',
-    primary_phone: '',
-    additional_phone: ''
+    full_name: '', college: '', branch: '', degree_type: '', year_of_study: '', city: '', phone_number: '', referral_code: '', referred_by: null
   });
-  
+  const [referrerCode, setReferrerCode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  
   const [password, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
@@ -28,250 +72,205 @@ function ProfilePage() {
       if (user) {
         try {
           setLoading(true);
-          // --- MODIFICATION: Select all new profile fields ---
           const { data, error } = await supabase
             .from('profiles')
-            .select('full_name, bio, college_name, year, branch, primary_phone, additional_phone')
-            .eq('id', user.id)
-            .single();
-            
+            .select('*')
+            .eq('id', user.id).single();
           if (error) throw error;
-          if (data) setProfile(data);
-        } catch (error) {
-          console.error("Error fetching profile:", error.message);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
+          if (data) {
+            setProfile(data);
+            if (data.referred_by) {
+              const { data: refData } = await supabase
+                .from('profiles')
+                .select('referral_code')
+                .eq('id', data.referred_by).single();
+              if (refData) setReferrerCode(refData.referral_code);
+            }
+          }
+        } catch (error) { console.error("Error fetching profile:", error.message); }
+        finally { setLoading(false); }
+      } else setLoading(false);
     }
     getProfile();
   }, [user]);
 
-  // --- MODIFICATION: Generic change handler for all profile fields ---
-  const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    setProfile(prevProfile => ({
-      ...prevProfile,
-      [name]: value
-    }));
-  };
+  const handleProfileChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     if (!user) return;
     setMessage('');
     try {
-      // --- MODIFICATION: Update all new profile fields ---
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          bio: profile.bio,
-          college_name: profile.college_name,
-          year: profile.year,
-          branch: profile.branch,
-          primary_phone: profile.primary_phone,
-          additional_phone: profile.additional_phone
-        })
-        .eq('id', user.id);
-        
+      const updates = {
+        full_name: profile.full_name,
+        college: profile.college,
+        branch: profile.branch,
+        degree_type: profile.degree_type,
+        year_of_study: parseInt(profile.year_of_study, 10),
+        city: profile.city,
+        phone_number: profile.phone_number,
+      };
+
+      const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
       if (error) throw error;
-      setMessage('Profile details updated successfully!');
+      setMessage('PROFILE_UPDATED successfully!');
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      console.error('Error updating profile:', error.message);
-      setMessage(`Failed to update profile details: ${error.message}`);
+      setMessage(`ERROR: ${error.message}`);
     }
   };
   
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setPasswordMessage('');
-    if (password !== confirmPassword) {
-        setPasswordMessage("Passwords do not match.");
-        return;
-    }
-    if (password.length < 6) {
-        setPasswordMessage("Password must be at least 6 characters long.");
-        return;
-    }
+    if (password !== confirmPassword) return setPasswordMessage("ERROR: Keys do not match.");
+    if (password.length < 6) return setPasswordMessage("ERROR: Key must be at least 6 characters.");
     try {
         const { error } = await supabase.auth.updateUser({ password: password });
         if (error) throw error;
-        setPasswordMessage('Password updated successfully!');
-        setNewPassword('');
-        setConfirmPassword('');
+        setPasswordMessage('ACCESS_KEY updated successfully!');
+        setNewPassword(''); setConfirmPassword('');
+        setTimeout(() => setPasswordMessage(''), 3000);
     } catch (error) {
-        console.error('Error updating password:', error.message);
-        setPasswordMessage(`Failed to update password: ${error.message}`);
+        setPasswordMessage(`ERROR: ${error.message}`);
     }
   };
 
-  if (loading) return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Loading...</div>;
-  if (!user) return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Please log in to view your profile.</div>;
+  if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_NODE_DATA..." /></div>;
+  if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">Not logged in</div>;
   
+  const Toast = ({ msg }) => {
+      if (!msg) return null;
+      const isError = msg.startsWith('ERROR:');
+      return (
+        <div className={clsx("p-4 flex items-start text-sm font-mono font-bold mb-6 animate-fade-in-up border", isError ? "bg-danger/10 border-danger/50 text-danger" : "bg-cyan/10 border-cyan/50 text-cyan")}>
+            <span className="mr-3">{'>'}</span>
+            <span className="uppercase">{msg}</span>
+        </div>
+      );
+  };
+
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white text-center mb-10">My Profile</h1>
+    <div className="bg-void min-h-screen pb-20 pt-20 relative">
+      
+      {/* Background Grid */}
+      <div className="absolute inset-0 axis-grid-bg opacity-20 pointer-events-none fixed"></div>
 
-      {/* Form for Profile Details */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-8">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Your Information</h2>
-        {/* --- MODIFICATION: Updated form with new fields --- */}
-        <form onSubmit={handleUpdateProfile} className="space-y-4">
-          <div>
-            <label htmlFor="full_name" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Full Name *</label>
-            <input 
-              type="text" 
-              name="full_name" 
-              id="full_name"
-              value={profile.full_name || ''} 
-              onChange={handleProfileChange} 
-              required 
-              className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-            />
-          </div>
-
-          <div>
-            <label htmlFor="bio" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Bio</label>
-            <textarea 
-              id="bio" 
-              name="bio" 
-              rows="4"
-              value={profile.bio || ''} 
-              onChange={handleProfileChange}
-              className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-              placeholder="Tell us a little about yourself"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="college_name" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">College Name *</label>
-            <input 
-              type="text" 
-              name="college_name" 
-              id="college_name" 
-              value={profile.college_name || ''} 
-              onChange={handleProfileChange} 
-              required 
-              className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-              placeholder="e.g., Visvesvaraya National Institute of Technology"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="year" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Year of Study *</label>
-              <select 
-                name="year" 
-                id="year" 
-                value={profile.year || ''} 
-                onChange={handleProfileChange} 
-                required
-                className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              >
-                <option value="" disabled>Select your year</option>
-                <option value="1st Year">1st Year</option>
-                <option value="2nd Year">2nd Year</option>
-                <option value="3rd Year">3rd Year</option>
-                <option value="4th Year">4th Year</option>
-                <option value="5th+ Year">5th+ Year</option>
-              </select>
+      {/* Header */}
+      <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
+        <div className="max-w-4xl mx-auto flex items-center gap-x-6 relative z-10 animate-fade-in">
+            <div className="w-[clamp(4rem,10vw,5rem)] h-[clamp(4rem,10vw,5rem)] bg-obsidian border border-amber flex items-center justify-center text-[clamp(1.5rem,5vw,1.875rem)] font-display font-bold text-amber shadow-[0_0_15px_rgba(255,158,0,0.2)]">
+                {(profile.full_name || user.email || 'A').charAt(0).toUpperCase()}
             </div>
             <div>
-              <label htmlFor="branch" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Branch *</label>
-              <input 
-                type="text" 
-                name="branch" 
-                id="branch" 
-                value={profile.branch || ''} 
-                onChange={handleProfileChange} 
-                required 
-                className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-                placeholder="e.g., Computer Science"
-              />
+                <TerminalLabel prefix=">">{profile.full_name?.toUpperCase() || 'AMBASSADOR'}</TerminalLabel>
+                <h1 className="text-[clamp(1.875rem,5vw,2.25rem)] font-display font-bold text-white uppercase tracking-wide mt-2">
+                    System Profile
+                </h1>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="primary_phone" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Primary Phone *</label>
-              <input 
-                type="tel" 
-                name="primary_phone" 
-                id="primary_phone" 
-                value={profile.primary_phone || ''} 
-                onChange={handleProfileChange} 
-                required 
-                className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-                placeholder="e.g., +91 12345 67890"
-              />
-            </div>
-            <div>
-              <label htmlFor="additional_phone" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Additional Phone (Optional)</label>
-              <input 
-                type="tel" 
-                name="additional_phone" 
-                id="additional_phone" 
-                value={profile.additional_phone || ''} 
-                onChange={handleProfileChange} 
-                className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-                placeholder="e.g., +91 98765 43210"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block mb-2 text-sm font-medium text-slate-500 dark:text-slate-300">Email</label>
-            <input 
-              type="email" 
-              value={user?.email || ''} 
-              disabled 
-              className="bg-slate-100 dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed" 
-            />
-          </div>
-          
-          {message && <p className={`text-sm text-center ${message.includes('successfully') ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>{message}</p>}
-          <div className="flex justify-end">
-            <button type="submit" className="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Details</button>
-          </div>
-        </form>
+        </div>
       </div>
 
-      {/* Form for Password Change (Unchanged) */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-8 mt-8">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Change Password</h2>
-        <form onSubmit={handlePasswordUpdate} className="space-y-4">
-          <div>
-            <label htmlFor="newPassword" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">New Password</label>
-            <input 
-              type="password" 
-              name="newPassword" 
-              id="newPassword" 
-              value={password} 
-              onChange={(e) => setNewPassword(e.target.value)} 
-              required 
-              className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-            />
-          </div>
-          <div>
-            <label htmlFor="confirmPassword" className="block mb-2 text-sm font-medium text-slate-700 dark:text-white">Confirm New Password</label>
-            <input 
-              type="password" 
-              name="confirmPassword" 
-              id="confirmPassword" 
-              value={confirmPassword} 
-              onChange={(e) => setConfirmPassword(e.target.value)} 
-              required 
-              className="bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-            />
-          </div>
-          {passwordMessage && <p className={`text-sm text-center ${passwordMessage.includes('successfully') ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>{passwordMessage}</p>}
-          <div className="flex justify-end">
-            <button type="submit" className="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Update Password</button>
-          </div>
-        </form>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-20 space-y-8 animate-slide-in-up">
+        
+        {/* Profile Card */}
+        <AxisFrame variant="cyan" hover={true} className="!p-[clamp(1.5rem,5vw,2.5rem)]">
+            <div className="flex items-center mb-8 border-b border-border pb-6">
+                <div>
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Your Details</h2>
+                    <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Public ambassador parameters.</p>
+                </div>
+            </div>
+
+            <Toast msg={message} />
+
+            <form onSubmit={handleUpdateProfile}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                    <InputField label="Full Name" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
+                    <InputField label="Email" id="email" type="email" value={user?.email || ''} disabled />
+                </div>
+                
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4 border-b border-border/50 pb-2 mb-8">
+                    <InputField 
+                        label="Your Referral Code" 
+                        id="referral_code" 
+                        type="text" 
+                        value={profile.referral_code || 'UNASSIGNED'} 
+                        disabled 
+                    />
+                    <InputField 
+                        label="Referral Used" 
+                        id="referred_by" 
+                        type="text" 
+                        value={profile.referred_by ? (referrerCode || 'Loading...') : 'No referral code used'} 
+                        disabled 
+                    />
+                </div>
+                
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                    <InputField label="Phone Number" id="phone_number" type="tel" value={profile.phone_number || ''} onChange={handleProfileChange} required placeholder="10 digit mobile number" />
+                    <InputField label="City" id="city" value={profile.city || ''} onChange={handleProfileChange} placeholder="City Name" />
+                </div>
+
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                    <InputField label="Institution Name" id="college" value={profile.college || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
+                    <InputField label="Degree Type" id="degree_type" value={profile.degree_type || ''} onChange={handleProfileChange} required placeholder="e.g. B.Tech" />
+                </div>
+
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                    <InputField label="Branch / Major" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
+                    <InputField 
+                        label="Year of Study" 
+                        id="year_of_study" 
+                        value={profile.year_of_study?.toString() || ''} 
+                        onChange={handleProfileChange} 
+                        required 
+                        options={[
+                          { value: '1', label: '1st Year' },
+                          { value: '2', label: '2nd Year' },
+                          { value: '3', label: '3rd Year' },
+                          { value: '4', label: '4th Year' },
+                          { value: '5', label: '5th Year' },
+                          { value: '6', label: '6th+ Year' }
+                        ]}
+                    />
+                </div>
+
+                <div className="flex justify-end mt-8">
+                    <button type="submit" className="w-full min-[400px]:w-auto px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 flex items-center justify-center gap-2">
+                        Save Changes
+                        <Crosshair size={12} className="opacity-50 text-void" />
+                    </button>
+                </div>
+            </form>
+        </AxisFrame>
+
+        {/* Password Card */}
+        <AxisFrame variant="amber" hover={true} className="!p-[clamp(1.5rem,5vw,2.5rem)]">
+            <div className="flex items-center mb-8 border-b border-border pb-6">
+                <div>
+                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Password & Security</h2>
+                    <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Modify access key.</p>
+                </div>
+            </div>
+
+            <Toast msg={passwordMessage} />
+
+            <form onSubmit={handlePasswordUpdate}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                    <InputField label="NEW_ACCESS_KEY" id="newPassword" type="password" value={password} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" />
+                    <InputField label="CONFIRM_KEY" id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="••••••••" />
+                </div>
+
+                <div className="flex justify-end mt-4">
+                    <button type="submit" className="w-full min-[400px]:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center justify-center gap-2">
+                        Update Password
+                        <Crosshair size={12} className="opacity-50 text-amber" />
+                    </button>
+                </div>
+            </form>
+        </AxisFrame>
+
       </div>
     </div>
   );

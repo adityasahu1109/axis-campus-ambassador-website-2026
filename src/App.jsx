@@ -2,8 +2,10 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer'; 
-import ProtectedRoute from './components/ProtectedRoute';
+import OnboardingGate from './components/OnboardingGate';
 import HomePage from './pages/HomePage';
+import OnboardingDetailsPage from './pages/onboarding/OnboardingDetailsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import LoginPage from './pages/LoginPage';
 import OrganizerLoginPage from './pages/OrganizerLoginPage';
@@ -14,24 +16,31 @@ import AnnouncementsPage from './pages/AnnouncementsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import OrganizerProfilePage from './pages/OrganizerProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
-    <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen antialiased flex flex-col">
+    <div className="min-h-screen flex flex-col relative selection:bg-amber-deep/30">
       <Navbar />
+      <ScrollToTop />
       <main className="pt-20 flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/login/organizer" element={<OrganizerLoginPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
+          <Route path="/announcements" element={<OnboardingGate requiredRole="student"><AnnouncementsPage /></OnboardingGate>} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/update-password" element={<UpdatePasswordPage />} />
-          <Route path="/dashboard" element={<MyDashboardPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/profile/organizer" element={<OrganizerProfilePage />} />
-          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<OnboardingGate requiredRole="student"><MyDashboardPage /></OnboardingGate>} />
+          <Route path="/profile" element={<OnboardingGate requiredRole="student"><ProfilePage /></OnboardingGate>} />
+          <Route path="/profile/organizer" element={<OnboardingGate requiredRole="organizer"><OrganizerProfilePage /></OnboardingGate>} />
+          <Route path="/admin" element={<OnboardingGate requiredRole="organizer"><AdminDashboard /></OnboardingGate>} />
+          <Route path="/notifications" element={<OnboardingGate><NotificationsPage /></OnboardingGate>} />
+          {/* Onboarding Routes */}
+          <Route path="/onboarding/details" element={<OnboardingGate requiredRole="student"><OnboardingDetailsPage /></OnboardingGate>} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <Footer />

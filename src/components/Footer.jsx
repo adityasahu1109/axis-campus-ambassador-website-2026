@@ -1,69 +1,86 @@
 import React from 'react';
-// --- MODIFICATION: Import both logos ---
-import logoLight from '../assets/logo-light.png';
-import logoDark from '../assets/logo-dark.png';
-// --- END MODIFICATION ---
-
-// Helper SVG components for social icons
-const InstagramIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>;
-const TwitterIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" /></svg>;
-const LinkedInIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM6 9H2v12h4V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 100-4 2 2 0 000 4z" /></svg>;
+import { Link } from 'react-router-dom';
+import { PiInstagramLogo, PiTwitterLogo, PiLinkedinLogo } from 'react-icons/pi';
+import { AxisFrame } from './motifs/AxisFrame';
+import syntaxLogo from '../assets/syntax_logo.png';
+import logoIconWebp from '../assets/logo-icon.webp';
+import logoIconPng from '../assets/logo-icon.png';
 
 function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer id="contact-footer" className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        
-        {/* Parent container aligns all 3 columns to the top on desktop (md:items-start) */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between space-y-6 md:space-y-0">
+    <footer id="contact-footer" className="relative bg-obsidian-soft border-t border-border mt-auto">
+      <div className="max-w-[1500px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <AxisFrame variant="cyan" hover={false} className="!p-[clamp(1.5rem,5vw,3rem)] mb-8 w-full">
+          <div className="flex flex-col md:flex-row justify-center md:justify-between items-center md:items-start gap-8 md:gap-12 w-full text-center md:text-left">
           
-          <div className="flex flex-col items-center md:items-start">
-            {/* --- MODIFICATION: Set fixed h-12 (48px) and implement switching --- */}
-            <img 
-              src={logoLight} 
-              alt="Event Logo" 
-              className="h-12 w-auto mb-2 block dark:hidden" 
-            />
-            <img 
-              src={logoDark} 
-              alt="Event Logo" 
-              className="h-12 w-auto mb-2 hidden dark:block" 
-            />
-            {/* --- END MODIFICATION --- */}
-            
-            {/* --- MODIFICATION: Removed the tagline paragraph --- */}
-            {/* <p className="text-sm text-slate-500 dark:text-slate-400">
-              Your Event Tagline Here
-            </p> */}
-            {/* --- END MODIFICATION --- */}
-          </div>
-
-          {/* Middle: Copyright */}
-          <div className="text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              &copy; {currentYear} AXIS, VNIT Nagpur. All rights reserved.
+          {/* Logo / System ID Column */}
+          <div className="flex flex-col items-center md:items-start space-y-4">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+              <div className="flex items-center gap-3">
+                <picture className="w-[clamp(2rem,4vw,2.5rem)] h-[clamp(2rem,4vw,2.5rem)] flex-shrink-0">
+                  <source srcSet={logoIconWebp} type="image/webp" />
+                  <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                </picture>
+                <span className="font-logo text-[clamp(1.5rem,4vw,2.25rem)] text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+              </div>
+              <span className="text-xl text-sandstone-dim font-mono">×</span>
+              <div className="flex items-center gap-3">
+                <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-[clamp(2.5rem,5vw,4rem)] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                <span 
+                  className="text-[clamp(1.5rem,4vw,2.25rem)] font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+                >
+                  SyntaX
+                </span>
+              </div>
+            </div>
+            <p className="text-sm text-sandstone-dim font-mono text-center md:text-left">
+              Made in collaboration with<br className="md:hidden" /> SyntaX, VNIT
             </p>
           </div>
 
-          {/* Right Side: Social Media */}
-          <div className="flex justify-center md:justify-end space-x-6">
-            <a href="https://www.instagram.com/axis_vnit/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-500 dark:hover:text-white transition-colors">
-              <span className="sr-only">Instagram</span>
-              <InstagramIcon />
-            </a>
-            <a href="https://twitter.com/axisvnit" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-500 dark:hover:text-white transition-colors">
-              <span className="sr-only">Twitter</span>
-              <TwitterIcon />
-            </a>
-            <a href="https://www.linkedin.com/company/axis-vnit-nagpur/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-500 dark:hover:text-white transition-colors">
-              <span className="sr-only">LinkedIn</span>
-              <LinkedInIcon />
-            </a>
+          {/* Quick Links Column */}
+          <div className="flex flex-col items-center space-y-3 font-mono">
+             <h4 className="text-xs font-bold text-sandstone uppercase tracking-widest mb-2 opacity-50">// NAV_LINKS</h4>
+             <Link to="/" className="text-sm text-sandstone hover:text-cyan transition-colors">Home</Link>
+             <Link to="/leaderboard" className="text-sm text-sandstone hover:text-cyan transition-colors">Leaderboard</Link>
+             <Link to="/login" className="text-sm text-sandstone hover:text-cyan transition-colors">Init_Session</Link>
+          </div>
+
+          {/* Social Media Column */}
+          <div className="flex flex-col items-center md:items-end space-y-4">
+             <h4 className="text-xs font-bold text-sandstone uppercase tracking-widest mb-4 opacity-50 font-mono">// EXTERNAL_COMMS</h4>
+             <div className="flex space-x-4">
+                <a href="https://www.instagram.com/axis_vnit/" target="_blank" rel="noopener noreferrer" 
+                   className="relative w-12 h-12 bg-void border border-border flex items-center justify-center text-white hover:text-amber hover:border-amber hover:bg-amber/10 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(255,158,0,0.3)]">
+                  <span className="sr-only">Instagram</span>
+                  <PiInstagramLogo className="h-5 w-5 relative z-10" />
+                </a>
+                <a href="https://twitter.com/axisvnit" target="_blank" rel="noopener noreferrer" 
+                   className="relative w-12 h-12 bg-void border border-border flex items-center justify-center text-white hover:text-cyan hover:border-cyan hover:bg-cyan/10 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                  <span className="sr-only">Twitter</span>
+                  <PiTwitterLogo className="h-5 w-5 relative z-10" />
+                </a>
+                <a href="https://www.linkedin.com/company/axis-vnit-nagpur/" target="_blank" rel="noopener noreferrer" 
+                   className="relative w-12 h-12 bg-void border border-border flex items-center justify-center text-white hover:text-amber hover:border-amber hover:bg-amber/10 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(255,158,0,0.3)]">
+                  <span className="sr-only">LinkedIn</span>
+                  <PiLinkedinLogo className="h-5 w-5 relative z-10" />
+                </a>
+             </div>
           </div>
         </div>
+        </AxisFrame>
         
+        <div className="mt-12 pt-8 border-t border-border text-center flex flex-col md:flex-row justify-between items-center font-mono text-xs text-sandstone-dim">
+            <p>
+              &copy; {currentYear} AXIS, VNIT Nagpur.
+            </p>
+            <p className="mt-2 md:mt-0 opacity-50">
+              ALL_SYSTEMS_NOMINAL
+            </p>
+        </div>
       </div>
     </footer>
   );

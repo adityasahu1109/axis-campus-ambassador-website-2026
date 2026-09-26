@@ -1,31 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { AxisFrame } from '../components/motifs/AxisFrame';
+import { TerminalLabel } from '../components/motifs/TerminalLabel';
+import { TerminalLoader } from '../components/motifs/TerminalLoader';
+import { LensingRing } from '../components/motifs/LensingRing';
+import { clsx } from 'clsx';
 
 function LeaderboardPage() {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
+  const { user, profile } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('global');
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-        const { data: leaderboardData, error: leaderboardError } = await supabase
-          .from('profiles').select('id, full_name, points').order('points', { ascending: false });
-        if (leaderboardError) throw leaderboardError;
-        setLeaderboard(leaderboardData || []);
-
-        if (user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles').select('role').eq('id', user.id).single();
-          if (profileError) throw profileError;
-          setProfile(profileData);
+        
+        let data = [];
+        if (user && profile?.role === 'student') {
+            // Local leaderboard returns top 10 + current user (if outside top 10)
+            const { data: localData, error } = await supabase.rpc('get_local_leaderboard');
+            if (error) throw error;
+            data = localData || [];
         } else {
-          setProfile(null);
+            // Public leaderboard
+            const { data: publicData, error } = await supabase.rpc('get_public_leaderboard', { p_offset: 0, p_limit: 10 });
+            if (error) throw error;
+            data = publicData || [];
         }
+        
+        // Sort by rank, but ensure the current user (if rank > 10) is always at the bottom
+        // Wait, get_local_leaderboard already returns them as a UNION ALL, so they are likely at the bottom.
+        // Let's just ensure they are sorted by rank, and if it's the current user outside top 10, keep them at end.
+        data.sort((a, b) => a.rank - b.rank);
+        
+        setLeaderboard(data);
       } catch (error) {
         console.error('Error fetching leaderboard data:', error.message);
       } finally {
@@ -33,72 +43,191 @@ function LeaderboardPage() {
       }
     }
     fetchData();
-  }, [user]);
+  }, [user, profile?.role]);
 
-  const myIndex = user ? leaderboard.findIndex(p => p.id === user.id) : -1;
-  let localLeaderboardData = [];
-  if (myIndex !== -1) {
-    const start = Math.max(0, myIndex - 7);
-    const end = Math.min(leaderboard.length, myIndex + 6);
-    localLeaderboardData = leaderboard.slice(start, end);
-  }
+  if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_GRID_DATA..." /></div>;
 
-  const dataToDisplay = view === 'local' && localLeaderboardData.length > 0 ? localLeaderboardData : leaderboard;
+  const top3 = leaderboard.slice(0, 3).filter(p => p.rank <= 3);
+  const rest = leaderboard.filter(p => p.rank > 3);
 
-  if (loading) {
-    return <div className="text-center py-10 text-slate-500 dark:text-slate-400">Loading leaderboard...</div>;
-  }
+  const getRankColor = (rank) => {
+    switch (rank) {
+      case 1: return 'text-amber border-amber shadow-[0_0_15px_rgba(255,191,0,0.5)]'; // Gold
+      case 2: return 'text-white border-white shadow-[0_0_15px_rgba(255,255,255,0.8)]'; // Silver
+      case 3: return 'text-orange-400 border-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.3)]'; // Bronze
+      default: return 'text-cyan border-cyan shadow-[0_0_10px_rgba(0,240,255,0.2)]';
+    }
+  };
+  
+  const getRankColorText = (rank) => getRankColor(rank).split(' ')[0];
+
+  const getPointsBarWidth = (total_points) => {
+    const maxPoints = Number(leaderboard[0]?.total_points) || 1;
+    return `${Math.max(5, (Number(total_points) / maxPoints) * 100)}%`;
+  };
+
+  const PodiumItem = ({ profileData, rankIndex }) => {
+    if (!profileData) return null;
+    const isFirst = rankIndex === 1;
+    const orderClass = isFirst ? 'order-1 md:order-2 z-10' : rankIndex === 2 ? 'order-2 md:order-1' : 'order-3';
+    
+    return (
+        <div className={clsx(`flex flex-col items-center w-1/3 md:w-1/4 animate-fade-in-up min-w-0`, orderClass)} style={{ animationDelay: `${rankIndex * 150}ms` }}>
+            <div className="relative mb-4 flex items-center justify-center w-full">
+                {isFirst && <LensingRing size="w-[clamp(6rem,15vw,10rem)] h-[clamp(6rem,15vw,10rem)]" className="absolute" color="amber" />}
+                {!isFirst && <LensingRing size={rankIndex === 2 ? "w-[clamp(5rem,12vw,8rem)] h-[clamp(5rem,12vw,8rem)]" : "w-[clamp(4rem,10vw,6rem)] h-[clamp(4rem,10vw,6rem)]"} className="absolute opacity-50" color={rankIndex === 2 ? "white" : "orange"} />}
+                <div className={clsx("relative z-10 font-display font-black text-[clamp(1.5rem,5vw,3rem)]", getRankColorText(profileData.rank))}>
+                    {profileData.rank}
+                </div>
+            </div>
+            
+            <div className={clsx("w-full border-t bg-gradient-to-t from-cyan/10 to-transparent pt-[clamp(0.75rem,2vw,1rem)] flex flex-col items-center min-w-0", isFirst ? 'h-[clamp(7rem,15vw,10rem)] border-t-2' : rankIndex === 2 ? 'h-[clamp(6rem,12vw,8rem)]' : 'h-[clamp(5rem,10vw,6rem)]', getRankColor(profileData.rank).split(' ')[1])}>
+                <span className="font-mono font-bold text-white text-[clamp(0.625rem,1.5vw,0.875rem)] text-center px-1 truncate w-full uppercase tracking-wider">{profileData.full_name?.split(' ')[0]}</span>
+                <span className="font-mono text-cyan text-[clamp(0.875rem,2.5vw,1.25rem)] mt-[clamp(0.25rem,1vw,0.5rem)]">{Number(profileData.total_points)}</span>
+                <span className={clsx("text-[clamp(0.5rem,1.5vw,0.5625rem)] uppercase tracking-widest mt-1 truncate w-full text-center px-1", getRankColorText(profileData.rank))}>{profileData.college?.substring(0, 15)}</span>
+            </div>
+        </div>
+    );
+  };
+
+  const renderTableRow = (profileRow, isSeparator = false) => {
+    const isMe = profileRow.is_current_user;
+    return (
+      <React.Fragment key={profileRow.rank + '-' + profileRow.full_name}>
+          {isSeparator && (
+              <tr>
+                  <td colSpan="4" className="bg-obsidian py-2 text-center text-xs font-bold text-sandstone uppercase tracking-widest border-t-2 border-border border-dashed">
+                    --- YOUR RANK ---
+                  </td>
+              </tr>
+          )}
+          <tr className={clsx('transition-colors', isMe ? 'bg-amber/10 border-l-2 border-l-amber' : 'hover:bg-obsidian')}>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className={clsx("text-sm font-bold", isMe ? "text-amber" : getRankColorText(profileRow.rank))}>
+                      {profileRow.rank < 10 ? `0${profileRow.rank}` : profileRow.rank}
+                  </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={clsx("text-sm uppercase tracking-wider block", isMe ? "text-white font-bold" : "text-sandstone")}>
+                      {profileRow.full_name} {isMe && <span className="text-amber ml-2 text-xs">[YOU]</span>}
+                  </span>
+                  <span className="text-[10px] text-sandstone-dim uppercase tracking-widest mt-1 block">
+                      {profileRow.college} (Yr {profileRow.year_of_study})
+                  </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap w-1/3">
+                  <div className="w-full h-1 bg-obsidian-soft border border-border">
+                      <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
+                  </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <span className={clsx("text-sm font-bold", isMe ? "text-amber" : "text-cyan")}>{Number(profileRow.total_points)}</span>
+              </td>
+          </tr>
+      </React.Fragment>
+    );
+  };
+
+  const renderMobileRow = (profileRow, isSeparator = false) => {
+    const isMe = profileRow.is_current_user;
+    return (
+        <React.Fragment key={profileRow.rank + '-' + profileRow.full_name}>
+            {isSeparator && (
+                <div className="bg-obsidian py-2 text-center text-xs font-bold text-sandstone uppercase tracking-widest border-t-2 border-border border-dashed">
+                  --- YOUR RANK ---
+                </div>
+            )}
+            <div className={clsx('p-4 flex flex-col gap-3 font-mono', isMe ? 'bg-amber/10 border-l-2 border-l-amber' : '')}>
+                <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start gap-3 w-3/4 min-w-0">
+                        <span className={clsx("text-xs w-6 text-right mt-0.5 shrink-0", isMe ? "text-amber font-bold" : getRankColorText(profileRow.rank))}>
+                            #{profileRow.rank}
+                        </span>
+                        <div className="flex flex-col min-w-0 flex-grow">
+                            <span className={clsx("text-sm uppercase tracking-wider truncate w-full", isMe ? "text-white font-bold" : "text-sandstone")}>
+                                {profileRow.full_name} {isMe && <span className="text-amber ml-1 text-xs shrink-0">[YOU]</span>}
+                            </span>
+                            <span className="text-[9px] text-sandstone-dim uppercase tracking-widest mt-1 truncate w-full">
+                                {profileRow.college} (Yr {profileRow.year_of_study})
+                            </span>
+                        </div>
+                    </div>
+                    <span className={clsx("text-sm mt-0.5 shrink-0", isMe ? "text-amber font-bold" : "text-cyan")}>{Number(profileRow.total_points)}</span>
+                </div>
+                <div className="w-full h-1 bg-obsidian border border-border mt-1">
+                    <div className={clsx("h-full transition-all duration-1000", isMe ? "bg-amber" : "bg-cyan")} style={{ width: getPointsBarWidth(profileRow.total_points) }}></div>
+                </div>
+            </div>
+        </React.Fragment>
+    );
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        {/* --- MODIFICATION: Made heading responsive --- */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">Leaderboard</h1>
-        {profile?.role === 'student' && myIndex !== -1 && (
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
-            <button
-              onClick={() => setView('global')}
-              className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${view === 'global' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-            >
-              Global
-            </button>
-            <button
-              onClick={() => setView('local')}
-              className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${view === 'local' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-            >
-              Local
-            </button>
-          </div>
-        )}
+    <div className="bg-void min-h-screen pb-20 relative pt-20">
+      <div className="absolute inset-0 axis-grid-bg opacity-20 pointer-events-none fixed"></div>
+
+      {/* Header */}
+      <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
+        <div className="max-w-4xl mx-auto text-center relative z-10 animate-fade-in-up">
+            <TerminalLabel className="justify-center mb-4">Leaderboard</TerminalLabel>
+            <h1 className="text-[clamp(2.25rem,5vw,3rem)] font-display font-black text-white tracking-widest uppercase">Leaderboard</h1>
+            <p className="mt-4 text-sandstone-dim font-mono text-sm max-w-xl mx-auto">Track top 10 nodes across the network. Performers receive elevated permissions and rewards.</p>
+        </div>
       </div>
 
-      {/* --- MODIFICATION: Changed overflow-hidden to overflow-x-auto --- */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 dark:bg-slate-900">
-            <tr>
-              <th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Rank</th>
-              <th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Points</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-            {dataToDisplay.length > 0 ? dataToDisplay.map((profileRow) => {
-              const originalRank = leaderboard.findIndex(p => p.id === profileRow.id) + 1;
-              return (
-                <tr key={profileRow.id} className={`${profileRow.id === user?.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''} hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors`}>
-                  <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-slate-800 dark:text-white">{originalRank}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">{profileRow.full_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap font-semibold text-blue-600 dark:text-blue-400">{profileRow.points}</td>
-                </tr>
-              )
-            }) : (
-              <tr>
-                <td colSpan="3" className="text-center py-10 text-slate-500 dark:text-slate-400">No student data found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
+        
+        {/* Podium */}
+        {leaderboard.length > 0 && (
+            <div className="flex justify-center items-end gap-2 md:gap-4 mb-20 max-w-2xl mx-auto">
+                {top3.find(p => p.rank === 2) && <PodiumItem profileData={top3.find(p => p.rank === 2)} rankIndex={2} />}
+                {top3.find(p => p.rank === 1) && <PodiumItem profileData={top3.find(p => p.rank === 1)} rankIndex={1} />}
+                {top3.find(p => p.rank === 3) && <PodiumItem profileData={top3.find(p => p.rank === 3)} rankIndex={3} />}
+            </div>
+        )}
+
+        {/* Data View */}
+        <AxisFrame variant="cyan" className="!p-0 overflow-hidden animate-slide-in-up">
+            
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto w-full">
+                <table className="w-full text-left font-mono min-w-[600px]">
+                    <thead className="bg-obsidian border-b border-border">
+                        <tr>
+                            <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest w-24 text-center">RANK</th>
+                            <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID (Name)</th>
+                            <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest w-1/3">PROGRESS</th>
+                            <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">METRICS</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                        {rest.length > 0 ? rest.map((p, index) => {
+                            // If this row is the current user and their rank is > 10, add a separator
+                            const isSeparator = p.is_current_user && p.rank > 10;
+                            return renderTableRow(p, isSeparator);
+                        }) : (
+                            <tr>
+                                <td colSpan="4" className="text-center py-12 text-sandstone-dim text-sm uppercase tracking-widest">No more students to show</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Mobile Stacked Card View */}
+            <div className="md:hidden flex flex-col divide-y divide-border bg-obsidian-soft">
+                <div className="bg-obsidian px-4 py-3 border-b border-border">
+                    <span className="text-xs font-mono font-bold text-sandstone uppercase tracking-widest">GLOBAL_READOUT</span>
+                </div>
+                {rest.length > 0 ? rest.map((p, index) => {
+                    const isSeparator = p.is_current_user && p.rank > 10;
+                    return renderMobileRow(p, isSeparator);
+                }) : (
+                    <div className="text-center py-12 font-mono text-sandstone-dim text-sm uppercase tracking-widest">No more students to show</div>
+                )}
+            </div>
+
+        </AxisFrame>
       </div>
     </div>
   );
