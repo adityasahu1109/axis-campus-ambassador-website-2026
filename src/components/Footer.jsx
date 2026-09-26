@@ -13,7 +13,7 @@ function Footer() {
     <footer id="contact-footer" className="relative bg-obsidian-soft border-t border-border mt-auto">
       <div className="max-w-[1500px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <AxisFrame variant="cyan" hover={false} className="!p-[clamp(1.5rem,5vw,3rem)] mb-8 w-full">
-          <div className="flex flex-wrap justify-between gap-8 md:gap-12 items-center md:items-start">
+          <div className="flex flex-col md:flex-row justify-center md:justify-between items-center md:items-start gap-8 md:gap-12 w-full text-center md:text-left">
           
           {/* Logo / System ID Column */}
           <div className="flex flex-col items-center md:items-start space-y-4">

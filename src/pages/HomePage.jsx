@@ -10,55 +10,55 @@ import { IoChevronDown } from 'react-icons/io5';
 import axisLogo from '../assets/logo.png';
 
 // --- Diagnostic Readout Card (Benefits) ---
-const DiagnosticCard = ({ index, title, children }) => ( 
-    <AxisFrame variant="cyan" hover={true} className="flex flex-col h-full group">
-        <TerminalLabel prefix="//">{`DIAGNOSTIC_0${index + 1}`}</TerminalLabel>
-        <h3 className="text-xl font-display font-bold text-white mt-4 mb-2 group-hover:text-cyan transition-colors">{title}</h3> 
-        <p className="text-sm font-mono text-sandstone-dim leading-relaxed">{children}</p> 
-        <div className="mt-auto pt-6 flex justify-end">
-            <Crosshair className="opacity-30 group-hover:opacity-100 transition-opacity" />
-        </div>
-    </AxisFrame>
+const DiagnosticCard = ({ index, title, children }) => (
+  <AxisFrame variant="cyan" hover={true} className="flex flex-col h-full group">
+    <TerminalLabel prefix="//">{`DIAGNOSTIC_0${index + 1}`}</TerminalLabel>
+    <h3 className="text-xl font-display font-bold text-white mt-4 mb-2 group-hover:text-cyan transition-colors">{title}</h3>
+    <p className="text-sm font-mono text-sandstone-dim leading-relaxed">{children}</p>
+    <div className="mt-auto pt-6 flex justify-end">
+      <Crosshair className="opacity-30 group-hover:opacity-100 transition-opacity" />
+    </div>
+  </AxisFrame>
 );
 
-const FaqItem = ({ question, answer, isOpen, onClick, index }) => ( 
-    <div className="border-b border-border py-5 font-mono"> 
-        <button onClick={onClick} className="flex justify-between items-center w-full text-left group focus:outline-none" aria-expanded={isOpen}> 
-            <div className="flex items-center space-x-4">
-                <span className="text-cyan text-sm">
-                    {`[0${index + 1}]`}
-                </span>
-                <span className="font-medium text-sm md:text-base text-sandstone group-hover:text-cyan transition-colors">{question}</span> 
-            </div>
-            <div className="text-cyan">
-                {isOpen ? '×' : '+'}
-            </div>
-        </button> 
-        <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden">
-                <p className="pl-12 text-sm text-sandstone-dim leading-relaxed"> 
-                    {answer} 
-                </p> 
-            </div>
-        </div> 
-    </div> 
+const FaqItem = ({ question, answer, isOpen, onClick, index }) => (
+  <div className="border-b border-border py-5 font-mono">
+    <button onClick={onClick} className="flex justify-between items-center w-full text-left group focus:outline-none" aria-expanded={isOpen}>
+      <div className="flex items-center space-x-4">
+        <span className="text-cyan text-sm">
+          {`[0${index + 1}]`}
+        </span>
+        <span className="font-medium text-sm md:text-base text-sandstone group-hover:text-cyan transition-colors">{question}</span>
+      </div>
+      <div className="text-cyan">
+        {isOpen ? '×' : '+'}
+      </div>
+    </button>
+    <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div className="overflow-hidden">
+        <p className="pl-12 text-sm text-sandstone-dim leading-relaxed">
+          {answer}
+        </p>
+      </div>
+    </div>
+  </div>
 );
 
-const ContactTerminal = ({ name, email, role }) => ( 
-    <div className="bg-obsidian border border-border p-6 flex flex-col font-mono text-sm relative group overflow-hidden break-words"> 
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <TerminalLabel className="mb-4">{role}</TerminalLabel>
-        <div className="space-y-2 text-sandstone">
-            <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="opacity-50 shrink-0">NAME:</span>
-                <span className="text-white text-right">{name}</span>
-            </div>
-            <div className="flex justify-between pt-2 gap-4">
-                <span className="opacity-50 shrink-0">NODE:</span>
-                <a href={`mailto:${email}`} className="text-amber hover:text-amber-bright transition-colors text-right break-all">{email}</a>
-            </div>
-        </div>
-    </div> 
+const ContactTerminal = ({ name, email, role }) => (
+  <div className="bg-obsidian border border-border p-6 flex flex-col font-mono text-sm relative group overflow-hidden break-words">
+    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <TerminalLabel className="mb-4">{role}</TerminalLabel>
+    <div className="space-y-2 text-sandstone">
+      <div className="flex justify-between border-b border-border/50 pb-2">
+        <span className="opacity-50 shrink-0">NAME:</span>
+        <span className="text-white text-right">{name}</span>
+      </div>
+      <div className="flex justify-between pt-2 gap-4">
+        <span className="opacity-50 shrink-0">NODE:</span>
+        <a href={`mailto:${email}`} className="text-amber hover:text-amber-bright transition-colors text-right break-all">{email}</a>
+      </div>
+    </div>
+  </div>
 );
 
 // --- StatCard with count-up animation ---
@@ -85,8 +85,8 @@ const RollingDigit = ({ digit, isVisible, delay = 0 }) => {
 
   return (
     <div className="inline-block relative h-[1em] overflow-hidden leading-none align-bottom">
-      <div 
-        className="flex flex-col transition-transform duration-[2500ms] ease-[cubic-bezier(0.1,0.9,0.2,1)]" 
+      <div
+        className="flex flex-col transition-transform duration-[2500ms] ease-[cubic-bezier(0.1,0.9,0.2,1)]"
         style={{ transform: `translateY(-${offset}em)` }}
       >
         {ROLLING_COLUMN.map((n, i) => (
@@ -102,9 +102,9 @@ const StatCard = ({ endValue, prefix, suffix, label, isVisible }) => {
   const digits = endValueStr.split('');
 
   return (
-    <AxisFrame variant="cyan" hover={true} className="text-center group overflow-hidden">
+    <AxisFrame variant="cyan" hover={true} className="text-center group overflow-hidden w-full aspect-square flex flex-col items-center justify-center">
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-      <div className="relative z-10 flex flex-col items-center">
+      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
         <Crosshair className="absolute -top-2 -right-2 opacity-50" size={12} />
         <span className="text-[clamp(2.25rem,6vw,3rem)] leading-none font-mono font-bold text-cyan drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] flex items-center justify-center">
           {prefix && <span>{prefix}</span>}
@@ -125,7 +125,7 @@ function HomePage() {
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const statsRef = useRef(null);
   const [isStatsVisible, setIsStatsVisible] = useState(false);
 
@@ -145,7 +145,7 @@ function HomePage() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setIsStatsVisible(true); 
+          setIsStatsVisible(true);
           observer.disconnect();
         }
       },
@@ -153,7 +153,7 @@ function HomePage() {
     );
     if (statsRef.current) observer.observe(statsRef.current);
     return () => observer.disconnect();
-  }, []); 
+  }, []);
 
   useEffect(() => {
     if (!loading && profile) {
@@ -163,46 +163,46 @@ function HomePage() {
   }, [profile, loading, navigate]);
 
   if (loading || profile) return <div className="w-full min-h-screen bg-void" />;
-  
+
   return (
     <div className="bg-void min-h-screen relative overflow-hidden">
-      
+
       {/* Global Grid Motif */}
       <div className="fixed inset-0 axis-grid-bg pointer-events-none z-0"></div>
 
       {/* --- HERO SECTION --- */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 pb-10 z-10">
-        
+
         {/* Split Diagonal Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-            {/* Aethel side (Left/Top) */}
-            <div className="absolute -top-[50%] -left-[50%] w-[100%] h-[150%] bg-gradient-to-br from-cyan-deep/20 to-transparent -rotate-12 transform origin-center"></div>
-            {/* Nix side (Right/Bottom) */}
-            <div className="absolute -bottom-[50%] -right-[50%] w-[100%] h-[150%] bg-gradient-to-tl from-amber-deep/10 to-transparent -rotate-12 transform origin-center"></div>
+          {/* Aethel side (Left/Top) */}
+          <div className="absolute -top-[50%] -left-[50%] w-[100%] h-[150%] bg-gradient-to-br from-cyan-deep/20 to-transparent -rotate-12 transform origin-center"></div>
+          {/* Nix side (Right/Bottom) */}
+          <div className="absolute -bottom-[50%] -right-[50%] w-[100%] h-[150%] bg-gradient-to-tl from-amber-deep/10 to-transparent -rotate-12 transform origin-center"></div>
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center w-full">
-          
-          <div className="relative flex justify-center items-center mb-8 h-[clamp(12rem,30vw,16rem)]">
+
+          <div className="@container relative flex justify-center items-center mb-8 h-[clamp(12rem,30vw,16rem)] w-full max-w-full min-w-0">
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
-              <LensingRing size="w-[clamp(16rem,50vw,24rem)] h-[clamp(16rem,50vw,24rem)]" color="cyan" />
+              <LensingRing size="w-[clamp(10rem,40cqw,24rem)] h-[clamp(10rem,40cqw,24rem)]" color="cyan" />
             </div>
-            <span className="font-logo text-[clamp(4rem,15vw,8rem)] text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
+            <span className="font-logo text-[clamp(2.5rem,11cqw,8rem)] text-white tracking-widest relative z-10 animate-scale-in drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] whitespace-nowrap overflow-visible">AXIS'27</span>
           </div>
-          
+
           <h1 className="text-[clamp(1.875rem,5vw,3.75rem)] font-display font-black tracking-tighter mb-4 uppercase leading-none">
             <span className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Ambassador</span>
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-cyan pb-2 pr-2">Network</span>
           </h1>
-          
+
           <div className="mt-8 mb-12 font-mono text-cyan-soft tracking-[0.15em] sm:tracking-[0.3em] uppercase text-sm sm:text-base">
             <span className="opacity-50">{'//'}</span> Illuminate the Infinite <span className="opacity-50">{'//'}</span>
           </div>
-          
+
           <div className="mt-12 flex justify-center relative z-30">
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               state={{ isRegister: true }}
               className="group relative inline-flex items-center justify-center px-8 py-4 font-mono font-bold tracking-widest text-void bg-amber hover:bg-amber-bright uppercase text-sm transition-all duration-300 shadow-[0_0_20px_rgba(255,158,0,0.4)] hover:shadow-[0_0_40px_rgba(255,158,0,0.6)]"
             >
@@ -223,7 +223,7 @@ function HomePage() {
           <div className="mb-12 flex justify-center">
             <TerminalLabel prefix=">">SYSTEM_METRICS_READOUT</TerminalLabel>
           </div>
-          <div ref={statsRef} className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 130px), 1fr))] gap-[clamp(1rem,3vw,1.5rem)]">
+          <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[clamp(1rem,3vw,1.5rem)]">
             <StatCard endValue={3} prefix="0" label="Days" isVisible={isStatsVisible} />
             <StatCard endValue={35} suffix="+" label="Events" isVisible={isStatsVisible} />
             <StatCard endValue={170} suffix="+" label="Colleges" isVisible={isStatsVisible} />
@@ -236,11 +236,11 @@ function HomePage() {
       <section className="py-24 relative z-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Protocol Advantages</h2>
-             <p className="text-sandstone-dim font-mono text-sm max-w-2xl mx-auto">Analyze the strategic benefits of joining the AXIS'27 grid as a primary node.</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Protocol Advantages</h2>
+            <p className="text-sandstone-dim font-mono text-sm max-w-2xl mx-auto">Analyze the strategic benefits of joining the AXIS'27 grid as a primary node.</p>
           </div>
-          
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-6">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full min-w-0">
             <DiagnosticCard index={0} title="Networking">Establish high-bandwidth connections with technical nodes and industry mentors nationwide.</DiagnosticCard>
             <DiagnosticCard index={1} title="Leadership">Execute command protocols by mobilizing and directing your local campus sub-grid.</DiagnosticCard>
             <DiagnosticCard index={2} title="Skill Upgrade">Install new communication, marketing, and strategic planning modules to your skill tree.</DiagnosticCard>
@@ -253,22 +253,22 @@ function HomePage() {
       <section id="contact" className="py-24 relative z-20 border-t border-border bg-obsidian">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-16">
-             <TerminalLabel prefix=">">AETHEL_COMMS_SECTOR // SUPPORT</TerminalLabel>
-             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Establish Connection</h2>
+            <TerminalLabel prefix=">">AETHEL_COMMS_SECTOR // SUPPORT</TerminalLabel>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Establish Connection</h2>
           </div>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 280px), 1fr))] gap-8 max-w-4xl">
-            <ContactTerminal role="PRIMARY_NODE_LEAD" name="Krati Verma" email="krati@axisvnit.in" />
-            <ContactTerminal role="SECONDARY_NODE_LEAD" name="Shreyas Rane" email="shreyas@axisvnit.in" />
+            <ContactTerminal role="PRIMARY_NODE_LEAD" name="Krati Verma" email="krati.verma@axisvnit.in" />
+            <ContactTerminal role="SECONDARY_NODE_LEAD" name="Shreyas Rane" email="shreyas.rane@axisvnit.in" />
           </div>
         </div>
       </section>
-      
+
       {/* --- FAQ SECTION --- */}
       <section className="py-24 relative z-20 border-t border-border bg-obsidian-soft/80 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
-             <TerminalLabel prefix=">">KNOWLEDGE_BASE // QUERY</TerminalLabel>
-             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Frequently Asked Questions</h2>
+            <TerminalLabel prefix=">">KNOWLEDGE_BASE // QUERY</TerminalLabel>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-4">Frequently Asked Questions</h2>
           </div>
           <div className="bg-obsidian border border-border p-6 sm:p-8 relative">
             {/* Decorative Corner Markers for the whole FAQ block */}
@@ -278,19 +278,19 @@ function HomePage() {
             <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-sandstone-dim opacity-30"></div>
 
             {[
-                {q: "Who can initiate the Ambassador sequence?", a: "Any active student node currently enrolled in an undergraduate or postgraduate program. First and second-year nodes are highly prioritized for installation."},
-                {q: "Are there any credit requirements (fees)?", a: "Negative. The sequence is completely open-source and free. We are establishing a nationwide mesh network of student leaders."},
-                {q: "What is the uptime duration?", a: "The sequence runs continuously from initial handshake (selection) until the final runtime of AXIS'27. Timestamps will be relayed via secure email."},
-                {q: "How are metrics calculated?", a: "Performance is tracked via a transparent point system on the grid. Tasks yield points upon successful execution and verification. Total score determines leaderboard ranking."}
+              { q: "Who can initiate the Ambassador sequence?", a: "Any active student node currently enrolled in an undergraduate or postgraduate program. First and second-year nodes are highly prioritized for installation." },
+              { q: "Are there any credit requirements (fees)?", a: "Negative. The sequence is completely open-source and free. We are establishing a nationwide mesh network of student leaders." },
+              { q: "What is the uptime duration?", a: "The sequence runs continuously from initial handshake (selection) until the final runtime of AXIS'27. Timestamps will be relayed via secure email." },
+              { q: "How are metrics calculated?", a: "Performance is tracked via a transparent point system on the grid. Tasks yield points upon successful execution and verification. Total score determines leaderboard ranking." }
             ].map((faq, index) => (
-                <FaqItem 
-                    key={index}
-                    index={index}
-                    question={faq.q} 
-                    answer={faq.a} 
-                    isOpen={openFaq === index} 
-                    onClick={() => handleFaqClick(index)} 
-                />
+              <FaqItem
+                key={index}
+                index={index}
+                question={faq.q}
+                answer={faq.a}
+                isOpen={openFaq === index}
+                onClick={() => handleFaqClick(index)}
+              />
             ))}
           </div>
         </div>

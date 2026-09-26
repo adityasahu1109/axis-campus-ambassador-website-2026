@@ -348,7 +348,7 @@ function AdminDashboard() {
         <div className="animate-fade-in">
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full min-w-0">
                     <AxisFrame variant="cyan" hover className="flex flex-col items-center justify-center py-12 cursor-pointer group hover:bg-cyan/5 transition-all" onClick={() => setActiveTab('students')}>
                         <span className="flex items-center gap-2 text-xs font-mono text-cyan uppercase tracking-widest mb-2 text-center">
                             <PiUsers size={16} /> Active Students
