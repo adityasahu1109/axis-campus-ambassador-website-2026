@@ -13,18 +13,18 @@ function Footer() {
     <footer id="contact-footer" className="relative bg-obsidian-soft border-t border-border mt-auto">
       <div className="max-w-[1500px] mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <AxisFrame variant="cyan" hover={false} className="!p-[clamp(1.5rem,5vw,3rem)] mb-8 w-full">
-          <div className="flex flex-col md:flex-row justify-center md:justify-between items-center md:items-start gap-8 md:gap-12 w-full text-center md:text-left">
+          <div className="flex flex-col md:flex-row flex-wrap justify-center md:justify-between items-center md:items-start gap-8 md:gap-12 w-full text-center md:text-left">
           
           {/* Logo / System ID Column */}
-          <div className="flex flex-col items-center md:items-start space-y-4">
+          <div className="flex flex-col items-center space-y-4">
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-              <div className="flex items-center gap-3">
+              <a href="https://axisvnit.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <picture className="w-[clamp(2rem,4vw,2.5rem)] h-[clamp(2rem,4vw,2.5rem)] flex-shrink-0">
                   <source srcSet={logoIconWebp} type="image/webp" />
                   <img src={logoIconPng} alt="AXIS Logo Icon" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                 </picture>
                 <span className="font-logo text-[clamp(1.5rem,4vw,2.25rem)] text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
-              </div>
+              </a>
               <span className="text-xl text-sandstone-dim font-mono">×</span>
               <div className="flex items-center gap-3">
                 <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-[clamp(2.5rem,5vw,4rem)] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
@@ -36,8 +36,8 @@ function Footer() {
                 </span>
               </div>
             </div>
-            <p className="text-sm text-sandstone-dim font-mono text-center md:text-left">
-              Made in collaboration with<br className="md:hidden" /> SyntaX, VNIT
+            <p className="text-sm text-sandstone-dim font-mono text-center">
+              Made in collaboration with<br className="md:hidden" /> <span className="font-bold bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent">SyntaX</span>, VNIT
             </p>
           </div>
 

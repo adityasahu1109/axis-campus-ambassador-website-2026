@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer'; 
 import OnboardingGate from './components/OnboardingGate';
@@ -17,14 +17,18 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import OrganizerProfilePage from './pages/OrganizerProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+import SyntaxPage from './pages/SyntaxPage';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
+  const location = useLocation();
+  const isSyntaxPage = location.pathname === '/syntax';
+
   return (
     <div className="min-h-screen flex flex-col relative selection:bg-amber-deep/30">
-      <Navbar />
+      {!isSyntaxPage && <Navbar />}
       <ScrollToTop />
-      <main className="pt-20 flex-grow">
+      <main className={isSyntaxPage ? "flex-grow" : "pt-20 flex-grow"}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
@@ -40,10 +44,13 @@ function App() {
           <Route path="/notifications" element={<OnboardingGate><NotificationsPage /></OnboardingGate>} />
           {/* Onboarding Routes */}
           <Route path="/onboarding/details" element={<OnboardingGate requiredRole="student"><OnboardingDetailsPage /></OnboardingGate>} />
+          
+          <Route path="/syntax" element={<SyntaxPage />} />
+          
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
-      <Footer />
+      {!isSyntaxPage && <Footer />}
     </div>
   );
 }

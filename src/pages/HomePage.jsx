@@ -197,7 +197,7 @@ function HomePage() {
           </h1>
 
           <div className="mt-8 mb-12 font-mono text-cyan-soft tracking-[0.15em] sm:tracking-[0.3em] uppercase text-sm sm:text-base">
-            <span className="opacity-50">{'//'}</span> Illuminate the Infinite <span className="opacity-50">{'//'}</span>
+            <span className="opacity-50">{'//'}</span> Illuminating the Infinite <span className="opacity-50">{'//'}</span>
           </div>
 
           <div className="mt-12 flex justify-center relative z-30">
