@@ -95,7 +95,7 @@ function SyntaxPage() {
           />
           
           <h1 
-            className="mt-4 mb-8 text-[clamp(2.5rem,8vw,4.5rem)] font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.3)] animate-fade-in-up leading-none"
+            className="mt-4 mb-8 pb-[0.2em] text-[clamp(2.5rem,8vw,4.5rem)] font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.3)] animate-fade-in-up leading-none"
             style={{ fontFamily: 'Inter, system-ui, sans-serif', animationDelay: '100ms' }}
           >
             SyntaX
