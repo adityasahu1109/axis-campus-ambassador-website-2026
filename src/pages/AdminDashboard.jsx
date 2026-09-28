@@ -287,12 +287,11 @@ function AdminDashboard() {
   const handleSettingsUpdate = async (e) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from('program_settings').upsert({
-        id: 1,
+      const { error } = await supabase.from('program_settings').update({
         campus_ambassador_threshold: programSettings.campus_ambassador_threshold,
         referral_reward_points: programSettings.referral_reward_points,
         updated_by: user.id
-      });
+      }).eq('id', 1);
       if (error) throw error;
       alert("Settings updated successfully");
       fetchData();
@@ -317,14 +316,14 @@ function AdminDashboard() {
       <div className="absolute inset-0 axis-grid-bg opacity-30 pointer-events-none fixed"></div>
 
       {/* Header */}
-      <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10 animate-fade-in-up">
-            <div>
+      <div className="relative border-b border-border bg-obsidian-soft/80 backdrop-blur-md pb-12 pt-12 px-4 @container">
+        <div className="max-w-7xl mx-auto flex flex-wrap justify-center items-center gap-6 relative z-10 animate-fade-in-up">
+            <div className="flex-[1_1_500px] min-w-[280px] text-center @[800px]:text-left flex flex-col items-center @[800px]:items-start">
                 <TerminalLabel prefix=">">Admin Dashboard</TerminalLabel>
                 <h1 className="text-4xl font-display font-black text-white tracking-widest uppercase mt-4">Admin Dashboard</h1>
                 <p className="mt-2 text-sandstone-dim font-mono text-sm max-w-xl">Grid overview, node management, and directive authorization.</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex-[1_1_300px] min-w-[200px] flex justify-center @[800px]:justify-end gap-4">
                 <div className="bg-obsidian border border-border p-4 flex flex-col items-center">
                     <span className="text-xs font-mono text-cyan uppercase tracking-widest mb-1">Pending_Reviews</span>
                     <span className="text-2xl font-mono font-bold text-white">{stats.pendingSubs}</span>
@@ -336,7 +335,7 @@ function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
         
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-8 animate-slide-in-up border-b border-border pb-4">
+        <div className="flex flex-wrap justify-center gap-2 mb-8 animate-slide-in-up border-b border-border pb-4">
           <TabButton name="overview" label="Overview" />
           <TabButton name="submissions" label="Review Queue" count={stats.pendingSubs} />
           <TabButton name="tasks" label="Tasks" count={stats.tasksCount} />
@@ -621,7 +620,7 @@ function AdminDashboard() {
                 <InputField label="DIRECTIVE_TITLE" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} required />
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_200px),_1fr))] gap-4">
                     <InputField 
                         label="REWARD_METRICS" 
                         type="text" 
@@ -675,7 +674,7 @@ function AdminDashboard() {
                 <InputField label="DESCRIPTION" multiline value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} required />
                 <InputField label="INSTRUCTIONS" multiline value={formData.instructions} onChange={(e) => setFormData({...formData, instructions: e.target.value})} />
                 
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_200px),_1fr))] gap-4">
                     <InputField 
                         label="REWARD_METRICS" 
                         type="text" 

@@ -77,7 +77,7 @@ function MyDashboardPage() {
 
             // Fetch tasks filtered by domain_id and deadline
             const today = new Date().toISOString().split('T')[0];
-            
+
             // Try PostgREST OR approach first
             let fetchedTasks = [];
             const { data: tasksData, error: tasksError } = await supabase
@@ -86,7 +86,7 @@ function MyDashboardPage() {
                 .or(`domain_id.eq.${profileData.domain_id},domain_id.is.null`)
                 .or(`deadline.is.null,deadline.gt.${today}`)
                 .order('id', { ascending: false });
-                
+
             if (!tasksError && tasksData) {
                 fetchedTasks = tasksData;
             } else {
@@ -97,12 +97,12 @@ function MyDashboardPage() {
                     .select('*')
                     .or(`domain_id.eq.${profileData.domain_id},domain_id.is.null`)
                     .order('id', { ascending: false });
-                    
+
                 if (fallbackTasks) {
                     fetchedTasks = fallbackTasks.filter(t => !t.deadline || t.deadline > today);
                 }
             }
-            
+
             setTasks(fetchedTasks);
 
             // get_my_rank is not in the current DB schema.
@@ -167,8 +167,8 @@ function MyDashboardPage() {
         }
         try {
             const { error } = await supabase.from('submissions').upsert({
-                student_id: user.id, 
-                task_id: selectedTask.id, 
+                student_id: user.id,
+                task_id: selectedTask.id,
                 drive_link: driveLink || null,
                 submission_context: submissionContext || null,
                 status: 'pending'
@@ -212,7 +212,7 @@ function MyDashboardPage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-10">
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 200px), 1fr))] gap-4 mb-8 animate-slide-in-up">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_200px),_1fr))] gap-4 mb-8 animate-slide-in-up">
                     <AxisFrame variant="cyan" hover={true} className="!p-6 flex flex-col items-center text-center">
                         <TerminalLabel className="mb-2">GLOBAL_RANK</TerminalLabel>
                         <p className="text-4xl font-mono font-bold text-cyan">
@@ -248,9 +248,9 @@ function MyDashboardPage() {
                         </p>
                     </AxisFrame>
                 </div>
-                
+
                 {/* Referral Display */}
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4 mb-12 animate-slide-in-up" style={{ animationDelay: '100ms' }}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_250px),_1fr))] gap-4 mb-12 animate-slide-in-up" style={{ animationDelay: '100ms' }}>
                     <AxisFrame variant="cyan" className="!p-6 flex flex-col justify-center">
                         <TerminalLabel className="mb-3">YOUR REFERRAL CODE</TerminalLabel>
                         <div className="bg-void border border-border p-4 text-center flex-grow flex items-center justify-center overflow-hidden">
@@ -258,7 +258,7 @@ function MyDashboardPage() {
                         </div>
                     </AxisFrame>
                     <AxisFrame variant={profile.referred_by ? "cyan" : "default"} className="!p-6 flex flex-col justify-center">
-                        <TerminalLabel className="mb-3">REFERRAL USED</TerminalLabel>
+                        <TerminalLabel className="mb-3">REFERRED BY</TerminalLabel>
                         <div className={clsx("border p-4 text-center flex-grow flex items-center justify-center overflow-hidden", profile.referred_by ? "bg-void border-border" : "bg-obsidian border-transparent opacity-50")}>
                             <span className={clsx("text-[clamp(1rem,2.5vw,1.25rem)] font-mono tracking-widest break-all", profile.referred_by ? "text-white font-bold" : "text-sandstone-dim")}>
                                 {profile.referred_by ? (referrerCode || 'Loading...') : 'No referral code used'}
@@ -273,7 +273,7 @@ function MyDashboardPage() {
                         <TerminalLabel prefix=">">Your Tasks</TerminalLabel>
                     </div>
 
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 280px), 1fr))] gap-4">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_280px),_1fr))] gap-4">
                         {tasks.length === 0 ? (
                             <div className="col-span-full border border-border bg-obsidian-soft p-12 text-center flex flex-col items-center">
                                 <TerminalLabel prefix=">">STATUS_REPORT</TerminalLabel>
@@ -336,7 +336,7 @@ function MyDashboardPage() {
                                     <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
                                     <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{Number(selectedTask?.points)}</span>
                                 </div>
-                                
+
                                 {selectedTask?.deadline && (
                                     <div className="mb-4">
                                         <span className="text-xs font-mono font-bold tracking-widest uppercase text-sandstone">Deadline: </span>
@@ -352,7 +352,7 @@ function MyDashboardPage() {
                                 <p className="text-sm font-mono text-sandstone bg-obsidian-soft border border-border p-4 leading-relaxed mb-6 whitespace-pre-wrap">
                                     {selectedTask?.description || "No description provided."}
                                 </p>
-                                
+
                                 {selectedTask?.instructions && (
                                     <div className="mb-6">
                                         <h4 className="text-xs font-mono font-bold tracking-widest uppercase text-cyan mb-2">Instructions</h4>

@@ -203,7 +203,6 @@ function HomePage() {
           <div className="mt-12 flex justify-center relative z-30">
             <Link
               to="/login"
-              state={{ isRegister: true }}
               className="group relative inline-flex items-center justify-center px-8 py-4 font-mono font-bold tracking-widest text-void bg-amber hover:bg-amber-bright uppercase text-sm transition-all duration-300 shadow-[0_0_20px_rgba(255,158,0,0.4)] hover:shadow-[0_0_40px_rgba(255,158,0,0.6)]"
             >
               <span>Initialize Sequence</span>

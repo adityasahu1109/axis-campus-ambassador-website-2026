@@ -26,7 +26,7 @@ function Footer() {
                 <span className="font-logo text-[clamp(1.5rem,4vw,2.25rem)] text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">AXIS'27</span>
               </a>
               <span className="text-xl text-sandstone-dim font-mono">×</span>
-              <div className="flex items-center gap-3">
+              <Link to="/syntax" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <img src={syntaxLogo} alt="SyntaX Club Logo" className="h-[clamp(2.5rem,5vw,4rem)] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                 <span 
                   className="text-[clamp(1.5rem,4vw,2.25rem)] font-black tracking-tight bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(131,49,216,0.2)] pb-1 leading-normal"
@@ -34,10 +34,10 @@ function Footer() {
                 >
                   SyntaX
                 </span>
-              </div>
+              </Link>
             </div>
             <p className="text-sm text-sandstone-dim font-mono text-center">
-              Made in collaboration with<br className="md:hidden" /> <span className="font-bold bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent">SyntaX</span>, VNIT
+              Made in collaboration with<br className="md:hidden" /> <Link to="/syntax" className="font-bold bg-gradient-to-br from-[#0450db] to-[#8331d8] bg-clip-text text-transparent hover:opacity-80 transition-opacity">SyntaX</Link>, VNIT
             </p>
           </div>
 
