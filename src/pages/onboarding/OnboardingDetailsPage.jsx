@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../hooks/useAuth';
 import { AxisFrame } from '../../components/motifs/AxisFrame';
@@ -38,6 +39,7 @@ export default function OnboardingDetailsPage() {
   const { user, profile, refetchProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   
   const [domains, setDomains] = useState([]);
   const [domainExamples, setDomainExamples] = useState([]);
@@ -316,10 +318,24 @@ export default function OnboardingDetailsPage() {
             </div>
         </AxisFrame>
 
+        <div className="mb-8 flex items-center gap-3 bg-obsidian-soft p-4 border border-border">
+            <input 
+              type="checkbox" 
+              id="terms" 
+              required
+              checked={termsAccepted} 
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="w-4 h-4 bg-void border-border accent-cyan cursor-pointer"
+            />
+            <label htmlFor="terms" className="text-sandstone text-xs font-mono">
+              I agree to the <Link to="/terms" target="_blank" className="text-cyan underline hover:text-white transition-colors">Terms and Conditions</Link>.
+            </label>
+        </div>
+
         <div className="flex justify-end">
             <button 
               type="submit" 
-              disabled={loading || (formData.referral_code && referralStatus && !referralStatus.valid)}
+              disabled={loading || !termsAccepted || (formData.referral_code && referralStatus && !referralStatus.valid)}
               className="w-full sm:w-auto px-8 py-4 text-sm font-mono font-bold uppercase tracking-[0.2em] text-void bg-cyan hover:bg-cyan-soft transition-colors shadow-[0_0_15px_rgba(0,240,255,0.4)] disabled:opacity-50 disabled:shadow-none"
             >
               {loading ? 'TRANSMITTING...' : 'Complete Profile'}

@@ -18,6 +18,7 @@ import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import OrganizerProfilePage from './pages/OrganizerProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import SyntaxPage from './pages/SyntaxPage';
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/onboarding/details" element={<OnboardingGate requiredRole="student"><OnboardingDetailsPage /></OnboardingGate>} />
           
           <Route path="/syntax" element={<SyntaxPage />} />
+          <Route path="/terms" element={<TermsAndConditionsPage />} />
           
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
