@@ -21,20 +21,22 @@ export const Modal = ({ children, onClose, title, variant = "cyan", footer }) =>
     }, []);
 
     return (
-        <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={onClose}>
-            <AxisFrame variant={variant} className="!p-0 w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden" innerClassName="flex flex-col flex-1 min-h-0" onClick={e => e.stopPropagation()}>
-                <div className={clsx("px-6 py-4 flex justify-between items-center border-b shrink-0", variant === "cyan" ? "border-cyan/30 bg-cyan/10" : "border-danger/30 bg-danger/10")}>
-                    <TerminalLabel prefix=">">{title}</TerminalLabel>
-                    <button onClick={onClose} className={clsx("text-xl hover:scale-110 transition-transform", variant === "cyan" ? "text-cyan" : "text-danger")}>×</button>
-                </div>
-                <div className="p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 bg-obsidian text-sandstone terminal-scrollbar">
-                    {children}
-                </div>
-                {footer && (
-                    <div className="p-6 pt-4 border-t border-border bg-obsidian shrink-0 flex flex-wrap justify-end gap-4">
-                        {footer}
+        <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 sm:p-6 animate-fade-in" onClick={onClose}>
+            <AxisFrame variant={variant} className="!p-0 w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="flex flex-col max-h-[85vh] sm:max-h-[90vh] w-full bg-obsidian relative">
+                    <div className={clsx("px-6 py-4 flex justify-between items-center border-b shrink-0", variant === "cyan" ? "border-cyan/30 bg-cyan/10" : "border-danger/30 bg-danger/10")}>
+                        <TerminalLabel prefix=">">{title}</TerminalLabel>
+                        <button onClick={onClose} className={clsx("text-xl hover:scale-110 transition-transform", variant === "cyan" ? "text-cyan" : "text-danger")}>×</button>
                     </div>
-                )}
+                    <div className="p-6 overflow-y-auto flex-1 min-h-0 text-sandstone terminal-scrollbar">
+                        {children}
+                    </div>
+                    {footer && (
+                        <div className="p-6 pt-4 border-t border-border bg-obsidian shrink-0 flex flex-wrap justify-end gap-4">
+                            {footer}
+                        </div>
+                    )}
+                </div>
             </AxisFrame>
         </div>
     );
@@ -75,6 +77,16 @@ export const InputField = ({ label, type = "text", value, onChange, required, mu
         {error && <span className="absolute -bottom-5 left-0 text-[10px] text-danger font-mono uppercase tracking-widest">{error}</span>}
     </div>
 );
+
+const formatYear = (year) => {
+    if (!year) return '--';
+    const num = parseInt(year);
+    if (isNaN(num)) return year;
+    if (num === 1) return '1st Year';
+    if (num === 2) return '2nd Year';
+    if (num === 3) return '3rd Year';
+    return `${num}th Year`;
+};
 
 function AdminDashboard() {
   const { user } = useAuth();
@@ -496,27 +508,31 @@ function AdminDashboard() {
             {activeTab === 'students' && (
                 <AxisFrame variant="cyan" className="!p-0 overflow-hidden">
                     <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left font-mono min-w-[600px]">
+                        <table className="w-full text-left font-mono min-w-[900px]">
                             <thead className="bg-obsidian border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">NODE_ID</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">TOTAL_METRICS</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">COLLEGE</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">YEAR</th>
                                     <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest">DOMAIN</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-sandstone uppercase tracking-widest text-right">TOTAL_METRICS</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-obsidian-soft">
                                 {studentsQuery.loading ? (
-                                    <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
+                                    <tr><td colSpan="5" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">LOADING...</td></tr>
                                 ) : studentsQuery.data.length === 0 ? (
-                                    <tr><td colSpan="3" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No students yet</td></tr>
+                                    <tr><td colSpan="5" className="px-6 py-8 text-center text-sandstone-dim text-sm uppercase tracking-widest">No students yet</td></tr>
                                 ) : (
                                     studentsQuery.data.map(student => (
                                     <tr key={student.id} className="hover:bg-obsidian transition-colors">
                                         <td className="px-6 py-4 text-sm font-bold text-white uppercase">{student.full_name}</td>
-                                        <td className="px-6 py-4 text-sm font-bold text-cyan">{Number(student.total_points)}</td>
+                                        <td className="px-6 py-4 text-sm text-sandstone truncate max-w-[200px]" title={student.college}>{student.college || '--'}</td>
+                                        <td className="px-6 py-4 text-sm text-sandstone whitespace-nowrap">{formatYear(student.year_of_study)}</td>
                                         <td className="px-6 py-4 text-sm text-sandstone">
                                             {getDomainName(student.domain_id)}
                                         </td>
+                                        <td className="px-6 py-4 text-sm font-bold text-cyan text-right">{Number(student.total_points)}</td>
                                     </tr>
                                     ))
                                 )}

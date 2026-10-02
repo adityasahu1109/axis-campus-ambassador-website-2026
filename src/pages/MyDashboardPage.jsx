@@ -13,6 +13,7 @@ const StatusBadge = ({ status }) => {
         'pending': { text: '[ PENDING ]', color: 'text-amber' },
         'needs_revision': { text: '[ REVISION ]', color: 'text-amber' },
         'rejected': { text: '[ REJECTED ]', color: 'text-danger' },
+        'partially_accepted': { text: '[ PARTIAL ]', color: 'text-cyan' },
         'not_submitted': { text: '[ UNASSIGNED ]', color: 'text-sandstone-dim' },
     };
     const { text, color } = format[status] || format['not_submitted'];
@@ -322,16 +323,16 @@ function MyDashboardPage() {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in" onClick={() => setIsModalOpen(false)}>
-                    <AxisFrame variant={getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'cyan' : 'amber'} className="!p-0 w-full max-w-lg max-h-[90vh] flex flex-col relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-void/90 backdrop-blur-sm z-50 flex justify-center items-center p-4 sm:p-6 animate-fade-in" onClick={() => setIsModalOpen(false)}>
+                    <AxisFrame variant={getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'cyan' : 'amber'} className="!p-0 w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
 
-                        <div className={clsx("px-6 py-4 flex justify-between items-center border-b shrink-0", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'border-cyan/30 bg-cyan/10' : 'border-amber/30 bg-amber/10')}>
-                            <TerminalLabel prefix=">">{getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'DIRECTIVE_VERIFIED' : 'EXECUTE_DIRECTIVE'}</TerminalLabel>
-                            <button onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>×</button>
-                        </div>
+                        <form onSubmit={handleSubmitForReview} className="flex flex-col max-h-[85vh] sm:max-h-[90vh] w-full bg-obsidian relative">
+                            <div className={clsx("px-6 py-4 flex justify-between items-center border-b shrink-0", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'border-cyan/30 bg-cyan/10' : 'border-amber/30 bg-amber/10')}>
+                                <TerminalLabel prefix=">">{getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'DIRECTIVE_VERIFIED' : 'EXECUTE_DIRECTIVE'}</TerminalLabel>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className={clsx("text-xl hover:scale-110 transition-transform", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>×</button>
+                            </div>
 
-                        <form onSubmit={handleSubmitForReview} className="flex flex-col flex-1 min-h-0 bg-obsidian">
-                            <div className="p-6 overflow-y-auto overscroll-contain flex-1 min-h-0">
+                            <div className="p-6 overflow-y-auto flex-1 min-h-0 terminal-scrollbar">
                                 <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
                                     <h3 className="text-xl font-display font-bold text-white uppercase">{selectedTask?.title}</h3>
                                     <span className={clsx("font-mono font-bold", getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'text-cyan' : 'text-amber')}>+{Number(selectedTask?.points)}</span>
@@ -380,7 +381,7 @@ function MyDashboardPage() {
                                         onChange={(e) => setDriveLink(e.target.value)}
                                         className="w-full bg-void border border-border p-4 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] disabled:opacity-50"
                                         placeholder="https://..."
-                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
+                                        disabled={['approved', 'pending', 'partially_accepted'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
                                     />
                                 </div>
                                 <div className="mb-6">
@@ -393,7 +394,7 @@ function MyDashboardPage() {
                                         className="w-full bg-void border border-border p-4 focus:border-amber outline-none transition-all text-sm font-mono text-white placeholder-sandstone-dim focus:shadow-[0_0_15px_rgba(255,158,0,0.2)] disabled:opacity-50 resize-y"
                                         placeholder="I completed this by..."
                                         rows={3}
-                                        disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
+                                        disabled={['approved', 'pending', 'partially_accepted'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
                                     />
                                 </div>
                             </div>
@@ -401,11 +402,11 @@ function MyDashboardPage() {
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 min-w-[120px] text-center px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest text-sandstone hover:text-white transition-colors">ABORT</button>
                                 <button
                                     type="submit"
-                                    disabled={['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
-                                    className={clsx("flex-1 min-w-[120px] text-center px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
+                                    disabled={['approved', 'pending', 'partially_accepted'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask)}
+                                    className={clsx("flex-1 min-w-[120px] text-center px-6 py-3 text-xs font-mono font-bold uppercase tracking-widest flex justify-center items-center gap-2 transition-all disabled:opacity-50", ['approved', 'pending', 'partially_accepted'].includes(getSubmissionForTask(selectedTask?.id)?.status) || isTaskExpired(selectedTask) ? "bg-obsidian-soft border border-border text-sandstone-dim" : "bg-amber text-void hover:bg-amber-bright shadow-[0_0_15px_rgba(255,158,0,0.4)]")}
                                 >
-                                    {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : getSubmissionForTask(selectedTask?.id)?.status === 'rejected' ? 'REJECTED' : getSubmissionForTask(selectedTask?.id)?.status === 'needs_revision' ? 'Resubmit' : 'Submit'}
-                                    {!['approved', 'pending', 'rejected'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
+                                    {getSubmissionForTask(selectedTask?.id)?.status === 'approved' ? 'VERIFIED' : getSubmissionForTask(selectedTask?.id)?.status === 'partially_accepted' ? 'PARTIAL' : getSubmissionForTask(selectedTask?.id)?.status === 'pending' ? 'PENDING' : ['rejected', 'needs_revision'].includes(getSubmissionForTask(selectedTask?.id)?.status) ? 'Resubmit' : 'Submit'}
+                                    {!['approved', 'pending', 'partially_accepted'].includes(getSubmissionForTask(selectedTask?.id)?.status) && <Crosshair size={10} className="opacity-50" />}
                                 </button>
                             </div>
                         </form>

@@ -63,9 +63,7 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   
-  const [password, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordMessage, setPasswordMessage] = useState('');
+
 
   useEffect(() => {
     async function getProfile() {
@@ -74,7 +72,7 @@ function ProfilePage() {
           setLoading(true);
           const { data, error } = await supabase
             .from('profiles')
-            .select('*')
+            .select('*, domains(name)')
             .eq('id', user.id).single();
           if (error) throw error;
           if (data) {
@@ -120,21 +118,7 @@ function ProfilePage() {
     }
   };
   
-  const handlePasswordUpdate = async (e) => {
-    e.preventDefault();
-    setPasswordMessage('');
-    if (password !== confirmPassword) return setPasswordMessage("ERROR: Keys do not match.");
-    if (password.length < 6) return setPasswordMessage("ERROR: Key must be at least 6 characters.");
-    try {
-        const { error } = await supabase.auth.updateUser({ password: password });
-        if (error) throw error;
-        setPasswordMessage('ACCESS_KEY updated successfully!');
-        setNewPassword(''); setConfirmPassword('');
-        setTimeout(() => setPasswordMessage(''), 3000);
-    } catch (error) {
-        setPasswordMessage(`ERROR: ${error.message}`);
-    }
-  };
+
 
   if (loading) return <div className="min-h-screen bg-void flex justify-center items-center"><TerminalLoader text="FETCHING_NODE_DATA..." /></div>;
   if (!user || !profile) return <div className="text-center py-20 text-sandstone-dim font-mono uppercase tracking-widest bg-void min-h-screen">Not logged in</div>;
@@ -185,12 +169,13 @@ function ProfilePage() {
             <Toast msg={message} />
 
             <form onSubmit={handleUpdateProfile}>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_250px),_1fr))] gap-4 mb-4">
                     <InputField label="Full Name" id="full_name" value={profile.full_name || ''} onChange={handleProfileChange} required />
                     <InputField label="Email" id="email" type="email" value={user?.email || ''} disabled />
+                    <InputField label="Selected Domain" id="domain" type="text" value={profile.domains?.name || 'UNASSIGNED'} disabled />
                 </div>
                 
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4 border-b border-border/50 pb-2 mb-8">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_250px),_1fr))] gap-4 border-b border-border/50 pb-2 mb-8">
                     <InputField 
                         label="Your Referral Code" 
                         id="referral_code" 
@@ -207,17 +192,17 @@ function ProfilePage() {
                     />
                 </div>
                 
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_250px),_1fr))] gap-4">
                     <InputField label="Phone Number" id="phone_number" type="tel" value={profile.phone_number || ''} onChange={handleProfileChange} required placeholder="10 digit mobile number" />
                     <InputField label="City" id="city" value={profile.city || ''} onChange={handleProfileChange} placeholder="City Name" />
                 </div>
 
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_250px),_1fr))] gap-4">
                     <InputField label="Institution Name" id="college" value={profile.college || ''} onChange={handleProfileChange} required placeholder="e.g. VNIT Nagpur" />
                     <InputField label="Degree Type" id="degree_type" value={profile.degree_type || ''} onChange={handleProfileChange} required placeholder="e.g. B.Tech" />
                 </div>
 
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,_250px),_1fr))] gap-4">
                     <InputField label="Branch / Major" id="branch" value={profile.branch || ''} onChange={handleProfileChange} required placeholder="e.g. Computer Science" />
                     <InputField 
                         label="Year of Study" 
@@ -245,31 +230,7 @@ function ProfilePage() {
             </form>
         </AxisFrame>
 
-        {/* Password Card */}
-        <AxisFrame variant="amber" hover={true} className="!p-[clamp(1.5rem,5vw,2.5rem)]">
-            <div className="flex items-center mb-8 border-b border-border pb-6">
-                <div>
-                    <h2 className="text-xl font-display font-bold text-white uppercase tracking-widest">Password & Security</h2>
-                    <p className="text-sandstone-dim font-mono text-xs tracking-widest mt-1 uppercase">Modify access key.</p>
-                </div>
-            </div>
 
-            <Toast msg={passwordMessage} />
-
-            <form onSubmit={handlePasswordUpdate}>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%, 250px), 1fr))] gap-4">
-                    <InputField label="NEW_ACCESS_KEY" id="newPassword" type="password" value={password} onChange={(e) => setNewPassword(e.target.value)} required placeholder="••••••••" />
-                    <InputField label="CONFIRM_KEY" id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="••••••••" />
-                </div>
-
-                <div className="flex justify-end mt-4">
-                    <button type="submit" className="w-full min-[400px]:w-auto px-8 py-4 text-xs font-mono font-bold tracking-widest uppercase bg-transparent border border-amber text-amber hover:bg-amber/10 transition-colors flex items-center justify-center gap-2">
-                        Update Password
-                        <Crosshair size={12} className="opacity-50 text-amber" />
-                    </button>
-                </div>
-            </form>
-        </AxisFrame>
 
       </div>
     </div>
